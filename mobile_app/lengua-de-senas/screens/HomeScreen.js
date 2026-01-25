@@ -1,26 +1,19 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   StyleSheet,
   View,
   Text,
-  TextInput,
   TouchableOpacity,
   ScrollView,
   Alert,
   Modal,
   ActivityIndicator,
   Platform,
-  Image,
-  StatusBar,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { WebView } from 'react-native-webview';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import AvatarSelector from '../components/AvatarSelector';
-import apiService from '../services/apiService';
-import { getCurrentUser, getUserProgress } from '../services/authService';
 
 // URL del visualizador 3D
 // En desarrollo:
@@ -39,61 +32,18 @@ const getWebUrl = () => {
 const WEB_3D_URL = getWebUrl();
 
 const AVATARES = {
-  nancy: 'Nancy',
-  carla: 'Carla',
-  luis: 'luis',
-  duvall: 'Duvall',
-  argenis: 'Argenis'
+  remy: 'Remy',
+  carlos: 'Carlos'
 };
 
 export default function HomeScreen({ navigation }) {
   const [activeTab, setActiveTab] = useState('traduccion');
   const [progress] = useState(0); // 0 de 6 lecciones completadas
-  const [userStars, setUserStars] = useState(0);
-  const [userLevel, setUserLevel] = useState(1);
-  const [userName, setUserName] = useState('');
-  const [avatarSeleccionado, setAvatarSeleccionado] = useState('luis');
+  const [avatarSeleccionado, setAvatarSeleccionado] = useState('remy');
   const [showWebView, setShowWebView] = useState(false);
   const [webViewUrl, setWebViewUrl] = useState(WEB_3D_URL);
   const [webViewLoading, setWebViewLoading] = useState(true);
   const [showAvatarSelector, setShowAvatarSelector] = useState(false);
-  const [textoTraducir, setTextoTraducir] = useState('');
-  const [isOptimizing, setIsOptimizing] = useState(false);
-  const [optimizationResult, setOptimizationResult] = useState(null);
-
-  // Cargar datos del usuario al montar
-  useEffect(() => {
-    loadUserData();
-  }, []);
-
-  // Recargar datos cuando vuelven a esta pantalla
-  useEffect(() => {
-    const unsubscribe = navigation.addListener('focus', () => {
-      loadUserData();
-    });
-    return unsubscribe;
-  }, [navigation]);
-
-  const loadUserData = async () => {
-    try {
-      const user = await getCurrentUser();
-      if (user) {
-        setUserName(user.name);
-        setUserStars(user.stars);
-        setUserLevel(user.level);
-        
-        // Actualizar progreso desde el servidor
-        const progressData = await getUserProgress(user.id);
-        if (progressData.success) {
-          setUserStars(progressData.data.stars);
-          setUserLevel(progressData.data.level);
-          console.log('✅ Progreso cargado:', progressData.data);
-        }
-      }
-    } catch (error) {
-      console.error('❌ Error cargando datos de usuario:', error);
-    }
-  };
 
   const lecciones = [
     {
@@ -143,83 +93,38 @@ export default function HomeScreen({ navigation }) {
     },
   ];
 
-  const abrirTraductor = async (palabra = '') => {
-    const avatarName = AVATARES[avatarSeleccionado] || 'Nancy';
+  const abrirTraductor = (palabra = '') => {
+    const avatarName = AVATARES[avatarSeleccionado] || 'Remy';
+    // Usar la URL de desarrollo o producción
+    let url = WEB_3D_URL;
     
-    let textoFinal = palabra;
-    
-    // Si hay texto, intentar optimizar con IA
-    if (palabra && palabra.length > 0) {
-      setIsOptimizing(true);
-      
-      try {
-        const result = await apiService.optimizarTexto(palabra);
-        
-        if (result.success) {
-          setOptimizationResult(result.data);
-          textoFinal = result.data.textoLSV || result.data.textoCorregido || palabra;
-          console.log('✨ Optimizado por IA:', textoFinal);
-          console.log('📊 Cobertura:', result.data.porcentajeCobertura + '%');
-          
-          // Mostrar info de optimización
-          if (result.data.textoCorregido !== palabra) {
-            Alert.alert(
-              '🤖 Texto Optimizado por IA',
-              `Original: "${palabra}"\nOptimizado: "${textoFinal}"\nCobertura: ${(result.data.porcentajeCobertura || 0).toFixed(1)}%`,
-              [{ text: 'OK' }]
-            );
-          }
-        } else {
-          console.warn('⚠️ API no disponible, usando texto original');
-        }
-      } catch (error) {
-        console.error('Error al optimizar:', error);
-      } finally {
-        setIsOptimizing(false);
-      }
-    }
-    
-    // ============================================
-    // CONFIGURACIÓN DE URL
-    // ============================================
-    let url = 'http://192.168.10.93:8000/animation_mobile.html';
-    
-    // Construir URL con parámetros de avatar y palabra optimizada
+    // Construir URL con parámetros de avatar y palabra
     const params = new URLSearchParams();
-    params.append('avatar', avatarName);
+    params.append('avatar', avatarName); // Enviar nombre del avatar seleccionado
     
-    if (textoFinal) {
-      params.append('text', textoFinal);
+    if (palabra) {
+      params.append('word', palabra);
       params.append('autoload', 'true');
     }
     
-    url = `${url}?${params.toString()}`;
+    url = `${WEB_3D_URL}?${params.toString()}`;
     
-    console.log('🌐 Abriendo URL:', url);
-    console.log('👤 Avatar seleccionado:', avatarName);
+    console.log('🌐 Abriendo URL:', url); // Log para debug
+    console.log('👤 Avatar seleccionado:', avatarName); // Log del avatar
     
     setWebViewUrl(url);
     setWebViewLoading(true);
     setShowWebView(true);
   };
 
-  const handleSelectAvatar = async (avatarId, avatarName) => {
+  const handleSelectAvatar = (avatarId, avatarName) => {
     setAvatarSeleccionado(avatarId);
     setShowAvatarSelector(false);
-    
-    // Guardar avatar seleccionado en AsyncStorage
-    try {
-      await AsyncStorage.setItem('selectedAvatar', avatarId);
-      console.log('✅ Avatar guardado en HomeScreen:', avatarId);
-      
-      Alert.alert(
-        'Avatar seleccionado',
-        `Has seleccionado a ${avatarName}. El avatar se usará en el traductor 3D.`,
-        [{ text: 'OK' }]
-      );
-    } catch (error) {
-      console.error('Error guardando avatar:', error);
-    }
+    Alert.alert(
+      'Avatar seleccionado',
+      `Has seleccionado a ${avatarName}. El avatar se usará en el traductor 3D.`,
+      [{ text: 'OK' }]
+    );
   };
 
   const cerrarTraductor = () => {
@@ -235,7 +140,7 @@ export default function HomeScreen({ navigation }) {
         <Text style={styles.infoText}>
           Usando avatar: <Text style={styles.infoBold}>{AVATARES[avatarSeleccionado]}</Text>
         </Text>
-        <TouchableOpacity onPress={() => setShowAvatarSelector(true)}>
+        <TouchableOpacity onPress={() => setActiveTab('avatar')}>
           <Ionicons name="settings-outline" size={20} color="#4A90E2" />
         </TouchableOpacity>
       </View>
@@ -248,15 +153,13 @@ export default function HomeScreen({ navigation }) {
           </View>
           <View style={styles.cardHeaderText}>
             <Text style={styles.cardTitle}>Traductor de Lengua de Señas</Text>
-            <Text style={styles.cardSubtitle}>Escribe una frase para traducir</Text>
+            <Text style={styles.cardSubtitle}>Visualiza señas en 3D</Text>
           </View>
         </View>
         
-        {/* Botón de traducir con IA */}
         <TouchableOpacity
           style={styles.translateButton}
-          onPress={() => abrirTraductor('')}
-          disabled={isOptimizing}
+          onPress={() => abrirTraductor()}
         >
           <LinearGradient
             colors={['#4A90E2', '#357ABD']}
@@ -265,9 +168,7 @@ export default function HomeScreen({ navigation }) {
             style={styles.buttonGradient}
           >
             <Ionicons name="hand-left" size={24} color="white" style={{ marginRight: 8 }} />
-            <Text style={styles.translateButtonText}>
-              Abrir Traductor 3D con IA
-            </Text>
+            <Text style={styles.translateButtonText}>Abrir Traductor 3D</Text>
           </LinearGradient>
         </TouchableOpacity>
       </View>
@@ -375,80 +276,12 @@ export default function HomeScreen({ navigation }) {
     );
   };
 
-  const renderAvatar = () => {
-    const avatars = [
-      { id: 'luis', name: 'Luis', img: require('../assets/avatar/Luis.png'), color: '#3498DB', description: 'Avatar masculino - Completo' },
-      { id: 'duvall', name: 'Duvall', img: require('../assets/avatar/Duvall.png'), color: '#E67E22', description: 'Avatar masculino - Completo' },
-      { id: 'nancy', name: 'Nancy', img: require('../assets/avatar/Nancy.png'), color: '#9B59B6', description: 'Avatar femenino - Completo' },
-      { id: 'carla', name: 'Carla', img: require('../assets/avatar/Carla.png'), color: '#FF6B9D', description: 'Avatar femenino - Completo' },
-      { id: 'argenis', name: 'Argenis', img: require('../assets/avatar/Argenis.png'), color: '#2ECC71', description: 'Avatar masculino - Completo' }
-    ];
-
-    return (
-      <View style={styles.tabContent}>
-        <Text style={styles.sectionTitle}>Selecciona tu Avatar</Text>
-        <Text style={styles.sectionSubtitle}>
-          El avatar seleccionado se usará en todas las traducciones de lengua de señas
-        </Text>
-
-        <View style={styles.avatarGrid}>
-          {avatars.map((avatar) => {
-            const isSelected = avatarSeleccionado === avatar.id;
-            return (
-              <TouchableOpacity
-                key={avatar.id}
-                style={[
-                  styles.avatarCardNew,
-                  isSelected && styles.avatarCardSelected
-                ]}
-                onPress={() => handleSelectAvatar(avatar.id, avatar.name)}
-              >
-                <View style={styles.avatarImageContainer}>
-                  <Image 
-                    source={avatar.img}
-                    style={styles.avatarImage}
-                    resizeMode="cover"
-                  />
-                  {isSelected && (
-                    <View style={styles.selectedBadgeNew}>
-                      <Ionicons name="checkmark-circle" size={24} color="#4CAF50" />
-                    </View>
-                  )}
-                </View>
-                
-                <View style={styles.avatarCardContent}>
-                  <Text style={styles.avatarNameNew}>{avatar.name}</Text>
-                  <Text style={styles.avatarDescriptionNew}>{avatar.description}</Text>
-                  
-                  {isSelected && (
-                    <View style={styles.currentBadge}>
-                      <Ionicons name="checkmark-circle" size={16} color="#4CAF50" />
-                      <Text style={styles.currentText}>En uso</Text>
-                    </View>
-                  )}
-                </View>
-              </TouchableOpacity>
-            );
-          })}
-        </View>
-
-        {/* Info adicional */}
-        <View style={styles.avatarInfo}>
-          <Ionicons name="information-circle" size={24} color="#4A90E2" />
-          <Text style={styles.avatarInfoText}>
-            Los avatares animan las señas en 3D. Más avatares próximamente.
-          </Text>
-        </View>
-      </View>
-    );
-  };
-
   const renderAprendizajeOLD = () => (
     <View style={styles.tabContent}>
       {/* Barra de Progreso */}
       <View style={styles.progressCard}>
         <Text style={styles.progressTitle}>Tu Progreso</Text>
-        <Text style={styles.progressText}>⭐ {userStars} estrellas - Nivel {userLevel}</Text>
+        <Text style={styles.progressText}>Has completado {progress} de {lecciones.length} lecciones</Text>
         <View style={styles.progressBarContainer}>
           <View style={[styles.progressBar, { width: `${(progress / lecciones.length) * 100}%` }]} />
         </View>
@@ -492,11 +325,71 @@ export default function HomeScreen({ navigation }) {
     </View>
   );
 
+  const renderAvatar = () => {
+    const avatars = [
+      { id: 'remy', name: 'Remy', icon: 'woman', color: '#E24A90', description: 'Avatar femenino - Completo' },
+      { id: 'carlos', name: 'Carlos', icon: 'man', color: '#4A90E2', description: 'Avatar masculino - En progreso' }
+    ];
 
+    return (
+      <View style={styles.tabContent}>
+        <Text style={styles.sectionTitle}>Selecciona tu Avatar</Text>
+        <Text style={styles.sectionSubtitle}>
+          El avatar seleccionado se usará en todas las traducciones de lengua de señas
+        </Text>
+
+        <View style={styles.avatarGrid}>
+          {avatars.map((avatar) => {
+            const isSelected = avatarSeleccionado === avatar.id;
+            return (
+              <TouchableOpacity
+                key={avatar.id}
+                style={[
+                  styles.avatarCardNew,
+                  isSelected && styles.avatarCardSelected
+                ]}
+                onPress={() => handleSelectAvatar(avatar.id, avatar.name)}
+              >
+                <View style={[styles.avatarIconContainer, { backgroundColor: avatar.color + '20' }]}>
+                  <Ionicons 
+                    name={avatar.icon}
+                    size={60}
+                    color={avatar.color}
+                  />
+                  {isSelected && (
+                    <View style={[styles.selectedBadgeNew, { backgroundColor: avatar.color }]}>
+                      <Ionicons name="checkmark" size={20} color="white" />
+                    </View>
+                  )}
+                </View>
+                
+                <Text style={styles.avatarNameNew}>{avatar.name}</Text>
+                <Text style={styles.avatarDescriptionNew}>{avatar.description}</Text>
+                
+                {isSelected && (
+                  <View style={styles.currentBadge}>
+                    <Ionicons name="checkmark-circle" size={16} color="#4CAF50" />
+                    <Text style={styles.currentText}>En uso</Text>
+                  </View>
+                )}
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+
+        {/* Info adicional */}
+        <View style={styles.avatarInfo}>
+          <Ionicons name="information-circle" size={24} color="#4A90E2" />
+          <Text style={styles.avatarInfoText}>
+            Los avatares animan las señas en 3D. Más avatares próximamente.
+          </Text>
+        </View>
+      </View>
+    );
+  };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
-      <StatusBar barStyle="light-content" backgroundColor="#667eea" />
+    <View style={styles.container}>
       {/* Header */}
       <LinearGradient
         colors={['#667eea', '#764ba2']}
@@ -530,10 +423,7 @@ export default function HomeScreen({ navigation }) {
 
           <TouchableOpacity
             style={[styles.tab, activeTab === 'aprendizaje' && styles.tabActive]}
-            onPress={() => {
-              setActiveTab('aprendizaje');
-              navigation.navigate('Learning');
-            }}
+            onPress={() => setActiveTab('aprendizaje')}
           >
             <Ionicons
               name="school"
@@ -564,6 +454,7 @@ export default function HomeScreen({ navigation }) {
       {/* Content */}
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {activeTab === 'traduccion' && renderTraduccion()}
+        {activeTab === 'aprendizaje' && renderAprendizaje()}
         {activeTab === 'avatar' && renderAvatar()}
       </ScrollView>
 
@@ -650,15 +541,10 @@ export default function HomeScreen({ navigation }) {
             scalesPageToFit={true}
             bounces={false}
             originWhitelist={['*']}
-            useWebKit={true}
-            sharedCookiesEnabled={true}
-            thirdPartyCookiesEnabled={true}
-            setSupportMultipleWindows={false}
-            textZoom={100}
           />
         </View>
       </Modal>
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -758,53 +644,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#7f8c8d',
     marginTop: 2,
-  },
-  inputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#F5F5F5',
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 4,
-    marginBottom: 16,
-    borderWidth: 1,
-    borderColor: '#E0E0E0',
-  },
-  textInput: {
-    flex: 1,
-    fontSize: 16,
-    color: '#2c3e50',
-    paddingVertical: 12,
-  },
-  clearButton: {
-    padding: 4,
-    marginLeft: 8,
-  },
-  optimizationInfo: {
-    marginTop: 12,
-    marginBottom: 8,
-    padding: 12,
-    backgroundColor: 'rgba(74, 144, 226, 0.1)',
-    borderRadius: 8,
-    borderLeftWidth: 3,
-    borderLeftColor: '#4A90E2',
-  },
-  optimizationLabel: {
-    color: '#4A90E2',
-    fontSize: 12,
-    fontWeight: 'bold',
-    marginBottom: 6,
-  },
-  optimizationText: {
-    color: '#333',
-    fontSize: 13,
-    marginBottom: 4,
-  },
-  coverageText: {
-    color: '#E24A90',
-    fontSize: 12,
-    fontWeight: '600',
-    marginTop: 4,
   },
   translateButton: {
     borderRadius: 12,
@@ -1032,16 +871,16 @@ const styles = StyleSheet.create({
   // Avatar Grid
   avatarGrid: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
     justifyContent: 'space-between',
     marginBottom: 20,
+    gap: 12,
   },
   avatarCardNew: {
-    width: '48%',
+    flex: 1,
     backgroundColor: 'white',
     borderRadius: 16,
-    marginBottom: 15,
-    overflow: 'hidden',
+    padding: 20,
+    alignItems: 'center',
     borderWidth: 3,
     borderColor: '#E0E0E0',
     shadowColor: '#000',
@@ -1050,28 +889,6 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
   },
-  avatarImageContainer: {
-    width: '100%',
-    height: 150,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#f0f0f0',
-    position: 'relative',
-  },
-  avatarImage: {
-    width: '100%',
-    height: '100%',
-  },
-  avatarGradient: {
-    padding: 30,
-    alignItems: 'center',
-    justifyContent: 'center',
-    minHeight: 150,
-  },
-  avatarCardContent: {
-    padding: 12,
-    backgroundColor: '#f5f5f5',
-  },
   avatarCardSelected: {
     borderColor: '#4CAF50',
     shadowOpacity: 0.3,
@@ -1079,23 +896,37 @@ const styles = StyleSheet.create({
     elevation: 6,
     transform: [{ scale: 1.02 }],
   },
+  avatarIconContainer: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 12,
+    position: 'relative',
+  },
   selectedBadgeNew: {
     position: 'absolute',
-    top: 10,
-    right: 10,
+    top: -5,
+    right: -5,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 3,
+    borderColor: 'white',
   },
   avatarNameNew: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: '700',
     color: '#2c3e50',
-    marginBottom: 4,
-    textAlign: 'center',
+    marginBottom: 6,
   },
   avatarDescriptionNew: {
-    fontSize: 11,
+    fontSize: 12,
     color: '#7f8c8d',
     textAlign: 'center',
-    marginBottom: 4,
   },
   currentBadge: {
     flexDirection: 'row',

@@ -19,6 +19,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getCurrentUser, logout } from '../services/authService';
 import AvatarSelector from '../components/AvatarSelector';
 
+
 const { width, height } = Dimensions.get('window');
 
 export default function MainScreen({ navigation }) {
@@ -224,7 +225,7 @@ export default function MainScreen({ navigation }) {
 
         <TouchableOpacity 
           style={[styles.circleButton, styles.learningButton]}
-          onPress={() => navigation.navigate('Learning')}
+          onPress={() => navigation.navigate('LearningDuolingo')}
         >
           <Ionicons name="school" size={40} color="black" />
           <Text style={styles.buttonLabel}>Aprendizaje</Text>
