@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Visualizador de Señas</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #canvas-container {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #word-display {
+            position: absolute;
+            top: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255, 255, 255, 0.95);
+            padding: 16px 32px;
+            border-radius: 20px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            z-index: 10;
+        }
+
+        #word-text {
+            font-size: 32px;
+            font-weight: 700;
+            color: #2c3e50;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        #loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            color: white;
+            z-index: 5;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 16px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        #loading-text {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        #replay-indicator {
+            position: absolute;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255, 255, 255, 0.95);
+            padding: 12px 24px;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            z-index: 10;
+            display: none;
+        }
+
+        #replay-text {
+            font-size: 16px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        canvas {
+            outline: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <div id="word-display">
+            <div id="word-text">Cargando...</div>
+        </div>
+        
+        <div id="canvas-container"></div>
+        
+        <div id="loading">
+            <div class="spinner"></div>
+            <div id="loading-text">Cargando animación...</div>
+        </div>
+
+        <div id="replay-indicator">
+            <div id="replay-text">🔄 Reproducción 1/2</div>
+        </div>
+    </div>
+
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+            "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+        }
+    }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+        import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
+
+        // Variables globales
+        let scene, camera, renderer, mixer, currentAction;
+        let loadedModel = null;
+        let playCount = 0;
+        const MAX_PLAYS = 2;
+        const SLOW_SPEED = 0.5; // Velocidad reducida (50%)
+
+        // Obtener parámetros de URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const word = urlParams.get('word') || 'hola';
+        const avatar = urlParams.get('avatar') || 'Remy';
+
+        // Actualizar display de palabra
+        document.getElementById('word-text').textContent = word;
+
+        // Configurar escena
+        function initScene() {
+            // Escena
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x667eea);
+
+            // Cámara
+            camera = new THREE.PerspectiveCamera(
+                50,
+                window.innerWidth / window.innerHeight,
+                0.1,
+                1000
+            );
+            camera.position.set(0, 1.5, 3);
+            camera.lookAt(0, 1, 0);
+
+            // Renderer
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            renderer.outputEncoding = THREE.sRGBEncoding;
+            renderer.toneMapping = THREE.ACESFilmicToneMapping;
+            renderer.toneMappingExposure = 1.2;
+            
+            document.getElementById('canvas-container').appendChild(renderer.domElement);
+
+            // Luces
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+            scene.add(ambientLight);
+
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            directionalLight.position.set(2, 4, 3);
+            directionalLight.castShadow = true;
+            directionalLight.shadow.mapSize.width = 2048;
+            directionalLight.shadow.mapSize.height = 2048;
+            scene.add(directionalLight);
+
+            const fillLight = new THREE.DirectionalLight(0xffffff, 0.3);
+            fillLight.position.set(-2, 2, -2);
+            scene.add(fillLight);
+
+            // Responsive
+            window.addEventListener('resize', onWindowResize);
+        }
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        // Cargar modelo
+        async function loadModel() {
+            const loadingEl = document.getElementById('loading');
+            const replayEl = document.getElementById('replay-indicator');
+            
+            try {
+                // Construir URL del modelo
+                const modelUrl = `https://usm-argenis.github.io/STT_LSV/animations_library/alphabet/${word.toLowerCase()}_${avatar}.glb`;
+                
+                console.log('Cargando modelo:', modelUrl);
+
+                const dracoLoader = new DRACOLoader();
+                dracoLoader.setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.5.6/');
+
+                const loader = new GLTFLoader();
+                loader.setDRACOLoader(dracoLoader);
+
+                const gltf = await new Promise((resolve, reject) => {
+                    loader.load(modelUrl, resolve, undefined, reject);
+                });
+
+                loadedModel = gltf.scene;
+                
+                // Configurar modelo
+                loadedModel.traverse((child) => {
+                    if (child.isMesh) {
+                        child.castShadow = true;
+                        child.receiveShadow = true;
+                        if (child.material) {
+                            child.material.needsUpdate = true;
+                        }
+                    }
+                });
+
+                // Centrar modelo
+                const box = new THREE.Box3().setFromObject(loadedModel);
+                const center = box.getCenter(new THREE.Vector3());
+                loadedModel.position.x -= center.x;
+                loadedModel.position.y -= center.y;
+
+                scene.add(loadedModel);
+
+                // Configurar animación
+                if (gltf.animations && gltf.animations.length > 0) {
+                    mixer = new THREE.AnimationMixer(loadedModel);
+                    currentAction = mixer.clipAction(gltf.animations[0]);
+                    currentAction.setLoop(THREE.LoopOnce);
+                    currentAction.clampWhenFinished = true;
+                    currentAction.timeScale = SLOW_SPEED; // Velocidad lenta
+                    
+                    // Listener para cuando termina la animación
+                    mixer.addEventListener('finished', onAnimationFinished);
+                    
+                    // Iniciar reproducción
+                    currentAction.reset();
+                    currentAction.play();
+                    playCount = 1;
+                    
+                    // Mostrar indicador de reproducción
+                    replayEl.style.display = 'block';
+                    document.getElementById('replay-text').textContent = `🔄 Reproducción ${playCount}/${MAX_PLAYS}`;
+                }
+
+                loadingEl.style.display = 'none';
+                
+            } catch (error) {
+                console.error('Error cargando modelo:', error);
+                document.getElementById('loading-text').textContent = 'Error al cargar la animación';
+                document.getElementById('word-text').textContent = 'Error';
+            }
+        }
+
+        function onAnimationFinished() {
+            if (playCount < MAX_PLAYS) {
+                // Reproducir de nuevo
+                playCount++;
+                document.getElementById('replay-text').textContent = `🔄 Reproducción ${playCount}/${MAX_PLAYS}`;
+                
+                setTimeout(() => {
+                    currentAction.reset();
+                    currentAction.play();
+                }, 500); // Pequeña pausa entre reproducciones
+            } else {
+                // Terminar
+                document.getElementById('replay-indicator').style.display = 'none';
+                console.log('Animación completada 2 veces');
+            }
+        }
+
+        // Loop de animación
+        const clock = new THREE.Clock();
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            const delta = clock.getDelta();
+            if (mixer) {
+                mixer.update(delta);
+            }
+            
+            renderer.render(scene, camera);
+        }
+
+        // Inicializar
+        initScene();
+        loadModel();
+        animate();
+    </script>
+</body>
+</html>

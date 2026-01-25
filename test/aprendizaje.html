@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modo Aprendizaje - LSV</title>
+    
+    <!-- Three.js y loaders -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/DRACOLoader.js"></script>
+    
+    <!-- MediaPipe -->
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1646424915/hands.min.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils@0.3.1620248357/camera_utils.min.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils@0.3.1620248357/drawing_utils.min.js" crossorigin="anonymous"></script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        #container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        /* Panel de información */
+        #info-panel {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.85);
+            padding: 25px;
+            border-radius: 15px;
+            color: white;
+            z-index: 100;
+            min-width: 300px;
+            border: 2px solid rgba(79, 195, 247, 0.4);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+        }
+
+        .info-title {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #4fc3f7;
+            text-align: center;
+        }
+
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .stat-row:last-child {
+            border-bottom: none;
+        }
+
+        .stat-label {
+            color: #aaa;
+            font-size: 14px;
+        }
+
+        .stat-value {
+            font-weight: bold;
+            font-size: 18px;
+            color: #4fc3f7;
+        }
+
+        .lives {
+            color: #ff5252;
+            font-size: 28px;
+            letter-spacing: 5px;
+        }
+
+        .score {
+            color: #4caf50;
+            font-size: 24px;
+        }
+
+        /* Seña objetivo */
+        #target-sign {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.9);
+            padding: 30px;
+            border-radius: 20px;
+            color: white;
+            z-index: 100;
+            text-align: center;
+            border: 3px solid #4caf50;
+            box-shadow: 0 10px 40px rgba(76, 175, 80, 0.5);
+            min-width: 250px;
+        }
+
+        .target-label {
+            font-size: 16px;
+            color: #aaa;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .target-word {
+            font-size: 48px;
+            font-weight: bold;
+            color: #4caf50;
+            text-transform: uppercase;
+            margin: 15px 0;
+        }
+
+        .target-hint {
+            font-size: 14px;
+            color: #4fc3f7;
+            margin-top: 10px;
+        }
+
+        /* Cámara del usuario */
+        #video-container {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            z-index: 100;
+            border: 3px solid rgba(79, 195, 247, 0.5);
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+            background: rgba(0, 0, 0, 0.8);
+        }
+
+        #video {
+            width: 320px;
+            height: 240px;
+            display: block;
+            transform: scaleX(-1); /* Efecto espejo */
+        }
+
+        #canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 320px;
+            height: 240px;
+            transform: scaleX(-1);
+        }
+
+        /* Feedback visual */
+        #feedback {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.95);
+            padding: 50px 70px;
+            border-radius: 25px;
+            color: white;
+            z-index: 200;
+            text-align: center;
+            font-size: 48px;
+            font-weight: bold;
+            display: none;
+            border: 5px solid;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+            animation: feedbackPulse 0.5s ease-out;
+        }
+
+        @keyframes feedbackPulse {
+            0% { transform: translate(-50%, -50%) scale(0.8); opacity: 0; }
+            50% { transform: translate(-50%, -50%) scale(1.1); }
+            100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+        }
+
+        .feedback-correct {
+            border-color: #4caf50;
+            color: #4caf50;
+        }
+
+        .feedback-wrong {
+            border-color: #ff5252;
+            color: #ff5252;
+        }
+
+        /* Estado de detección */
+        #detection-status {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.85);
+            padding: 15px 25px;
+            border-radius: 12px;
+            color: white;
+            z-index: 100;
+            font-size: 14px;
+            border: 2px solid rgba(79, 195, 247, 0.3);
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 10px;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        .status-active {
+            background: #4caf50;
+            box-shadow: 0 0 15px #4caf50;
+        }
+
+        .status-inactive {
+            background: #ff9800;
+            box-shadow: 0 0 15px #ff9800;
+        }
+
+        /* Loading */
+        #loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            color: white;
+            z-index: 300;
+            background: rgba(0, 0, 0, 0.9);
+            padding: 50px 70px;
+            border-radius: 25px;
+            backdrop-filter: blur(15px);
+        }
+
+        .spinner {
+            border: 6px solid rgba(255, 255, 255, 0.2);
+            border-top: 6px solid #4fc3f7;
+            border-radius: 50%;
+            width: 80px;
+            height: 80px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 30px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            font-size: 22px;
+            font-weight: 600;
+            color: #4fc3f7;
+        }
+
+        /* Game Over */
+        #game-over {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.95);
+            padding: 50px 70px;
+            border-radius: 25px;
+            color: white;
+            z-index: 300;
+            text-align: center;
+            display: none;
+            border: 3px solid #ff5252;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.9);
+        }
+
+        .game-over-title {
+            font-size: 48px;
+            font-weight: bold;
+            color: #ff5252;
+            margin-bottom: 20px;
+        }
+
+        .final-score {
+            font-size: 32px;
+            color: #4fc3f7;
+            margin: 20px 0;
+        }
+
+        .restart-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 18px 40px;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 30px;
+            transition: all 0.3s ease;
+        }
+
+        .restart-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.5);
+        }
+
+        /* Botón de inicio */
+        #start-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 400;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+        }
+
+        .start-title {
+            font-size: 56px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .start-subtitle {
+            font-size: 22px;
+            color: #aaa;
+            margin-bottom: 50px;
+        }
+
+        .start-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 25px 60px;
+            border-radius: 15px;
+            font-size: 24px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 40px rgba(102, 126, 234, 0.4);
+        }
+
+        .start-btn:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 50px rgba(102, 126, 234, 0.6);
+        }
+
+        .instructions {
+            max-width: 600px;
+            margin-top: 50px;
+            text-align: left;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 30px;
+            border-radius: 15px;
+            border: 2px solid rgba(79, 195, 247, 0.3);
+        }
+
+        .instructions h3 {
+            color: #4fc3f7;
+            margin-bottom: 20px;
+            font-size: 20px;
+        }
+
+        .instructions ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .instructions li {
+            padding: 10px 0;
+            padding-left: 30px;
+            position: relative;
+            color: #ddd;
+            font-size: 16px;
+        }
+
+        .instructions li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #4caf50;
+            font-weight: bold;
+            font-size: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div id="container"></div>
+
+    <!-- Pantalla de inicio -->
+    <div id="start-screen">
+        <div class="start-title">🤟 Modo Aprendizaje LSV</div>
+        <div class="start-subtitle">Practica la Lengua de Señas Venezolana</div>
+        <button class="start-btn" onclick="startGame()">🎮 Comenzar</button>
+        
+        <div class="instructions">
+            <h3>📋 Instrucciones:</h3>
+            <ul>
+                <li>Se te mostrará una seña para practicar</li>
+                <li>Haz la seña frente a la cámara</li>
+                <li>El sistema detectará si lo haces correctamente</li>
+                <li>Al acertar, verás la animación 3D</li>
+                <li>Si fallas, perderás una vida ❤️</li>
+                <li>¡Intenta obtener la puntuación más alta!</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Panel de información -->
+    <div id="info-panel" style="display: none;">
+        <div class="info-title">📊 Estadísticas</div>
+        <div class="stat-row">
+            <span class="stat-label">Vidas:</span>
+            <span class="stat-value lives" id="lives-display">❤️❤️❤️</span>
+        </div>
+        <div class="stat-row">
+            <span class="stat-label">Puntuación:</span>
+            <span class="stat-value score" id="score-display">0</span>
+        </div>
+        <div class="stat-row">
+            <span class="stat-label">Aciertos:</span>
+            <span class="stat-value" id="correct-display">0</span>
+        </div>
+        <div class="stat-row">
+            <span class="stat-label">Errores:</span>
+            <span class="stat-value" id="wrong-display">0</span>
+        </div>
+    </div>
+
+    <!-- Seña objetivo -->
+    <div id="target-sign" style="display: none;">
+        <div class="target-label">Haz esta seña:</div>
+        <div class="target-word" id="target-word">HOLA</div>
+        <div class="target-hint" id="target-hint">Coloca tus manos frente a la cámara</div>
+    </div>
+
+    <!-- Cámara -->
+    <div id="video-container" style="display: none;">
+        <video id="video" autoplay playsinline></video>
+        <canvas id="canvas"></canvas>
+    </div>
+
+    <!-- Estado de detección -->
+    <div id="detection-status" style="display: none;">
+        <span class="status-indicator status-active"></span>
+        <span id="status-text">Detectando manos...</span>
+    </div>
+
+    <!-- Feedback -->
+    <div id="feedback"></div>
+
+    <!-- Loading -->
+    <div id="loading">
+        <div class="spinner"></div>
+        <div class="loading-text">Cargando sistema...</div>
+    </div>
+
+    <!-- Game Over -->
+    <div id="game-over">
+        <div class="game-over-title">¡Juego Terminado!</div>
+        <div class="final-score">Puntuación Final: <span id="final-score">0</span></div>
+        <div class="final-score">Aciertos: <span id="final-correct">0</span></div>
+        <button class="restart-btn" onclick="restartGame()">🔄 Jugar de Nuevo</button>
+    </div>
+
+    <script>
+        // ==================== CONFIGURACIÓN ====================
+        const INITIAL_LIVES = 3;
+        const POINTS_PER_CORRECT = 10;
+        const FEEDBACK_DURATION = 2000;
+        const NEW_SIGN_DELAY = 3000;
+        
+        // Lista de señas disponibles para practicar
+        const AVAILABLE_SIGNS = [
+            'hola', 'adios', 'gracias', 'yo', 'tu', 
+            'buenos dias', 'buenas tardes', 'buenas noches',
+            'como estas', 'mucho gusto', 'permiso',
+            'lunes', 'martes', 'miercoles', 'jueves', 'viernes'
+        ];
+
+        // ==================== ESTADO DEL JUEGO ====================
+        let gameState = {
+            lives: INITIAL_LIVES,
+            score: 0,
+            correct: 0,
+            wrong: 0,
+            currentSign: null,
+            isPlaying: false,
+            canDetect: true
+        };
+
+        // ==================== THREE.JS SETUP ====================
+        let scene, camera, renderer, currentModel, mixer, clock;
+        let animationFrameId;
+        
+        function initThreeJS() {
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x1a1a2e);
+
+            camera = new THREE.PerspectiveCamera(
+                50,
+                window.innerWidth / window.innerHeight,
+                0.1,
+                1000
+            );
+            camera.position.set(0, 1.6, 3);
+
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.shadowMap.enabled = true;
+            document.getElementById('container').appendChild(renderer.domElement);
+
+            // Luces
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+            scene.add(ambientLight);
+
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            directionalLight.position.set(5, 10, 7.5);
+            directionalLight.castShadow = true;
+            scene.add(directionalLight);
+
+            const pointLight = new THREE.PointLight(0x4fc3f7, 0.5);
+            pointLight.position.set(-5, 5, -5);
+            scene.add(pointLight);
+
+            clock = new THREE.Clock();
+
+            // Animación
+            function animate() {
+                animationFrameId = requestAnimationFrame(animate);
+                
+                if (mixer) {
+                    mixer.update(clock.getDelta());
+                }
+                
+                renderer.render(scene, camera);
+            }
+            animate();
+
+            // Resize
+            window.addEventListener('resize', () => {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            });
+        }
+
+        // ==================== MEDIAPIPE SETUP ====================
+        let hands, videoElement, canvasElement, canvasCtx;
+        let lastDetectionTime = 0;
+        const DETECTION_COOLDOWN = 1000; // 1 segundo entre detecciones
+
+        async function initMediaPipe() {
+            videoElement = document.getElementById('video');
+            canvasElement = document.getElementById('canvas');
+            canvasCtx = canvasElement.getContext('2d');
+
+            // Configurar MediaPipe Hands
+            hands = new Hands({
+                locateFile: (file) => {
+                    return `https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1646424915/${file}`;
+                }
+            });
+
+            hands.setOptions({
+                maxNumHands: 2,
+                modelComplexity: 1,
+                minDetectionConfidence: 0.7,
+                minTrackingConfidence: 0.7
+            });
+
+            hands.onResults(onHandsDetected);
+
+            // Iniciar cámara
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: 'user', width: 640, height: 480 }
+                });
+                videoElement.srcObject = stream;
+                
+                videoElement.onloadedmetadata = () => {
+                    canvasElement.width = videoElement.videoWidth;
+                    canvasElement.height = videoElement.videoHeight;
+                    detectHands();
+                };
+            } catch (error) {
+                console.error('Error al acceder a la cámara:', error);
+                alert('No se pudo acceder a la cámara. Por favor, permite el acceso.');
+            }
+        }
+
+        async function detectHands() {
+            if (videoElement.readyState === 4) {
+                await hands.send({ image: videoElement });
+            }
+            requestAnimationFrame(detectHands);
+        }
+
+        function onHandsDetected(results) {
+            // Limpiar canvas
+            canvasCtx.save();
+            canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
+            
+            // Dibujar manos detectadas
+            if (results.multiHandLandmarks) {
+                for (const landmarks of results.multiHandLandmarks) {
+                    drawConnectors(canvasCtx, landmarks, HAND_CONNECTIONS, {
+                        color: '#00FF00',
+                        lineWidth: 2
+                    });
+                    drawLandmarks(canvasCtx, landmarks, {
+                        color: '#FF0000',
+                        lineWidth: 1,
+                        radius: 3
+                    });
+                }
+                
+                // Detectar seña si el juego está activo
+                if (gameState.isPlaying && gameState.canDetect) {
+                    const currentTime = Date.now();
+                    if (currentTime - lastDetectionTime > DETECTION_COOLDOWN) {
+                        detectSign(results.multiHandLandmarks);
+                        lastDetectionTime = currentTime;
+                    }
+                }
+            }
+            
+            canvasCtx.restore();
+        }
+
+        // ==================== DETECCIÓN DE SEÑAS ====================
+        function detectSign(handLandmarks) {
+            // SIMULACIÓN: En producción aquí iría tu modelo de ML
+            // Por ahora, simulamos una detección aleatoria
+            
+            if (!gameState.currentSign) return;
+            
+            // Simular 60% de probabilidad de éxito cuando hay manos detectadas
+            const isCorrect = Math.random() > 0.4;
+            
+            if (isCorrect) {
+                handleCorrectSign();
+            } else {
+                handleWrongSign();
+            }
+        }
+
+        // ==================== MANEJO DE ACIERTOS/ERRORES ====================
+        async function handleCorrectSign() {
+            gameState.canDetect = false;
+            gameState.correct++;
+            gameState.score += POINTS_PER_CORRECT;
+            
+            updateStats();
+            showFeedback('¡CORRECTO! ✓', true);
+            
+            // Cargar y mostrar animación
+            await loadSignAnimation(gameState.currentSign);
+            
+            setTimeout(() => {
+                nextSign();
+            }, NEW_SIGN_DELAY);
+        }
+
+        function handleWrongSign() {
+            gameState.canDetect = false;
+            gameState.wrong++;
+            gameState.lives--;
+            
+            updateStats();
+            showFeedback('¡INCORRECTO! ✗', false);
+            
+            if (gameState.lives <= 0) {
+                endGame();
+            } else {
+                setTimeout(() => {
+                    nextSign();
+                }, NEW_SIGN_DELAY);
+            }
+        }
+
+        // ==================== ANIMACIONES 3D ====================
+        async function loadSignAnimation(sign) {
+            const loader = new THREE.GLTFLoader();
+            
+            // Determinar género basado en parámetro URL o por defecto
+            const urlParams = new URLSearchParams(window.location.search);
+            const avatar = urlParams.get('avatar') || 'Duvall';
+            
+            // Mapeo de avatares a género
+            const genero = (avatar === 'Nancy' || avatar === 'Nina') ? 'Mujer' : 'Hombre';
+            
+            // Buscar en las carpetas de categorías
+            const categories = ['saludos', 'cortesia', 'pronombres', 'dias_semana', 'tiempo', 'preguntas', 'expresiones'];
+            
+            for (const category of categories) {
+                const path = `output/glb/${genero}/${category}/${sign}.glb`;
+                
+                try {
+                    const gltf = await new Promise((resolve, reject) => {
+                        loader.load(path, resolve, undefined, reject);
+                    });
+                    
+                    // Remover modelo anterior
+                    if (currentModel) {
+                        scene.remove(currentModel);
+                    }
+                    
+                    currentModel = gltf.scene;
+                    scene.add(currentModel);
+                    
+                    // Configurar animación
+                    if (gltf.animations && gltf.animations.length > 0) {
+                        mixer = new THREE.AnimationMixer(currentModel);
+                        const action = mixer.clipAction(gltf.animations[0]);
+                        action.setLoop(THREE.LoopOnce);
+                        action.clampWhenFinished = true;
+                        action.play();
+                    }
+                    
+                    console.log(`✅ Animación cargada: ${path}`);
+                    return;
+                } catch (error) {
+                    // Continuar buscando en otras categorías
+                    continue;
+                }
+            }
+            
+            console.warn(`⚠️ No se encontró animación para: ${sign}`);
+        }
+
+        // ==================== UI UPDATES ====================
+        function updateStats() {
+            document.getElementById('lives-display').textContent = '❤️'.repeat(gameState.lives);
+            document.getElementById('score-display').textContent = gameState.score;
+            document.getElementById('correct-display').textContent = gameState.correct;
+            document.getElementById('wrong-display').textContent = gameState.wrong;
+        }
+
+        function showFeedback(message, isCorrect) {
+            const feedback = document.getElementById('feedback');
+            feedback.textContent = message;
+            feedback.className = isCorrect ? 'feedback-correct' : 'feedback-wrong';
+            feedback.style.display = 'block';
+            
+            setTimeout(() => {
+                feedback.style.display = 'none';
+            }, FEEDBACK_DURATION);
+        }
+
+        function nextSign() {
+            // Seleccionar seña aleatoria
+            const randomIndex = Math.floor(Math.random() * AVAILABLE_SIGNS.length);
+            gameState.currentSign = AVAILABLE_SIGNS[randomIndex];
+            gameState.canDetect = true;
+            
+            document.getElementById('target-word').textContent = gameState.currentSign.toUpperCase();
+        }
+
+        // ==================== CONTROL DEL JUEGO ====================
+        async function startGame() {
+            document.getElementById('start-screen').style.display = 'none';
+            document.getElementById('loading').style.display = 'block';
+            
+            // Inicializar sistemas
+            initThreeJS();
+            await initMediaPipe();
+            
+            // Mostrar UI del juego
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('info-panel').style.display = 'block';
+            document.getElementById('target-sign').style.display = 'block';
+            document.getElementById('video-container').style.display = 'block';
+            document.getElementById('detection-status').style.display = 'block';
+            
+            // Iniciar juego
+            gameState.isPlaying = true;
+            gameState.lives = INITIAL_LIVES;
+            gameState.score = 0;
+            gameState.correct = 0;
+            gameState.wrong = 0;
+            
+            updateStats();
+            nextSign();
+        }
+
+        function endGame() {
+            gameState.isPlaying = false;
+            
+            document.getElementById('final-score').textContent = gameState.score;
+            document.getElementById('final-correct').textContent = gameState.correct;
+            document.getElementById('game-over').style.display = 'block';
+        }
+
+        function restartGame() {
+            document.getElementById('game-over').style.display = 'none';
+            
+            // Reset estado
+            gameState.lives = INITIAL_LIVES;
+            gameState.score = 0;
+            gameState.correct = 0;
+            gameState.wrong = 0;
+            gameState.isPlaying = true;
+            
+            updateStats();
+            nextSign();
+        }
+    </script>
+</body>
+</html>

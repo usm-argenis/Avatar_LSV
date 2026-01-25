@@ -1,0 +1,1546 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visualizador LSV v3.2 - Multi Avatar</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            overflow: hidden;
+        }
+
+        #container {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+        }
+
+        /* Panel de control principal */
+        #main-panel {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.9);
+            padding: 15px;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(15px);
+            z-index: 100;
+            width: 80px;
+            border: 2px solid rgba(79, 195, 247, 0.3);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        #main-panel h2 {
+            display: none;
+        }
+
+        .control-group {
+            display: none;
+        }
+
+        .control-label {
+            display: none;
+        }
+
+        .selector-container {
+            position: relative;
+        }
+
+        select {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: 2px solid #4fc3f7;
+            padding: 12px 15px;
+            border-radius: 10px;
+            font-size: 15px;
+            cursor: pointer;
+            outline: none;
+            transition: all 0.3s ease;
+            appearance: none;
+            -webkit-appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%234fc3f7' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 15px center;
+            padding-right: 40px;
+        }
+
+        select:hover {
+            border-color: #81d4fa;
+            background-color: rgba(255, 255, 255, 0.15);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(79, 195, 247, 0.3);
+        }
+
+        select:focus {
+            border-color: #4fc3f7;
+            box-shadow: 0 0 0 3px rgba(79, 195, 247, 0.2);
+        }
+
+        select option {
+            background: #1a1a2e;
+            color: white;
+            padding: 10px;
+        }
+
+        #sign-select {
+            border-color: #f093fb;
+        }
+
+        #sign-select:hover {
+            border-color: #f5576c;
+        }
+
+        .info-display {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .info-row:last-child {
+            border-bottom: none;
+        }
+
+        .info-row-label {
+            color: #aaa;
+            font-size: 13px;
+        }
+
+        .info-row-value {
+            color: #4fc3f7;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .status-playing { background: #4caf50; box-shadow: 0 0 10px #4caf50; animation: pulse 1s infinite; }
+        .status-paused { background: #ff9800; }
+        .status-stopped { background: #f44336; }
+        .status-loading { background: #2196f3; animation: pulse 0.5s infinite; }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* Controles de reproducción - Verticales a la derecha */
+        #playback-controls {
+            position: absolute;
+            top: 120px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.9);
+            padding: 15px;
+            border-radius: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            align-items: center;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(15px);
+            z-index: 100;
+            border: 2px solid rgba(79, 195, 247, 0.2);
+            width: 80px;
+        }
+
+        .playback-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            color: white;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 20px;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .playback-btn:hover {
+            transform: scale(1.15);
+            box-shadow: 0 6px 25px rgba(102, 126, 234, 0.6);
+        }
+
+        .playback-btn:active {
+            transform: scale(0.95);
+        }
+
+        #play-pause {
+            width: 60px;
+            height: 60px;
+            font-size: 24px;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            box-shadow: 0 4px 20px rgba(245, 87, 108, 0.5);
+        }
+
+        .speed-control {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+            padding: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            width: 100%;
+        }
+
+        .speed-control span:first-child {
+            font-size: 16px;
+        }
+
+        #speed-value {
+            font-size: 11px;
+            color: #4fc3f7;
+            font-weight: bold;
+        }
+
+        #speed-slider {
+            width: 100%;
+            -webkit-appearance: slider-vertical;
+            writing-mode: bt-lr;
+            height: 80px;
+        }
+
+        .speed-control {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: white;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 10px 20px;
+            border-radius: 25px;
+        }
+
+        #speed-slider {
+            width: 120px;
+            height: 5px;
+            -webkit-appearance: none;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 3px;
+            outline: none;
+        }
+
+        #speed-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #4fc3f7;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(79, 195, 247, 0.5);
+        }
+
+        #speed-value {
+            min-width: 50px;
+            text-align: center;
+            font-weight: bold;
+            color: #4fc3f7;
+        }
+
+        /* Timeline */
+        #timeline-panel {
+            position: absolute;
+            bottom: 130px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 85%;
+            max-width: 900px;
+            background: rgba(0, 0, 0, 0.9);
+            padding: 20px 25px;
+            border-radius: 20px;
+            box-shadow: 0 8px 35px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(15px);
+            z-index: 100;
+            border: 2px solid rgba(79, 195, 247, 0.2);
+        }
+
+        #timeline {
+            width: 100%;
+            height: 8px;
+            -webkit-appearance: none;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 4px;
+            outline: none;
+            cursor: pointer;
+        }
+
+        #timeline::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            cursor: pointer;
+            box-shadow: 0 3px 12px rgba(245, 87, 108, 0.6);
+        }
+
+        .timeline-info {
+            display: flex;
+            justify-content: space-between;
+            color: white;
+            font-size: 13px;
+            margin-top: 12px;
+            font-weight: 500;
+        }
+
+        /* Loading overlay */
+        #loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            color: white;
+            z-index: 200;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 40px 60px;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+        }
+
+        .spinner {
+            border: 5px solid rgba(255, 255, 255, 0.2);
+            border-top: 5px solid #4fc3f7;
+            border-radius: 50%;
+            width: 70px;
+            height: 70px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 25px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            font-size: 20px;
+            font-weight: 600;
+            color: #4fc3f7;
+        }
+
+        .loading-subtext {
+            font-size: 14px;
+            color: #aaa;
+            margin-top: 10px;
+        }
+
+        /* Error modal */
+        .error-modal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+            color: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 10px 50px rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            max-width: 600px;
+            text-align: center;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translate(-50%, -60%);
+            }
+            to {
+                opacity: 1;
+                transform: translate(-50%, -50%);
+            }
+        }
+
+        .error-modal h3 {
+            margin-bottom: 20px;
+            font-size: 28px;
+        }
+
+        .error-modal p {
+            margin-bottom: 15px;
+            font-size: 16px;
+            line-height: 1.6;
+        }
+
+        .error-filename {
+            font-weight: bold;
+            color: #ffeb3b;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 10px;
+            border-radius: 8px;
+            margin: 15px 0;
+            font-family: monospace;
+        }
+
+        .error-causes {
+            text-align: left;
+            margin: 20px auto;
+            max-width: 500px;
+        }
+
+        .error-causes li {
+            margin: 10px 0;
+            padding-left: 10px;
+        }
+
+        .error-btn {
+            background: white;
+            color: #dc3545;
+            border: none;
+            padding: 12px 35px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 16px;
+            margin-top: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .error-btn:hover {
+            background: #f8f9fa;
+            transform: scale(1.05);
+        }
+
+        input[type="text"] {
+            transition: all 0.3s ease;
+        }
+
+        input[type="text"]:focus {
+            border-color: #81d4fa;
+            box-shadow: 0 0 0 3px rgba(79, 195, 247, 0.2);
+            background-color: rgba(255, 255, 255, 0.15);
+        }
+
+        input[type="text"]::placeholder {
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        #load-fbx-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(245, 87, 108, 0.5);
+        }
+
+        #load-fbx-btn:active {
+            transform: translateY(0);
+        }
+
+        /* Info badge */
+        .info-badge {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.85);
+            padding: 15px 20px;
+            border-radius: 15px;
+            color: white;
+            font-size: 18px;
+            font-weight: bold;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+            z-index: 100;
+            border: 2px solid rgba(79, 195, 247, 0.3);
+        }
+
+        .info-badge-icon {
+            color: #4fc3f7;
+            margin-right: 10px;
+        }
+
+        /* Campo de búsqueda de señas en la parte inferior */
+        #sign-search-container {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.9);
+            padding: 20px 40px;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(15px);
+            z-index: 100;
+            border: 2px solid rgba(79, 195, 247, 0.3);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        #sign-search-label {
+            color: #4fc3f7;
+            font-size: 14px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .sign-search-input-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        #sign-search-input {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: 2px solid #4fc3f7;
+            padding: 12px 20px;
+            border-radius: 15px;
+            font-size: 18px;
+            outline: none;
+            transition: all 0.3s ease;
+            text-align: center;
+            width: 200px;
+            font-weight: bold;
+        }
+
+        #sign-search-input:focus {
+            border-color: #81d4fa;
+            box-shadow: 0 0 0 3px rgba(79, 195, 247, 0.2);
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        #sign-search-input::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        #sign-search-btn {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            border: none;
+            color: white;
+            padding: 12px 30px;
+            border-radius: 15px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(245, 87, 108, 0.4);
+        }
+
+        #sign-search-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 25px rgba(245, 87, 108, 0.6);
+        }
+
+        #sign-search-btn:active {
+            transform: translateY(0);
+        }
+
+        /* Ocultar elementos no necesarios */
+        .info-display {
+            display: none;
+        }
+
+        .selector-container {
+            display: none;
+        }
+
+        .info-badge {
+            display: none;
+        }
+
+        /* ===================================== */
+        /* RESPONSIVE - MOBILE FIRST */
+        /* ===================================== */
+        
+        @media (max-width: 768px) {
+            /* Panel principal más compacto */
+            #main-panel {
+                top: 10px;
+                right: 10px;
+                left: 10px;
+                padding: 15px;
+                min-width: auto;
+                max-width: calc(100vw - 20px);
+            }
+
+            #main-panel h2 {
+                font-size: 16px;
+                margin-bottom: 12px;
+                padding-bottom: 8px;
+            }
+
+            .control-group {
+                margin-bottom: 12px;
+            }
+
+            .control-label {
+                font-size: 10px;
+                margin-bottom: 5px;
+            }
+
+            select {
+                padding: 8px 10px;
+                font-size: 13px;
+                padding-right: 30px;
+                background-position: right 10px center;
+            }
+
+            /* Controles de reproducción más pequeños */
+            #playback-controls {
+                bottom: 15px;
+                padding: 12px 20px;
+                gap: 12px;
+                border-radius: 40px;
+            }
+
+            .playback-btn {
+                width: 40px;
+                height: 40px;
+                font-size: 16px;
+            }
+
+            .playback-btn:hover {
+                transform: scale(1.05);
+            }
+
+            /* Info display compacto */
+            .info-display {
+                padding: 10px;
+                margin-top: 12px;
+            }
+
+            .info-row {
+                padding: 5px 0;
+            }
+
+            .info-row-label {
+                font-size: 11px;
+            }
+
+            .info-row-value {
+                font-size: 12px;
+            }
+
+            .status-indicator {
+                width: 8px;
+                height: 8px;
+                margin-right: 5px;
+            }
+
+            /* Badge de nombre más pequeño */
+            #avatar-name-badge {
+                top: 10px;
+                left: 10px;
+                padding: 10px 15px;
+                font-size: 14px;
+                border-radius: 10px;
+            }
+
+            .info-badge-icon {
+                margin-right: 6px;
+            }
+
+            /* Ocultar badge en pantallas muy pequeñas */
+            @media (max-width: 480px) {
+                #avatar-name-badge {
+                    display: none;
+                }
+
+                #main-panel {
+                    top: 5px;
+                    right: 5px;
+                    left: 5px;
+                    padding: 10px;
+                }
+
+                #main-panel h2 {
+                    font-size: 14px;
+                }
+
+                select {
+                    padding: 6px 8px;
+                    font-size: 12px;
+                }
+
+                #playback-controls {
+                    bottom: 10px;
+                    padding: 10px 15px;
+                    gap: 10px;
+                }
+
+                .playback-btn {
+                    width: 35px;
+                    height: 35px;
+                    font-size: 14px;
+                }
+            }
+        }
+
+        /* Ajustes para tablets en horizontal */
+        @media (min-width: 769px) and (max-width: 1024px) {
+            #main-panel {
+                top: 15px;
+                right: 15px;
+                padding: 20px;
+                min-width: 280px;
+            }
+
+            #main-panel h2 {
+                font-size: 18px;
+            }
+
+            #playback-controls {
+                bottom: 20px;
+                padding: 15px 25px;
+            }
+
+            .playback-btn {
+                width: 45px;
+                height: 45px;
+                font-size: 18px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="container"></div>
+
+    <!-- Loading overlay -->
+    <div id="loading" style="display: none;">
+        <div class="spinner"></div>
+        <div class="loading-text">Cargando Modelo 3D...</div>
+        <div class="loading-subtext" id="loading-subtext">Preparando animación</div>
+    </div>
+
+    <!-- Info badge -->
+    <div class="info-badge">
+        <span class="info-badge-icon">🤟</span>
+        <span id="current-animation">Visualizador LSV</span>
+    </div>
+
+    <!-- Panel de control principal -->
+    <div id="main-panel">
+        <h2>⚙️ Control de Animación</h2>
+        
+        <div class="control-group">
+            <label class="control-label">👤 Avatar</label>
+            <div class="selector-container">
+                <select id="avatar-select">
+                    <option value="Remy">Remy</option>
+                    <option value="Leonard">Leonard</option>
+                    <option value="JH">JH</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="control-group">
+            <label class="control-label">🤟 Seña</label>
+            <div class="selector-container">
+                <select id="sign-select">
+                    <option value="resultado_b">b</option>
+                    <option value="resultado_c">c</option>
+                    <option value="resultado_d">d</option>
+                    <option value="resultado_e">e</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="control-group">
+            <label class="control-label">🔍 Búsqueda Directa FBX</label>
+            <div style="display: flex; gap: 8px;">
+                <input type="text" id="fbx-search" placeholder="Ej: avatar_nombre.fbx" 
+                    style="flex: 1; background: rgba(255, 255, 255, 0.1); color: white; border: 2px solid #4fc3f7; padding: 12px 15px; border-radius: 10px; font-size: 14px; outline: none;">
+                <button id="load-fbx-btn" title="Cargar FBX" 
+                    style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); border: none; color: white; padding: 12px 20px; border-radius: 10px; cursor: pointer; font-weight: bold; font-size: 14px;">
+                    📂 Cargar
+                </button>
+            </div>
+            <div style="font-size: 11px; color: #888; margin-top: 5px;">
+                💡 Escribe el nombre completo del archivo en output/
+            </div>
+        </div>
+
+        <div class="info-display">
+            <div class="info-row">
+                <span class="info-row-label">Estado:</span>
+                <span class="info-row-value">
+                    <span class="status-indicator status-stopped" id="status-dot"></span>
+                    <span id="status-text">Detenido</span>
+                </span>
+            </div>
+            <div class="info-row">
+                <span class="info-row-label">Frames:</span>
+                <span class="info-row-value">
+                    <span id="current-frame">0</span> / <span id="total-frames">0</span>
+                </span>
+            </div>
+            <div class="info-row">
+                <span class="info-row-label">Duración:</span>
+                <span class="info-row-value" id="duration">0.0s</span>
+            </div>
+            <div class="info-row">
+                <span class="info-row-label">Huesos:</span>
+                <span class="info-row-value" id="bone-count">0</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Timeline -->
+    <div id="timeline-panel">
+        <input type="range" id="timeline" min="0" max="100" value="0" step="0.01">
+        <div class="timeline-info">
+            <span id="current-time">0:00.0</span>
+            <span id="total-time">0:00.0</span>
+        </div>
+    </div>
+
+    <!-- Controles de reproducción -->
+    <div id="playback-controls">
+        <button class="playback-btn" id="play-pause" title="Play/Pause">▶️</button>
+        <button class="playback-btn" id="restart" title="Reiniciar">⏮</button>
+        <button class="playback-btn" id="stop" title="Detener">⏹</button>
+        <button class="playback-btn" id="loop" title="Loop" style="opacity: 1;">🔄</button>
+        <div class="speed-control">
+            <span>⚡</span>
+            <input type="range" id="speed-slider" min="0.25" max="2" value="1" step="0.25">
+            <span id="speed-value">1.0x</span>
+        </div>
+    </div>
+
+    <!-- Campo de búsqueda de señas -->
+    <div id="sign-search-container">
+        <label id="sign-search-label">🤟 Ingresa la seña</label>
+        <div class="sign-search-input-group">
+            <input type="text" id="sign-search-input" placeholder="Ej: b, c, hola..." maxlength="20">
+            <button id="sign-search-btn">🔍 Buscar</button>
+        </div>
+    </div>
+
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+            "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+        }
+    }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+        import { FBXLoader } from 'three/addons/loaders/FBXLoader.js';
+        import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+        import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
+
+        // Variables globales
+        let scene, camera, renderer, controls;
+        let mixer, currentAction, clock;
+        let currentModel = null;
+        let currentAvatar = null; // Guardar qué avatar está cargado actualmente
+        let isPlaying = false;
+        let isLooping = true;
+        let animationSpeed = 1.0;
+
+        // Referencias a elementos del DOM
+        const elements = {
+            loading: document.getElementById('loading'),
+            loadingSubtext: document.getElementById('loading-subtext'),
+            statusDot: document.getElementById('status-dot'),
+            statusText: document.getElementById('status-text'),
+            currentAnimation: document.getElementById('current-animation'),
+            currentFrame: document.getElementById('current-frame'),
+            totalFrames: document.getElementById('total-frames'),
+            duration: document.getElementById('duration'),
+            boneCount: document.getElementById('bone-count'),
+            currentTime: document.getElementById('current-time'),
+            totalTime: document.getElementById('total-time'),
+            timeline: document.getElementById('timeline'),
+            playPause: document.getElementById('play-pause'),
+            stop: document.getElementById('stop'),
+            restart: document.getElementById('restart'),
+            loop: document.getElementById('loop'),
+            speedSlider: document.getElementById('speed-slider'),
+            speedValue: document.getElementById('speed-value'),
+            signSearchInput: document.getElementById('sign-search-input'),
+            signSearchBtn: document.getElementById('sign-search-btn'),
+            // Mantener compatibilidad con código existente
+            avatarSelect: { value: 'Remy' },
+            signSelect: { value: 'resultado_b' },
+            fbxSearch: document.getElementById('fbx-search') || { value: '' },
+            loadFbxBtn: document.getElementById('load-fbx-btn') || { addEventListener: () => {} }
+        };
+
+        // Construir ruta del GLB basado en la entrada del usuario
+        function buildFBXPath() {
+            const signInput = elements.signSearchInput.value.trim().toLowerCase();
+            
+            // Si no hay entrada, usar valor por defecto 'b'
+            const sign = signInput || 'b';
+            
+            // Siempre usar Remy por defecto
+            return `output/glb/Remy_resultado_${sign}.glb`;
+        }
+
+        // Construir ruta desde búsqueda directa
+        function buildFBXPathFromSearch() {
+            const searchValue = elements.fbxSearch.value.trim();
+            if (!searchValue) {
+                alert('⚠️ Por favor ingresa un nombre de archivo');
+                return null;
+            }
+            
+            // Asegurar que termine en .glb o .fbx
+            let filename = searchValue;
+            if (!filename.toLowerCase().endsWith('.glb') && !filename.toLowerCase().endsWith('.fbx')) {
+                filename += '.glb';
+            }
+            
+            // Si es GLB, buscar en la carpeta glb
+            if (filename.toLowerCase().endsWith('.glb')) {
+                return `output/glb/${filename}`;
+            }
+            
+            return `output/${filename}`;
+        }
+
+        // Inicializar escena
+        function init() {
+            // Escena
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x2B3E50); // Azul medio oscuro
+
+            // Cámara
+            camera = new THREE.PerspectiveCamera(
+                50,
+                window.innerWidth / window.innerHeight,
+                0.1,
+                1000
+            );
+            camera.position.set(0, 1.5, 4);
+
+            // Renderer
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            renderer.outputEncoding = THREE.sRGBEncoding;
+            renderer.toneMapping = THREE.ACESFilmicToneMapping;
+            renderer.toneMappingExposure = 1.2;
+            document.getElementById('container').appendChild(renderer.domElement);
+
+            // Controles
+            controls = new OrbitControls(camera, renderer.domElement);
+            controls.target.set(0, 1, 0);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.05;
+            controls.minDistance = 2;
+            controls.maxDistance = 15;
+            controls.maxPolarAngle = Math.PI / 1.5;
+
+            // Iluminación mejorada
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+            scene.add(ambientLight);
+
+            const mainLight = new THREE.DirectionalLight(0xffffff, 1.5);
+            mainLight.position.set(3, 6, 4);
+            mainLight.castShadow = true;
+            mainLight.shadow.mapSize.width = 2048;
+            mainLight.shadow.mapSize.height = 2048;
+            mainLight.shadow.camera.near = 0.5;
+            mainLight.shadow.camera.far = 50;
+            scene.add(mainLight);
+
+            const fillLight = new THREE.DirectionalLight(0x6699ff, 0.4);
+            fillLight.position.set(-3, 3, -4);
+            scene.add(fillLight);
+
+            const backLight = new THREE.DirectionalLight(0xffaa66, 0.6);
+            backLight.position.set(0, 2, -5);
+            scene.add(backLight);
+
+            // Grid y ejes
+            const gridHelper = new THREE.GridHelper(10, 20, 0x34495E, 0x5D6D7E); // Azul grisáceo
+            scene.add(gridHelper);
+
+            const axesHelper = new THREE.AxesHelper(3);
+            scene.add(axesHelper);
+
+            // Clock
+            clock = new THREE.Clock();
+
+            // Event listeners
+            window.addEventListener('resize', onWindowResize);
+            elements.playPause.addEventListener('click', togglePlayPause);
+            elements.stop.addEventListener('click', stopAnimation);
+            elements.restart.addEventListener('click', restartAnimation);
+            elements.loop.addEventListener('click', toggleLoop);
+            elements.timeline.addEventListener('input', onTimelineChange);
+            elements.speedSlider.addEventListener('input', onSpeedChange);
+            
+            // Evento para el botón de búsqueda
+            elements.signSearchBtn.addEventListener('click', () => {
+                loadCurrentSelection();
+            });
+            
+            // Evento para buscar al presionar Enter
+            elements.signSearchInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    loadCurrentSelection();
+                }
+            });
+
+            // Leer parámetros de URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const wordParam = urlParams.get('word');
+            const autoloadParam = urlParams.get('autoload');
+            
+            // Si viene una palabra por URL, cargarla automáticamente
+            if (wordParam) {
+                elements.signSearchInput.value = wordParam;
+                console.log('📱 Palabra recibida desde app móvil:', wordParam);
+                if (autoloadParam === 'true') {
+                    // Cargar automáticamente después de 500ms
+                    setTimeout(() => {
+                        loadCurrentSelection();
+                    }, 500);
+                }
+            } else {
+                // Cargar animación inicial (b por defecto)
+                loadCurrentSelection();
+            }
+
+            // Iniciar animación
+            animate();
+        }
+
+        function loadCurrentSelection() {
+            const path = buildFBXPath();
+            const sign = elements.signSearchInput.value.trim() || 'b';
+            elements.currentAnimation.textContent = `Remy - ${sign}`;
+            console.log('🔄 Cargando:', path);
+            loadFBX(path);
+        }
+
+        function loadFromSearch() {
+            const path = buildFBXPathFromSearch();
+            if (!path) return;
+            
+            const filename = path.split('/').pop();
+            elements.currentAnimation.textContent = `🔍 ${filename}`;
+            loadFBX(path);
+        }
+
+        function loadFBX(path) {
+            // Detectar si es GLB o FBX
+            const isGLB = path.toLowerCase().endsWith('.glb');
+            console.log(`🔄 Cargando ${isGLB ? 'GLB' : 'FBX'}:`, path);
+            
+            // Mostrar loading
+            elements.loading.style.display = 'block';
+            elements.loadingSubtext.textContent = 'Cargando ' + path.split('/').pop();
+            updateStatus('loading', 'Cargando...');
+
+            // Limpiar TODOS los modelos anteriores (no solo currentModel)
+            const objectsToRemove = [];
+            scene.traverse((child) => {
+                if (child.type === 'Group' || child.type === 'Object3D' || child.type === 'Scene') {
+                    // Buscar si este grupo contiene meshes
+                    let hasMesh = false;
+                    child.traverse((subchild) => {
+                        if (subchild.isMesh || subchild.isSkinnedMesh) {
+                            hasMesh = true;
+                        }
+                    });
+                    // Si es un grupo con meshes y no es la escena principal, marcarlo para eliminar
+                    if (hasMesh && child !== scene) {
+                        objectsToRemove.push(child);
+                    }
+                }
+            });
+
+            // Eliminar todos los objetos marcados
+            objectsToRemove.forEach((obj) => {
+                scene.remove(obj);
+                obj.traverse((child) => {
+                    if (child.geometry) child.geometry.dispose();
+                    if (child.material) {
+                        if (Array.isArray(child.material)) {
+                            child.material.forEach(mat => mat.dispose());
+                        } else {
+                            child.material.dispose();
+                        }
+                    }
+                });
+            });
+            
+            console.log(`🗑️ Eliminados ${objectsToRemove.length} objetos de la escena`);
+            currentModel = null;
+
+            if (mixer) {
+                mixer.stopAllAction();
+                mixer = null;
+            }
+
+            currentAction = null;
+            isPlaying = false;
+            elements.playPause.textContent = '▶️';
+
+            // Usar LoadingManager para detectar texturas faltantes y aplicar fallback
+            const missingTextures = new Set();
+            const manager = new THREE.LoadingManager();
+            
+            manager.onError = function (url) {
+                console.warn('⚠️ Texture failed to load (404):', url);
+                missingTextures.add(url);
+            };
+
+            manager.onLoad = function () {
+                console.log('✅ LoadingManager: All resources loaded');
+            };
+
+            if (isGLB) {
+                // Cargar GLB con soporte para Draco
+                const loader = new GLTFLoader(manager);
+                
+                // Configurar DRACOLoader para descomprimir geometría
+                const dracoLoader = new DRACOLoader();
+                dracoLoader.setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.5.6/');
+                dracoLoader.setDecoderConfig({ type: 'js' });
+                loader.setDRACOLoader(dracoLoader);
+                
+                loader.load(
+                    path,
+                    (gltf) => {
+                        // Dar tiempo para que las texturas intenten cargar
+                        setTimeout(() => {
+                            console.log('🎨 Texturas faltantes detectadas:', missingTextures.size);
+                            onFBXLoaded(gltf.scene, path, missingTextures, gltf.animations);
+                        }, 100);
+                    },
+                    (xhr) => {
+                        const percent = (xhr.loaded / xhr.total * 100).toFixed(1);
+                        elements.loadingSubtext.textContent = `Cargando... ${percent}%`;
+                        console.log(`📊 Progreso: ${percent}%`);
+                    },
+                    (error) => onFBXError(error, path)
+                );
+            } else {
+                // Cargar FBX
+                const loader = new FBXLoader(manager);
+                loader.load(
+                    path,
+                    (fbx) => {
+                        // Dar tiempo para que las texturas intenten cargar
+                        setTimeout(() => {
+                            console.log('🎨 Texturas faltantes detectadas:', missingTextures.size);
+                            onFBXLoaded(fbx, path, missingTextures);
+                        }, 100);
+                    },
+                    (xhr) => {
+                        const percent = (xhr.loaded / xhr.total * 100).toFixed(1);
+                        elements.loadingSubtext.textContent = `Cargando... ${percent}%`;
+                        console.log(`📊 Progreso: ${percent}%`);
+                    },
+                    (error) => onFBXError(error, path)
+                );
+            }
+        }
+
+        function onFBXLoaded(fbx, path, missingTextures, animations = null) {
+            console.log('✅ Modelo cargado exitosamente');
+            console.log('🔄 Visualizador v3.2 - Avatar detectado desde path del archivo');
+            elements.loading.style.display = 'none';
+            currentModel = fbx;
+
+            // Detectar avatar desde el path
+            const isLeonard = path.includes('Leonard');
+            const isJH = path.includes('JH');
+            const hasTextures = path.includes('con_materiales');
+            const isGLB = path.toLowerCase().endsWith('.glb');
+            const avatarName = isLeonard ? 'Leonard' : (isJH ? (hasTextures ? 'JH_con_materiales' : 'JH') : 'Remy');
+            console.log('👤 Avatar detectado:', avatarName);
+            console.log('📁 Path del archivo:', path);
+            console.log('🎨 Tiene texturas embebidas:', hasTextures);
+            console.log('📦 Formato:', isGLB ? 'GLB' : 'FBX');
+
+            // Los archivos GLB vienen en escala 1.0, los FBX necesitan 0.01
+            let scale = isGLB ? 1.0 : 0.01;
+            
+            fbx.scale.set(scale, scale, scale);
+            console.log('🔍 Escala aplicada:', scale);
+
+            // Centrar modelo
+            fbx.updateMatrixWorld(true);
+            const box = new THREE.Box3().setFromObject(fbx);
+            const center = box.getCenter(new THREE.Vector3());
+            const size = box.getSize(new THREE.Vector3());
+
+            fbx.position.x = -center.x;
+            fbx.position.z = -center.z;
+            fbx.position.y = -box.min.y;
+
+            console.log('📏 Tamaño:', size);
+            console.log('📍 Centro:', center);
+
+            // Configurar materiales
+            let meshCount = 0;
+            fbx.traverse((child) => {
+                if (child.isMesh) {
+                    meshCount++;
+                    child.castShadow = true;
+                    child.receiveShadow = true;
+
+                    // Material mejorado
+                    if (child.material) {
+                        const name = child.name.toLowerCase();
+
+                        // SIEMPRE imprimir nombre del mesh para debugging
+                        console.log('🔍 MESH ENCONTRADO:', child.name, '| Avatar:', avatarName);
+
+                        // Para Leonard y JH (sin texturas): aplicar colores procedurales
+                        // JH_con_materiales tiene texturas, no aplicar colores
+                        if ((avatarName === 'Leonard' || avatarName === 'JH') && avatarName !== 'JH_con_materiales') {
+                            // Quitar referencias a texturas faltantes
+                            if (child.material.map) {
+                                console.log('🗑️ Removiendo textura de:', child.name);
+                                child.material.map = null;
+                            }
+                            
+                            console.log('🔍 Procesando mesh:', child.name);
+                            
+                            // Para JH: un solo mesh con múltiples materiales
+                            if (avatarName === 'JH') {
+                                // JH puede tener array de materiales o material único
+                                const materials = Array.isArray(child.material) ? child.material : [child.material];
+                                
+                                materials.forEach((mat, idx) => {
+                                    if (!mat) return;
+                                    
+                                    // Remover texturas faltantes
+                                    if (mat.map) mat.map = null;
+                                    
+                                    const matName = mat.name ? mat.name.toLowerCase() : '';
+                                    console.log(`🎨 Material [${idx}]:`, mat.name);
+                                    
+                                    // Asignar colores según nombre del material
+                                    if (matName.includes('eyelash')) {
+                                        mat.color.set(0x0D0D0D); // pestañas negras
+                                        console.log('  👁️ Color: Pestañas negras');
+                                    } else if (matName.includes('body1')) {
+                                        mat.color.set(0x4A5F8C); // ropa azul
+                                        console.log('  👕 Color: Ropa azul');
+                                    } else if (matName.includes('body')) {
+                                        mat.color.set(0xF2C2A5); // piel
+                                        console.log('  👤 Color: Piel');
+                                    } else {
+                                        mat.color.set(0xFF00FF); // magenta para debug
+                                        console.warn('  ⚠️ Material NO reconocido');
+                                    }
+                                    
+                                    mat.roughness = 0.3;
+                                    mat.metalness = 0.0;
+                                    mat.needsUpdate = true;
+                                });
+                            } else {
+                                // Para Leonard: aplicar colores por nombre de mesh
+                                if (name.includes('body')) {
+                                    child.material.color.set(0xF2C2A5); // piel
+                                    console.log('👤 Piel aplicada a BODY:', child.name);
+                                } else if (name.includes('sweater')) {
+                                    child.material.color.set(0x263A66); // suéter azul
+                                    console.log('👕 Suéter aplicado:', child.name);
+                                } else if (name.includes('collar')) {
+                                    child.material.color.set(0x263A66); // collar del suéter
+                                    console.log('👔 Collar aplicado:', child.name);
+                                } else if (name.includes('pants')) {
+                                    child.material.color.set(0x4D4D59); // pantalones grises
+                                    console.log('👖 Pantalones aplicados:', child.name);
+                                } else if (name.includes('hair')) {
+                                    child.material.color.set(0x402619); // cabello castaño
+                                    console.log('💇 Cabello aplicado:', child.name);
+                                } else if (name.includes('eyelash')) {
+                                    child.material.color.set(0x0D0D0D); // pestañas negras
+                                    console.log('👁️ Pestañas aplicadas:', child.name);
+                                } else if (name.includes('shoes')) {
+                                    child.material.color.set(0x1A1A1A); // zapatos negros
+                                    console.log('👞 Zapatos aplicados:', child.name);
+                                } else {
+                                    // Si no coincide, aplicar color llamativo para debugging
+                                    child.material.color.set(0xFF00FF); // MAGENTA para detectar
+                                    console.warn('⚠️ Mesh NO reconocido (MAGENTA):', child.name);
+                                }
+                            }
+                        } else {
+                            // Para Remy: NO tocar texturas, solo aclarar ropa muy oscura si no hay textura
+                            if (!child.material.map) {
+                                const isBodyPart = name.includes('body') ||
+                                                   name.includes('skin') ||
+                                                   name.includes('face') ||
+                                                   name.includes('head') ||
+                                                   name.includes('arm') ||
+                                                   name.includes('hand') ||
+                                                   name.includes('neck');
+                                if (!isBodyPart && child.material.color) {
+                                    const brightness = (child.material.color.r + child.material.color.g + child.material.color.b) / 3;
+                                    if (brightness < 0.25) {
+                                        child.material.color.multiplyScalar(1.5);
+                                        console.log('💡 Ropa oscura aclarada:', child.name);
+                                    }
+                                }
+                            }
+                        }
+
+                        // Ajustar propiedades del material según avatar
+                        if (avatarName === 'Leonard' || avatarName === 'JH') {
+                            // Sin texturas: necesita menos roughness para reflejar más luz
+                            if (!Array.isArray(child.material)) {
+                                child.material.roughness = 0.3;
+                                child.material.metalness = 0.0;
+                            }
+                            // Si es array, ya se ajustó arriba
+                            
+                            // NO multiplicar colores - mantener los colores originales
+                            // La iluminación extra viene de la exposición (3.5)
+                        } else {
+                            child.material.roughness = 0.6;
+                            child.material.metalness = 0.1;
+                        }
+                        child.material.needsUpdate = true;
+                    }
+                }
+            });
+
+            scene.add(fbx);
+
+            // Ajustar exposición para avatares sin texturas (necesitan MUCHA más luz)
+            // JH_con_materiales tiene texturas, no necesita exposición alta
+            if ((avatarName === 'Leonard' || avatarName === 'JH') && avatarName !== 'JH_con_materiales') {
+                renderer.toneMappingExposure = 3.5;
+                console.log('💡 Exposición aumentada para ' + avatarName + ':', 3.5);
+            } else {
+                renderer.toneMappingExposure = 1.2;
+                console.log('💡 Exposición normal:', 1.2);
+            }
+
+            // Contar huesos
+            let boneCount = 0;
+            fbx.traverse((child) => {
+                if (child.isBone) boneCount++;
+            });
+            elements.boneCount.textContent = boneCount;
+            console.log('🦴 Huesos:', boneCount);
+            console.log('🎨 Meshes:', meshCount);
+
+            // Configurar animación
+            // Si animations viene como parámetro (GLB), usarlo; sino usar fbx.animations (FBX)
+            const modelAnimations = animations || fbx.animations;
+            console.log('🎬 Animaciones encontradas:', modelAnimations.length);
+
+            if (modelAnimations.length > 0) {
+                mixer = new THREE.AnimationMixer(fbx);
+                const clip = modelAnimations[0];
+                currentAction = mixer.clipAction(clip);
+                currentAction.timeScale = animationSpeed;
+                currentAction.setLoop(isLooping ? THREE.LoopRepeat : THREE.LoopOnce);
+                currentAction.clampWhenFinished = true;
+
+                const fps = 30;
+                const totalFrames = Math.round(clip.duration * fps);
+                elements.totalFrames.textContent = totalFrames;
+
+                const minutes = Math.floor(clip.duration / 60);
+                const seconds = (clip.duration % 60).toFixed(1);
+                elements.duration.textContent = `${minutes}:${seconds.padStart(4, '0')}s`;
+                elements.totalTime.textContent = formatTime(clip.duration);
+
+                elements.timeline.max = clip.duration;
+
+                console.log('⏱️ Duración:', clip.duration, 'Frames:', totalFrames);
+
+                // Auto-reproducir
+                currentAction.play();
+                isPlaying = true;
+                elements.playPause.textContent = '⏸';
+                updateStatus('playing', 'Reproduciendo');
+            } else {
+                console.warn('⚠️ No hay animaciones');
+                elements.totalFrames.textContent = '0';
+                elements.duration.textContent = '0.0s';
+                updateStatus('stopped', 'Sin animación');
+            }
+
+            // Ajustar cámara
+            const maxDim = Math.max(size.x, size.y, size.z);
+            const fov = camera.fov * (Math.PI / 180);
+            let cameraDistance = maxDim / (2 * Math.tan(fov / 2));
+            cameraDistance *= 1.8;
+
+            camera.position.set(0, size.y * 0.6, cameraDistance);
+            camera.lookAt(new THREE.Vector3(0, size.y * 0.5, 0));
+            controls.target.set(0, size.y * 0.5, 0);
+            controls.update();
+        }
+
+        function onFBXError(error, path) {
+            console.error('❌ Error cargando FBX:', error);
+            elements.loading.style.display = 'none';
+            updateStatus('stopped', 'Error');
+
+            const errorModal = document.createElement('div');
+            errorModal.className = 'error-modal';
+            errorModal.innerHTML = `
+                <h3>❌ Error de Carga</h3>
+                <p>No se pudo cargar el archivo FBX:</p>
+                <div class="error-filename">${path}</div>
+                <p style="font-size: 14px; color: #ffcccc;">Detalles del error:</p>
+                <div class="error-filename" style="font-size: 13px;">${error.message || 'Error desconocido'}</div>
+                <p style="font-size: 15px; margin-top: 20px;">Posibles causas:</p>
+                <ul class="error-causes">
+                    <li>✗ El archivo no existe en la ruta especificada</li>
+                    <li>✗ El servidor web no está corriendo<br><code style="background: rgba(0,0,0,0.3); padding: 5px; border-radius: 5px;">python -m http.server 8000</code></li>
+                    <li>✗ El archivo FBX está corrupto</li>
+                    <li>✗ Problema de permisos de acceso</li>
+                </ul>
+                <button class="error-btn" onclick="this.parentElement.remove()">Cerrar</button>
+            `;
+
+            document.body.appendChild(errorModal);
+
+            setTimeout(() => {
+                if (errorModal.parentElement) {
+                    errorModal.remove();
+                }
+            }, 15000);
+        }
+
+        function togglePlayPause() {
+            if (!currentAction) return;
+
+            if (isPlaying) {
+                currentAction.paused = true;
+                isPlaying = false;
+                elements.playPause.textContent = '▶️';
+                updateStatus('paused', 'Pausado');
+            } else {
+                currentAction.paused = false;
+                currentAction.play();
+                isPlaying = true;
+                elements.playPause.textContent = '⏸';
+                updateStatus('playing', 'Reproduciendo');
+            }
+        }
+
+        function stopAnimation() {
+            if (!currentAction) return;
+
+            currentAction.stop();
+            isPlaying = false;
+            elements.playPause.textContent = '▶️';
+            updateStatus('stopped', 'Detenido');
+            elements.timeline.value = 0;
+            elements.currentTime.textContent = '0:00.0';
+            elements.currentFrame.textContent = '0';
+        }
+
+        function restartAnimation() {
+            if (!currentAction) return;
+
+            currentAction.reset();
+            currentAction.play();
+            isPlaying = true;
+            elements.playPause.textContent = '⏸';
+            updateStatus('playing', 'Reproduciendo');
+        }
+
+        function toggleLoop() {
+            isLooping = !isLooping;
+            if (currentAction) {
+                currentAction.setLoop(isLooping ? THREE.LoopRepeat : THREE.LoopOnce);
+            }
+            elements.loop.style.opacity = isLooping ? '1' : '0.4';
+            console.log('🔄 Loop:', isLooping ? 'ON' : 'OFF');
+        }
+
+        function onTimelineChange(event) {
+            if (!currentAction) return;
+
+            const time = parseFloat(event.target.value);
+            currentAction.time = time;
+            mixer.update(0);
+        }
+
+        function onSpeedChange(event) {
+            animationSpeed = parseFloat(event.target.value);
+            elements.speedValue.textContent = `${animationSpeed.toFixed(2)}x`;
+
+            if (currentAction) {
+                currentAction.timeScale = animationSpeed;
+            }
+        }
+
+        function updateStatus(status, text) {
+            elements.statusDot.className = `status-indicator status-${status}`;
+            elements.statusText.textContent = text;
+        }
+
+        function formatTime(seconds) {
+            const mins = Math.floor(seconds / 60);
+            const secs = (seconds % 60).toFixed(1);
+            return `${mins}:${secs.padStart(4, '0')}`;
+        }
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+
+            const delta = clock.getDelta();
+
+            if (mixer && isPlaying) {
+                mixer.update(delta);
+
+                if (currentAction) {
+                    const time = currentAction.time;
+                    elements.timeline.value = time;
+                    elements.currentTime.textContent = formatTime(time);
+
+                    const fps = 30;
+                    const currentFrame = Math.round(time * fps);
+                    elements.currentFrame.textContent = currentFrame;
+                }
+            }
+
+            controls.update();
+            renderer.render(scene, camera);
+        }
+
+        // Iniciar aplicación
+        init();
+    </script>
+</body>
+</html>
+

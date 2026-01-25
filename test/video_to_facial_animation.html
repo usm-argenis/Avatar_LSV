@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Video → Expresiones Faciales Automático</title>
+    <style>
+        body {
+            font-family: Arial;
+            background: #1a1a2e;
+            color: white;
+            padding: 20px;
+            margin: 0;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        .panel {
+            background: #16213e;
+            border-radius: 10px;
+            padding: 20px;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #06ffa5;
+            margin-bottom: 30px;
+            grid-column: 1 / -1;
+        }
+        
+        h2 {
+            color: #667eea;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+            margin-top: 0;
+        }
+        
+        video {
+            width: 100%;
+            border-radius: 8px;
+            background: #000;
+        }
+        
+        canvas {
+            width: 100%;
+            border-radius: 8px;
+            border: 2px solid #667eea;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            background: #06ffa5;
+            color: #000;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            margin: 10px 5px;
+            width: calc(50% - 10px);
+            display: inline-block;
+        }
+        
+        .btn:hover {
+            background: #04d98b;
+        }
+        
+        .btn:disabled {
+            background: #555;
+            cursor: not-allowed;
+        }
+        
+        .btn-secondary {
+            background: #667eea;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: #5568d3;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 30px;
+            background: #2d2d44;
+            border-radius: 15px;
+            overflow: hidden;
+            margin: 15px 0;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #06ffa5 100%);
+            transition: width 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: #000;
+        }
+        
+        .log {
+            background: #000;
+            color: #0f0;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New';
+            height: 200px;
+            overflow-y: auto;
+            font-size: 12px;
+            margin-top: 15px;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .stat-box {
+            background: #2d2d44;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 32px;
+            color: #06ffa5;
+            font-weight: bold;
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: #888;
+            margin-top: 5px;
+        }
+        
+        #videoInput {
+            display: none;
+        }
+        
+        .file-label {
+            display: inline-block;
+            padding: 12px 24px;
+            background: #667eea;
+            color: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            text-align: center;
+            width: calc(100% - 48px);
+        }
+        
+        .file-label:hover {
+            background: #5568d3;
+        }
+    </style>
+</head>
+<body>
+    <h1>🎥 → 🎭 Extractor Automático de Expresiones Faciales</h1>
+    
+    <div class="container">
+        <div class="panel">
+            <h2>📹 Video Original</h2>
+            <label for="videoInput" class="file-label">📂 Seleccionar Video (o usa amar.mp4)</label>
+            <input type="file" id="videoInput" accept="video/*">
+            <button class="btn" onclick="loadDefaultVideo()">📥 Cargar amar.mp4</button>
+            
+            <video id="video" controls></video>
+            
+            <div class="stats">
+                <div class="stat-box">
+                    <div class="stat-value" id="fps">--</div>
+                    <div class="stat-label">FPS</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value" id="duration">--</div>
+                    <div class="stat-label">Duración (s)</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value" id="totalFrames">--</div>
+                    <div class="stat-label">Total Frames</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value" id="processedFrames">0</div>
+                    <div class="stat-label">Procesados</div>
+                </div>
+            </div>
+            
+            <button class="btn" id="analyzeBtn" onclick="analyzeVideo()" disabled>🔍 Analizar Video</button>
+            <button class="btn btn-secondary" onclick="exportJSON()" disabled id="exportBtn">💾 Exportar JSON</button>
+            
+            <div class="progress-bar">
+                <div class="progress-fill" id="progress">0%</div>
+            </div>
+        </div>
+        
+        <div class="panel">
+            <h2>🎭 Vista Previa 3D (Luis)</h2>
+            <canvas id="canvas3d" width="600" height="600"></canvas>
+            
+            <div style="text-align: center; margin-top: 15px;">
+                <button class="btn btn-secondary" onclick="toggleSync()">🔄 Sincronizar con Video</button>
+            </div>
+        </div>
+        
+        <div class="panel" style="grid-column: 1 / -1;">
+            <h2>📊 Log de Procesamiento</h2>
+            <div class="log" id="log"></div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh@0.4.1633559619/face_mesh.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    
+    <script>
+        let video, faceMesh;
+        let animationData = null;
+        let model3D, meshesWithTargets = [];
+        let syncEnabled = false;
+        
+        function log(msg) {
+            const logDiv = document.getElementById('log');
+            const time = new Date().toLocaleTimeString();
+            logDiv.innerHTML += `[${time}] ${msg}<br>`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+            console.log(msg);
+        }
+        
+        // Setup Three.js
+        const canvas = document.getElementById('canvas3d');
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x2d2d44);
+        
+        const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 1000);
+        camera.position.set(0, 1.6, 2);
+        
+        const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+        renderer.setSize(600, 600);
+        
+        const controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.target.set(0, 1.4, 0);
+        controls.update();
+        
+        scene.add(new THREE.AmbientLight(0xffffff, 0.7));
+        const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+        dirLight.position.set(5, 10, 5);
+        scene.add(dirLight);
+        
+        // Cargar modelo Luis
+        const loader = new THREE.GLTFLoader();
+        loader.load('output/glb/Luis/Luis.glb', (gltf) => {
+            model3D = gltf.scene;
+            scene.add(model3D);
+            
+            const box = new THREE.Box3().setFromObject(model3D);
+            const center = box.getCenter(new THREE.Vector3());
+            model3D.position.sub(center);
+            model3D.position.y = 0;
+            
+            model3D.traverse(child => {
+                if (child.isMesh && child.morphTargetInfluences) {
+                    meshesWithTargets.push(child);
+                }
+            });
+            
+            log(`✅ Modelo Luis cargado: ${meshesWithTargets.length} meshes con morph targets`);
+        });
+        
+        function animate3D() {
+            requestAnimationFrame(animate3D);
+            controls.update();
+            renderer.render(scene, camera);
+        }
+        animate3D();
+        
+        // Cargar video
+        document.getElementById('videoInput').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const url = URL.createObjectURL(file);
+                loadVideo(url);
+            }
+        });
+        
+        function loadDefaultVideo() {
+            loadVideo('output/videos/amar.mp4');
+        }
+        
+        function loadVideo(url) {
+            video = document.getElementById('video');
+            video.src = url;
+            
+            video.addEventListener('loadedmetadata', () => {
+                const fps = 30; // Asumimos 30 FPS
+                const duration = video.duration;
+                const totalFrames = Math.floor(duration * fps);
+                
+                document.getElementById('fps').textContent = fps;
+                document.getElementById('duration').textContent = duration.toFixed(2);
+                document.getElementById('totalFrames').textContent = totalFrames;
+                document.getElementById('analyzeBtn').disabled = false;
+                
+                log(`✅ Video cargado: ${duration.toFixed(2)}s, ~${totalFrames} frames`);
+            });
+        }
+        
+        // MediaPipe Face Mesh
+        let currentResults = null;
+        
+        function initFaceMesh() {
+            faceMesh = new FaceMesh({
+                locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh@0.4.1633559619/${file}`
+            });
+            
+            faceMesh.setOptions({
+                maxNumFaces: 1,
+                refineLandmarks: true,
+                minDetectionConfidence: 0.5,
+                minTrackingConfidence: 0.5
+            });
+            
+            faceMesh.onResults((results) => {
+                currentResults = results;
+            });
+            
+            log('🔧 MediaPipe Face Mesh inicializado');
+        }
+        
+        async function analyzeVideo() {
+            if (!faceMesh) {
+                initFaceMesh();
+            }
+            
+            document.getElementById('analyzeBtn').disabled = true;
+            log('🎬 Iniciando análisis del video...');
+            
+            const fps = 30;
+            const duration = video.duration;
+            const frameInterval = 1 / fps;
+            
+            animationData = {
+                name: "amar_facial_animation",
+                fps: fps,
+                duration: duration,
+                frames: []
+            };
+            
+            let currentTime = 0;
+            let frameCount = 0;
+            const totalFrames = Math.floor(duration * fps);
+            
+            // Procesar frame por frame
+            while (currentTime < duration) {
+                video.currentTime = currentTime;
+                
+                await new Promise(resolve => {
+                    video.onseeked = resolve;
+                });
+                
+                // Capturar frame
+                const canvas = document.createElement('canvas');
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(video, 0, 0);
+                
+                // Analizar con MediaPipe
+                currentResults = null;
+                await faceMesh.send({image: canvas});
+                
+                // Esperar a que se procese
+                await new Promise(resolve => setTimeout(resolve, 50));
+                
+                if (currentResults && currentResults.multiFaceLandmarks && currentResults.multiFaceLandmarks[0]) {
+                    const shapeKeys = extractShapeKeys(currentResults.multiFaceLandmarks[0]);
+                    
+                    animationData.frames.push({
+                        frame: frameCount,
+                        time: currentTime,
+                        shape_keys: shapeKeys
+                    });
+                } else {
+                    // Sin cara detectada, frame vacío
+                    animationData.frames.push({
+                        frame: frameCount,
+                        time: currentTime,
+                        shape_keys: {}
+                    });
+                }
+                
+                frameCount++;
+                currentTime += frameInterval;
+                
+                // Actualizar progreso
+                const progress = (frameCount / totalFrames * 100).toFixed(1);
+                document.getElementById('progress').style.width = progress + '%';
+                document.getElementById('progress').textContent = progress + '%';
+                document.getElementById('processedFrames').textContent = frameCount;
+                
+                if (frameCount % 30 === 0) {
+                    log(`   Procesado: ${frameCount}/${totalFrames} frames (${progress}%)`);
+                }
+            }
+            
+            log(`✅ Análisis completo: ${frameCount} frames procesados`);
+            document.getElementById('exportBtn').disabled = false;
+            
+            // Mostrar estadísticas
+            analyzeResults();
+        }
+        
+        function extractShapeKeys(landmarks) {
+            const shapeKeys = {};
+            
+            // Helper: calcular distancia entre dos puntos
+            const dist = (p1, p2) => Math.sqrt(Math.pow(p2.x - p1.x, 2) + Math.pow(p2.y - p1.y, 2));
+            
+            // Helper: calcular distancia vertical
+            const distY = (p1, p2) => Math.abs(p2.y - p1.y);
+            
+            // Helper: calcular distancia horizontal
+            const distX = (p1, p2) => Math.abs(p2.x - p1.x);
+            
+            // === OJOS ===
+            // Ojo izquierdo
+            const leftEyeTop = landmarks[159];
+            const leftEyeBottom = landmarks[145];
+            const leftEyeLeft = landmarks[33];
+            const leftEyeRight = landmarks[133];
+            const leftEyeHeight = distY(leftEyeTop, leftEyeBottom);
+            const leftEyeWidth = distX(leftEyeLeft, leftEyeRight);
+            const leftEyeAspect = leftEyeHeight / (leftEyeWidth + 0.001);
+            
+            // Parpadeo izquierdo (aspecto < 0.15 = cerrado)
+            shapeKeys.eyeBlinkLeft = Math.max(0, Math.min(1, (0.20 - leftEyeAspect) / 0.15));
+            
+            // Ojos entrecerrados izquierdo (aspecto < 0.20)
+            shapeKeys.eyeSquintLeft = Math.max(0, Math.min(1, (0.25 - leftEyeAspect) / 0.10));
+            
+            // Ojos bien abiertos izquierdo (aspecto > 0.30)
+            shapeKeys.eyeWideLeft = Math.max(0, Math.min(1, (leftEyeAspect - 0.30) / 0.15));
+            
+            // Ojo derecho
+            const rightEyeTop = landmarks[386];
+            const rightEyeBottom = landmarks[374];
+            const rightEyeLeft = landmarks[362];
+            const rightEyeRight = landmarks[263];
+            const rightEyeHeight = distY(rightEyeTop, rightEyeBottom);
+            const rightEyeWidth = distX(rightEyeLeft, rightEyeRight);
+            const rightEyeAspect = rightEyeHeight / (rightEyeWidth + 0.001);
+            
+            shapeKeys.eyeBlinkRight = Math.max(0, Math.min(1, (0.20 - rightEyeAspect) / 0.15));
+            shapeKeys.eyeSquintRight = Math.max(0, Math.min(1, (0.25 - rightEyeAspect) / 0.10));
+            shapeKeys.eyeWideRight = Math.max(0, Math.min(1, (rightEyeAspect - 0.30) / 0.15));
+            
+            // === CEJAS ===
+            const leftBrowInner = landmarks[55];
+            const rightBrowInner = landmarks[285];
+            const leftBrowOuter = landmarks[46];
+            const rightBrowOuter = landmarks[276];
+            const noseBridge = landmarks[6];
+            const foreheadRef = landmarks[10];
+            
+            // Cejas levantadas (centro)
+            const browInnerHeight = (distY(noseBridge, leftBrowInner) + distY(noseBridge, rightBrowInner)) / 2;
+            shapeKeys.browInnerUp = Math.max(0, Math.min(1, (browInnerHeight - 0.08) / 0.03));
+            
+            // Cejas fruncidas
+            const leftBrowDownHeight = distY(noseBridge, leftBrowOuter);
+            const rightBrowDownHeight = distY(noseBridge, rightBrowOuter);
+            shapeKeys.browDownLeft = Math.max(0, Math.min(1, (0.09 - leftBrowDownHeight) / 0.02));
+            shapeKeys.browDownRight = Math.max(0, Math.min(1, (0.09 - rightBrowDownHeight) / 0.02));
+            
+            // Cejas exteriores levantadas
+            const leftBrowOuterHeight = distY(foreheadRef, leftBrowOuter);
+            const rightBrowOuterHeight = distY(foreheadRef, rightBrowOuter);
+            shapeKeys.browOuterUpLeft = Math.max(0, Math.min(1, (leftBrowOuterHeight - 0.12) / 0.03));
+            shapeKeys.browOuterUpRight = Math.max(0, Math.min(1, (rightBrowOuterHeight - 0.12) / 0.03));
+            
+            // === BOCA ===
+            const mouthLeft = landmarks[61];
+            const mouthRight = landmarks[291];
+            const mouthTop = landmarks[13];
+            const mouthBottom = landmarks[14];
+            const mouthUpperLip = landmarks[0];
+            const mouthLowerLip = landmarks[17];
+            
+            const mouthWidth = distX(mouthLeft, mouthRight);
+            const mouthHeight = distY(mouthTop, mouthBottom);
+            const lipDistance = distY(mouthUpperLip, mouthLowerLip);
+            
+            // Sonrisa (anchura aumenta)
+            const baseWidth = 0.10;
+            const smileAmount = Math.max(0, Math.min(1, (mouthWidth - baseWidth) / 0.04));
+            shapeKeys.mouthSmileLeft = smileAmount;
+            shapeKeys.mouthSmileRight = smileAmount;
+            
+            // Ceño/Frown (comisuras hacia abajo + anchura disminuye)
+            const frownAmount = Math.max(0, Math.min(1, (baseWidth - mouthWidth) / 0.02));
+            shapeKeys.mouthFrownLeft = frownAmount;
+            shapeKeys.mouthFrownRight = frownAmount;
+            
+            // Boca abierta
+            shapeKeys.mouthOpen = Math.max(0, Math.min(1, mouthHeight / 0.08));
+            shapeKeys.jawOpen = Math.max(0, Math.min(1, lipDistance / 0.10));
+            
+            // Boca en "O" (funnel) - altura y anchura pequeñas
+            const funnelRatio = mouthHeight / (mouthWidth + 0.001);
+            shapeKeys.mouthFunnel = Math.max(0, Math.min(1, (funnelRatio - 0.3) / 0.4));
+            
+            // Boca fruncida (pucker) - anchura muy pequeña
+            shapeKeys.mouthPucker = Math.max(0, Math.min(1, (0.08 - mouthWidth) / 0.03));
+            
+            // Labio superior levantado
+            const upperLipPos = landmarks[13].y;
+            const noseBottom = landmarks[2].y;
+            const upperLipDist = Math.abs(noseBottom - upperLipPos);
+            shapeKeys.mouthUpperUpLeft = Math.max(0, Math.min(1, (0.03 - upperLipDist) / 0.015));
+            shapeKeys.mouthUpperUpRight = shapeKeys.mouthUpperUpLeft;
+            
+            // Labio inferior hacia abajo
+            const lowerLipPos = landmarks[14].y;
+            const chinPos = landmarks[152].y;
+            const lowerLipDist = Math.abs(chinPos - lowerLipPos);
+            shapeKeys.mouthLowerDownLeft = Math.max(0, Math.min(1, (lowerLipDist - 0.06) / 0.02));
+            shapeKeys.mouthLowerDownRight = shapeKeys.mouthLowerDownLeft;
+            
+            // === MEJILLAS ===
+            const leftCheek = landmarks[116];
+            const rightCheek = landmarks[345];
+            const leftCheekRef = landmarks[123];
+            const rightCheekRef = landmarks[352];
+            
+            // Mejillas apretadas (squint)
+            const leftCheekDist = dist(leftCheek, leftCheekRef);
+            const rightCheekDist = dist(rightCheek, rightCheekRef);
+            shapeKeys.cheekSquintLeft = Math.max(0, Math.min(1, (0.02 - leftCheekDist) / 0.01));
+            shapeKeys.cheekSquintRight = Math.max(0, Math.min(1, (0.02 - rightCheekDist) / 0.01));
+            
+            // === NARIZ ===
+            const leftNostril = landmarks[36];
+            const rightNostril = landmarks[266];
+            const noseTop = landmarks[6];
+            
+            // Arrugar nariz (sneer)
+            const leftNoseDist = distY(noseTop, leftNostril);
+            const rightNoseDist = distY(noseTop, rightNostril);
+            shapeKeys.noseSneerLeft = Math.max(0, Math.min(1, (0.04 - leftNoseDist) / 0.015));
+            shapeKeys.noseSneerRight = Math.max(0, Math.min(1, (0.04 - rightNoseDist) / 0.015));
+            
+            // Limpiar valores muy pequeños (ruido)
+            Object.keys(shapeKeys).forEach(key => {
+                shapeKeys[key] = Math.round(shapeKeys[key] * 100) / 100;
+                if (shapeKeys[key] < 0.05) shapeKeys[key] = 0;
+            });
+            
+            return shapeKeys;
+        }
+        
+        function analyzeResults() {
+            const activeKeys = {};
+            
+            animationData.frames.forEach(frame => {
+                Object.entries(frame.shape_keys).forEach(([key, value]) => {
+                    if (value > 0.1) {
+                        if (!activeKeys[key]) activeKeys[key] = [];
+                        activeKeys[key].push(value);
+                    }
+                });
+            });
+            
+            log('\n📊 ESTADÍSTICAS DE SHAPE KEYS:');
+            Object.entries(activeKeys)
+                .sort((a, b) => b[1].length - a[1].length)
+                .slice(0, 10)
+                .forEach(([key, values]) => {
+                    const avg = values.reduce((a,b) => a+b, 0) / values.length;
+                    const max = Math.max(...values);
+                    log(`   ${key}: avg=${avg.toFixed(2)}, max=${max.toFixed(2)}, activo en ${values.length} frames`);
+                });
+        }
+        
+        function applyShapeKeys(shapeKeys) {
+            meshesWithTargets.forEach(mesh => {
+                if (mesh.morphTargetDictionary) {
+                    Object.entries(shapeKeys).forEach(([name, value]) => {
+                        const idx = mesh.morphTargetDictionary[name];
+                        if (idx !== undefined) {
+                            mesh.morphTargetInfluences[idx] = value;
+                        }
+                    });
+                }
+            });
+        }
+        
+        function toggleSync() {
+            syncEnabled = !syncEnabled;
+            
+            if (syncEnabled) {
+                log('🔄 Sincronización activada');
+                syncVideoTo3D();
+            } else {
+                log('⏸️ Sincronización desactivada');
+            }
+        }
+        
+        function syncVideoTo3D() {
+            if (!syncEnabled || !animationData) return;
+            
+            const currentTime = video.currentTime;
+            const fps = animationData.fps;
+            const frameIndex = Math.floor(currentTime * fps);
+            
+            if (frameIndex < animationData.frames.length) {
+                const frame = animationData.frames[frameIndex];
+                applyShapeKeys(frame.shape_keys);
+            }
+            
+            requestAnimationFrame(syncVideoTo3D);
+        }
+        
+        function exportJSON() {
+            if (!animationData) {
+                alert('No hay datos para exportar');
+                return;
+            }
+            
+            const blob = new Blob([JSON.stringify(animationData, null, 2)], {type: 'application/json'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'amar_facial_animation.json';
+            a.click();
+            
+            log('✅ JSON exportado: amar_facial_animation.json');
+        }
+        
+        log('🎭 Sistema listo. Carga un video para comenzar.');
+        log('💡 TIP: Haz click en "📥 Cargar amar.mp4" para usar el video de prueba');
+    </script>
+</body>
+</html>

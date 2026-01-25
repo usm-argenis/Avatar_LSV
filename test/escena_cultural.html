@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Escena Cultural - LSV</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #ffffff;
+            overflow: hidden;
+        }
+
+        #app {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #viewer-container {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            background: #ffffff;
+        }
+
+        #canvas-3d {
+            width: 100%;
+            height: 100%;
+        }
+
+        #loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        #loading.hidden {
+            display: none;
+        }
+
+        .spinner {
+            width: 60px;
+            height: 60px;
+            border: 4px solid rgba(255, 255, 255, 0.2);
+            border-top: 4px solid #8B4789;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            font-size: 18px;
+            color: #8B4789;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <div id="viewer-container">
+            <canvas id="canvas-3d"></canvas>
+        </div>
+    </div>
+
+    <div id="loading">
+        <div class="spinner"></div>
+        <div class="loading-text" id="loading-text">Cargando escena...</div>
+    </div>
+
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+                "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+            }
+        }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+
+        let scene, camera, renderer, clock;
+        let escenaModel, avatarModel, mixer;
+        let ambientLight, directionalLight1, directionalLight2, fillLight;
+        let isAnimating = false;
+        let animacionLuzCargada = null; // Precarga de animación
+        let avatarActual = 'Carla'; // Avatar por defecto
+
+        async function init() {
+            console.log('\n🚀🚀🚀 INICIANDO APLICACIÓN 🚀🚀🚀\n');
+            
+            // Extraer avatar de URL query parameter
+            const urlParams = new URLSearchParams(window.location.search);
+            const avatarParam = urlParams.get('avatar');
+            if (avatarParam) {
+                avatarActual = avatarParam.charAt(0).toUpperCase() + avatarParam.slice(1).toLowerCase();
+                console.log(`📋 Avatar recibido por parámetro: ${avatarActual}`);
+            } else {
+                console.log(`📋 Sin parámetro de avatar, usando por defecto: ${avatarActual}`);
+            }
+            
+            console.log('1️⃣ Configurando escena 3D...');
+            setupScene();
+            console.log('✅ Escena configurada\n');
+            
+            console.log(`2️⃣ Cargando recursos (escena_${avatarActual}.glb + animación ${avatarActual}_luz.glb)...`);
+            // Cargar todo en paralelo para mayor velocidad
+            await Promise.all([
+                cargarEscenaConAvatar(),
+                precargarAnimacionLuz()
+            ]);
+            console.log('✅ Todos los recursos cargados\n');
+            
+            console.log('3️⃣ Iniciando loop de animación...');
+            animate();
+            console.log('✅ Loop iniciado\n');
+            
+            console.log('4️⃣ Ocultando pantalla de carga...');
+            document.getElementById('loading').classList.add('hidden');
+            console.log('✅ Pantalla oculta\n');
+            
+            console.log('🎉🎉🎉 APLICACIÓN LISTA 🎉🎉🎉\n');
+            console.log('Esperando acciones del usuario vía window.ejecutarAccion()\n');
+        }
+
+        function setupScene() {
+            const container = document.getElementById('viewer-container');
+            const canvas = document.getElementById('canvas-3d');
+            
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0xffffff);
+            
+            // Cámara posicionada para ver a Carla de frente mirando la estantería
+            camera = new THREE.PerspectiveCamera(
+                50,
+                container.clientWidth / container.clientHeight,
+                0.1,
+                1000
+            );
+            camera.position.set(-2, 1.6, 3);
+            camera.lookAt(0, 1.2, 0);
+            
+            renderer = new THREE.WebGLRenderer({ 
+                canvas: canvas,
+                antialias: true,
+                alpha: true
+            });
+            renderer.setSize(container.clientWidth, container.clientHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+            renderer.outputColorSpace = THREE.SRGBColorSpace;
+            renderer.toneMapping = THREE.ACESFilmicToneMapping;
+            renderer.toneMappingExposure = 1.2;
+            
+            // Sistema de iluminación inicial (ambiente normal)
+            ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
+            scene.add(ambientLight);
+            
+            directionalLight1 = new THREE.DirectionalLight(0xffffff, 1.2);
+            directionalLight1.position.set(5, 5, 5);
+            scene.add(directionalLight1);
+            
+            directionalLight2 = new THREE.DirectionalLight(0xffffff, 0.6);
+            directionalLight2.position.set(-5, 3, -5);
+            scene.add(directionalLight2);
+            
+            fillLight = new THREE.DirectionalLight(0xffffff, 0.4);
+            fillLight.position.set(0, -2, 5);
+            scene.add(fillLight);
+            
+            clock = new THREE.Clock();
+            
+            window.addEventListener('resize', () => {
+                camera.aspect = container.clientWidth / container.clientHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(container.clientWidth, container.clientHeight);
+            });
+        }
+
+        async function cargarEscenaConAvatar() {
+            const loader = new GLTFLoader();
+            const loadingText = document.getElementById('loading-text');
+            
+            loadingText.textContent = `Cargando escena con ${avatarActual}...`;
+            
+            const baseUrl = window.location.hostname.includes('github.io') 
+                ? 'https://usm-argenis.github.io/STT_LSV/test/'
+                : '';
+            
+            const rutaEscena = `${baseUrl}output/glb/Cultura/escena_${avatarActual}.glb`;
+            console.log(`🔄 Cargando escena: ${rutaEscena}`);
+            
+            try {
+                const gltf = await new Promise((resolve, reject) => {
+                    loader.load(
+                        rutaEscena,
+                        (result) => resolve(result),
+                        (progress) => {
+                            const percent = (progress.loaded / progress.total) * 100;
+                            loadingText.textContent = `Cargando ${avatarActual}... ${percent.toFixed(0)}%`;
+                        },
+                        (error) => reject(error)
+                    );
+                });
+                
+                escenaModel = gltf.scene;
+                scene.add(escenaModel);
+                
+                // NO se modifica la posición - mantiene la orientación original del archivo GLB de Blender
+                console.log('📍 Posición original de la escena:', escenaModel.position);
+                console.log('🧭 Rotación original de la escena:', escenaModel.rotation);
+                
+                // Buscar el modelo del avatar dentro de la escena
+                // El avatar está incluido en el archivo escena_{avatar}.glb
+                escenaModel.traverse((child) => {
+                    if (child.isSkinnedMesh || child.type === 'SkinnedMesh') {
+                        // Encontramos el avatar con armature
+                        if (!avatarModel && child.parent) {
+                            avatarModel = child.parent;
+                            console.log(`✅ Avatar ${avatarActual} encontrado en la escena`);
+                        }
+                    }
+                });
+                
+                // Si no se encontró de esa manera, buscar por nombre
+                if (!avatarModel) {
+                    avatarModel = escenaModel.getObjectByName(avatarActual) || 
+                                  escenaModel.getObjectByName(avatarActual.toLowerCase()) ||
+                                  escenaModel.children.find(child => child.name.toLowerCase().includes(avatarActual.toLowerCase()));
+                }
+                
+                // Si aún no se encuentra, usar toda la escena como avatar
+                if (!avatarModel) {
+                    console.log('⚠️ No se encontró avatar específico, usando escena completa');
+                    avatarModel = escenaModel;
+                }
+                
+                // NOTA: No se aplica rotación - el avatar mantiene su orientación original de Blender
+                if (avatarModel) {
+                    console.log(`✅ Avatar ${avatarActual} listo (orientación original preservada)`);
+                    console.log('   📍 Posición del avatar:', avatarModel.position);
+                    console.log('   🧭 Rotación del avatar:', avatarModel.rotation);
+                }
+                
+                mixer = new THREE.AnimationMixer(escenaModel);
+                
+                console.log(`✅ Escena con ${avatarActual} cargada exitosamente`);
+            } catch (error) {
+                console.error(`❌ Error cargando escena_${avatarActual}.glb:`, error);
+                alert(`Error: No se pudo cargar escena_${avatarActual}.glb\n${error.message}`);
+            }
+        }
+
+        // NOTA: La función cargarCarla() fue eliminada.
+        // Ahora el avatar se carga junto con la escena en cargarEscenaConAvatar()
+        // usando el archivo escena_{avatar}.glb que contiene tanto la escena como el avatar.
+
+        async function precargarAnimacionLuz() {
+            const loader = new GLTFLoader();
+            const loadingText = document.getElementById('loading-text');
+            
+            loadingText.textContent = 'Precargando animaciones...';
+            
+            const baseUrl = window.location.hostname.includes('github.io') 
+                ? 'https://usm-argenis.github.io/STT_LSV/test/'
+                : '';
+            
+            const rutaAnimacion = `${baseUrl}output/glb/Cultura/${avatarActual}_luzT.glb`;
+            console.log(`🔄 Precargando animación: ${rutaAnimacion}`);
+            
+            try {
+                const gltf = await new Promise((resolve, reject) => {
+                    loader.load(
+                        rutaAnimacion,
+                        (result) => resolve(result),
+                        (progress) => {
+                            const percent = (progress.loaded / progress.total) * 100;
+                            loadingText.textContent = `Precargando ${avatarActual}_luz... ${percent.toFixed(0)}%`;
+                        },
+                        (error) => reject(error)
+                    );
+                });
+                
+                if (gltf.animations && gltf.animations.length > 0) {
+                    animacionLuzCargada = gltf.animations[0];
+                    console.log(`✅ Animación ${avatarActual}_luz.glb precargada (${gltf.animations.length} clips)`);
+                } else {
+                    console.warn(`⚠️ No se encontró animación en ${avatarActual}_luz.glb`);
+                }
+            } catch (error) {
+                console.error(`❌ Error precargando ${avatarActual}_luz.glb:`, error);
+            }
+        }
+
+        // Función expuesta para React Native
+        window.ejecutarAccion = async function(opcion) {
+            console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+            console.log(`🎮 FUNCIÓN LLAMADA: ejecutarAccion(${opcion})`);
+            console.log(`📊 Estado actual:`);
+            console.log(`   - Tipo de opcion: ${typeof opcion}`);
+            console.log(`   - Valor original: ${opcion}`);
+            console.log(`   - Avatar actual: ${avatarActual}`);
+            
+            // Convertir letras A/B/C/D a números 1/2/3/4
+            const mapeoLetras = {'A': 1, 'B': 2, 'C': 3, 'D': 4};
+            if (typeof opcion === 'string' && mapeoLetras[opcion]) {
+                opcion = mapeoLetras[opcion];
+                console.log(`   - Convertido a número: ${opcion}`);
+            }
+            
+            console.log(`   - avatarModel existe: ${!!avatarModel}`);
+            console.log(`   - mixer existe: ${!!mixer}`);
+            console.log(`   - isAnimating: ${isAnimating}`);
+            console.log(`   - animacionLuzCargada existe: ${!!animacionLuzCargada}`);
+            
+            if (isAnimating) {
+                console.log('⚠️ Ya hay una animación en curso, ignorando...');
+                return;
+            }
+            
+            if (!avatarModel) {
+                console.error('❌ ERROR CRÍTICO: No existe avatarModel');
+                alert(`Error: El modelo de ${avatarActual} no está cargado`);
+                return;
+            }
+            
+            if (!mixer) {
+                console.error('❌ ERROR CRÍTICO: No existe mixer');
+                alert('Error: El mixer de animaciones no está inicializado');
+                return;
+            }
+            
+            console.log(`🎬 Ejecutando opción: ${opcion}`);
+            
+            switch(opcion) {
+                case 1:
+                    console.log('❌ Opción 1: Sin acción (incorrecta - gritar)');
+                    break;
+                    
+                case 2:
+                    console.log('✅ Opción 2: Hacer seña de luz (CORRECTA)');
+                    await ejecutarAnimacionLuz();
+                    break;
+                    
+                case 3:
+                    console.log('❌ Opción 3: Seña + prender luz física (excesivo)');
+                    await ejecutarAnimacionLuzConBrillo();
+                    break;
+                    
+                case 4:
+                    console.log('❌ Opción 4: Sin acción (incorrecta - tocar hombro)');
+                    break;
+                    
+                default:
+                    console.error(`❌ Opción desconocida: ${opcion}`);
+            }
+            
+            console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+        };
+
+        async function ejecutarAnimacionLuz() {
+            console.log('━━━ EJECUTANDO ANIMACIÓN DE LUZ ━━━');
+            
+            if (!avatarModel || !mixer) {
+                console.error(`❌ ERROR CRÍTICO: No hay modelo de ${avatarActual} o mixer`);
+                console.log(`   - avatarModel: ${avatarModel}`);
+                console.log(`   - mixer: ${mixer}`);
+                alert('Error: No se puede ejecutar la animación. Modelo no cargado.');
+                return;
+            }
+            
+            console.log('🎬 Iniciando animación de luz...');
+            isAnimating = true;
+            
+            try {
+                if (animacionLuzCargada) {
+                    console.log('✅ Usando animación precargada');
+                    console.log(`   - Duración: ${animacionLuzCargada.duration.toFixed(2)}s`);
+                    
+                    // Detener cualquier animación previa
+                    mixer.stopAllAction();
+                    
+                    const action = mixer.clipAction(animacionLuzCargada);
+                    
+                    action.reset();
+                    action.setLoop(THREE.LoopOnce);
+                    action.clampWhenFinished = true;
+                    action.play();
+                    
+                    console.log('▶️ Animación iniciada correctamente');
+                    
+                    const onFinished = (e) => {
+                        if (e.action === action) {
+                            console.log('✅ Animación completada exitosamente');
+                            mixer.removeEventListener('finished', onFinished);
+                            isAnimating = false;
+                        }
+                    };
+                    mixer.addEventListener('finished', onFinished);
+                    
+                } else {
+                    console.warn('⚠️ Animación NO precargada, cargando bajo demanda...');
+                    const loader = new GLTFLoader();
+                    const baseUrl = window.location.hostname.includes('github.io') 
+                        ? 'https://usm-argenis.github.io/STT_LSV/test/'
+                        : '';
+                    
+                    const ruta = `${baseUrl}output/glb/Cultura/${avatarActual}_luz.glb`;
+                    console.log(`🔄 Cargando ${avatarActual}_luz.glb desde: ${ruta}`);
+                    
+                    const gltf = await new Promise((resolve, reject) => {
+                        loader.load(
+                            ruta,
+                            (result) => {
+                                console.log('✅ Animación cargada exitosamente');
+                                resolve(result);
+                            },
+                            undefined,
+                            (error) => {
+                                console.error('❌ Error al cargar:', error);
+                                reject(error);
+                            }
+                        );
+                    });
+                    
+                    if (gltf.animations && gltf.animations.length > 0) {
+                        console.log(`✅ Encontradas ${gltf.animations.length} animaciones`);
+                        const clip = gltf.animations[0];
+                        
+                        mixer.stopAllAction();
+                        
+                        const action = mixer.clipAction(clip);
+                        action.reset();
+                        action.setLoop(THREE.LoopOnce);
+                        action.clampWhenFinished = true;
+                        action.play();
+                        
+                        console.log('▶️ Animación iniciada correctamente');
+                        
+                        const onFinished = (e) => {
+                            if (e.action === action) {
+                                console.log('✅ Animación completada exitosamente');
+                                mixer.removeEventListener('finished', onFinished);
+                                isAnimating = false;
+                            }
+                        };
+                        mixer.addEventListener('finished', onFinished);
+                    } else {
+                        console.error('❌ El archivo GLB no contiene animaciones');
+                        isAnimating = false;
+                    }
+                }
+            } catch (error) {
+                console.error('❌ ERROR ejecutando animación:', error);
+                alert(`Error al ejecutar animación: ${error.message}`);
+                isAnimating = false;
+            }
+            
+            console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+        }
+
+        async function ejecutarAnimacionLuzConBrillo() {
+            if (!avatarModel || !mixer) {
+                console.error(`❌ No hay modelo de ${avatarActual} o mixer`);
+                return;
+            }
+            
+            console.log('🎬 Iniciando animación de luz con brillo...');
+            isAnimating = true;
+            
+            try {
+                // Usar animación precargada si está disponible
+                if (animacionLuzCargada) {
+                    console.log('✅ Usando animación precargada');
+                    const action = mixer.clipAction(animacionLuzCargada);
+                    
+                    action.reset();
+                    action.setLoop(THREE.LoopOnce);
+                    action.clampWhenFinished = true;
+                    action.play();
+                    
+                    // Esperar un momento y luego aumentar el brillo bruscamente
+                    setTimeout(() => {
+                        aumentarBrilloGolpe();
+                    }, 1000);
+                    
+                    const onFinished = (e) => {
+                        if (e.action === action) {
+                            console.log('✅ Animación con luz completada');
+                            mixer.removeEventListener('finished', onFinished);
+                            isAnimating = false;
+                        }
+                    };
+                    mixer.addEventListener('finished', onFinished);
+                } else {
+                    console.log('⚠️ Cargando animación bajo demanda...');
+                    // Si no está precargada, cargarla ahora
+                    const loader = new GLTFLoader();
+                    const baseUrl = window.location.hostname.includes('github.io') 
+                        ? 'https://usm-argenis.github.io/STT_LSV/test/'
+                        : '';
+                    
+                    const gltf = await new Promise((resolve, reject) => {
+                        loader.load(
+                            `${baseUrl}output/glb/Cultura/${avatarActual}_luz.glb`,
+                            (result) => resolve(result),
+                            undefined,
+                            (error) => reject(error)
+                        );
+                    });
+                    
+                    if (gltf.animations && gltf.animations.length > 0) {
+                        const clip = gltf.animations[0];
+                        const action = mixer.clipAction(clip);
+                        
+                        action.reset();
+                        action.setLoop(THREE.LoopOnce);
+                        action.clampWhenFinished = true;
+                        action.play();
+                        
+                        setTimeout(() => {
+                            aumentarBrilloGolpe();
+                        }, 1000);
+                        
+                        const onFinished = (e) => {
+                            if (e.action === action) {
+                                console.log('✅ Animación con luz completada');
+                                mixer.removeEventListener('finished', onFinished);
+                                isAnimating = false;
+                            }
+                        };
+                        mixer.addEventListener('finished', onFinished);
+                    }
+                }
+            } catch (error) {
+                console.error('❌ Error ejecutando animación:', error);
+                isAnimating = false;
+            }
+        }
+
+        function aumentarBrilloGolpe() {
+            // Aumentar brillo de todas las luces de golpe (simular luz prendida)
+            ambientLight.intensity = 1.5;
+            directionalLight1.intensity = 2.0;
+            directionalLight2.intensity = 1.2;
+            fillLight.intensity = 0.8;
+            renderer.toneMappingExposure = 2.0;
+            
+            console.log('💡 ¡Luz encendida!');
+            
+            // Volver a la normalidad después de 3 segundos
+            setTimeout(() => {
+                restaurarIluminacionNormal();
+            }, 3000);
+        }
+
+        function restaurarIluminacionNormal() {
+            // Restaurar iluminación suavemente
+            const duration = 1000;
+            const startTime = Date.now();
+            
+            const initialValues = {
+                ambient: ambientLight.intensity,
+                dir1: directionalLight1.intensity,
+                dir2: directionalLight2.intensity,
+                fill: fillLight.intensity,
+                exposure: renderer.toneMappingExposure
+            };
+            
+            const targetValues = {
+                ambient: 0.8,
+                dir1: 1.2,
+                dir2: 0.6,
+                fill: 0.4,
+                exposure: 1.2
+            };
+            
+            function animateRestore() {
+                const elapsed = Date.now() - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                const eased = 1 - Math.pow(1 - progress, 3);
+                
+                ambientLight.intensity = initialValues.ambient + (targetValues.ambient - initialValues.ambient) * eased;
+                directionalLight1.intensity = initialValues.dir1 + (targetValues.dir1 - initialValues.dir1) * eased;
+                directionalLight2.intensity = initialValues.dir2 + (targetValues.dir2 - initialValues.dir2) * eased;
+                fillLight.intensity = initialValues.fill + (targetValues.fill - initialValues.fill) * eased;
+                renderer.toneMappingExposure = initialValues.exposure + (targetValues.exposure - initialValues.exposure) * eased;
+                
+                if (progress < 1) {
+                    requestAnimationFrame(animateRestore);
+                }
+            }
+            
+            animateRestore();
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            const delta = clock.getDelta();
+            
+            if (mixer) {
+                mixer.update(delta);
+            }
+            
+            renderer.render(scene, camera);
+        }
+
+        // Iniciar cuando cargue el DOM
+        window.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>

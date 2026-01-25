@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test API LSV</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        input {
+            width: 70%;
+            padding: 10px;
+            font-size: 16px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f9f9f9;
+            border-left: 4px solid #4CAF50;
+            display: none;
+        }
+        .tag {
+            display: inline-block;
+            padding: 5px 10px;
+            margin: 3px;
+            border-radius: 15px;
+            font-size: 12px;
+        }
+        .disponible {
+            background: #4CAF50;
+            color: white;
+        }
+        .faltante {
+            background: #f44336;
+            color: white;
+        }
+        .info {
+            margin: 10px 0;
+            padding: 10px;
+            background: #e3f2fd;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🤖 Prueba del API LSV</h1>
+        <p>Escribe una frase para optimizar:</p>
+        
+        <input type="text" id="texto" placeholder="Ejemplo: ola como estas" value="ola como estas">
+        <button onclick="probarAPI()">Optimizar</button>
+        
+        <div id="result" class="result">
+            <div class="info">
+                <strong>📝 Original:</strong> <span id="original"></span>
+            </div>
+            <div class="info">
+                <strong>✅ Corregido:</strong> <span id="corregido"></span>
+            </div>
+            <div class="info">
+                <strong>🔄 LSV:</strong> <span id="lsv"></span>
+            </div>
+            <div class="info">
+                <strong>📊 Cobertura:</strong> <span id="cobertura"></span>
+            </div>
+            <div class="info">
+                <strong>✅ Disponibles:</strong>
+                <div id="disponibles"></div>
+            </div>
+            <div class="info">
+                <strong>❌ Faltantes:</strong>
+                <div id="faltantes"></div>
+            </div>
+            <div class="info">
+                <strong>🔍 Respuesta completa:</strong>
+                <pre id="json"></pre>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function probarAPI() {
+            const texto = document.getElementById('texto').value;
+            
+            try {
+                const response = await fetch('http://localhost:5000/api/optimizar', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ texto: texto })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                // Mostrar resultado
+                document.getElementById('result').style.display = 'block';
+                document.getElementById('original').textContent = data.texto_original;
+                document.getElementById('corregido').textContent = data.texto_corregido;
+                document.getElementById('lsv').textContent = data.texto_lsv;
+                document.getElementById('cobertura').textContent = data.porcentaje_cobertura.toFixed(2) + '%';
+                
+                // Palabras disponibles
+                const dispContainer = document.getElementById('disponibles');
+                dispContainer.innerHTML = '';
+                if (data.palabras_disponibles && data.palabras_disponibles.length > 0) {
+                    data.palabras_disponibles.forEach(palabra => {
+                        const tag = document.createElement('span');
+                        tag.className = 'tag disponible';
+                        tag.textContent = palabra;
+                        dispContainer.appendChild(tag);
+                    });
+                } else {
+                    dispContainer.textContent = '(ninguna)';
+                }
+                
+                // Palabras faltantes
+                const faltContainer = document.getElementById('faltantes');
+                faltContainer.innerHTML = '';
+                if (data.palabras_faltantes && data.palabras_faltantes.length > 0) {
+                    data.palabras_faltantes.forEach(palabra => {
+                        const tag = document.createElement('span');
+                        tag.className = 'tag faltante';
+                        tag.textContent = palabra;
+                        faltContainer.appendChild(tag);
+                    });
+                } else {
+                    faltContainer.textContent = '(ninguna)';
+                }
+                
+                // JSON completo
+                document.getElementById('json').textContent = JSON.stringify(data, null, 2);
+                
+            } catch (error) {
+                alert('Error: ' + error.message + '\n\nAsegúrate de que la API esté corriendo en http://localhost:5000');
+                console.error('Error:', error);
+            }
+        }
+        
+        // Ejecutar al cargar
+        window.onload = () => {
+            probarAPI();
+        };
+    </script>
+</body>
+</html>

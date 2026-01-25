@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visualizador LSV Mejorado</title>
+    <!-- Three.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <!-- OrbitControls -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.137.0/examples/js/controls/OrbitControls.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body { 
+            margin: 0; 
+            overflow: hidden;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: white;
+        }
+        
+        #viewer { 
+            width: 100vw; 
+            height: 100vh;
+        }
+        
+        #controls {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.85);
+            padding: 20px;
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+            min-width: 200px;
+            z-index: 100;
+        }
+        
+        #controls h3 {
+            margin: 0 0 15px 0;
+            color: #4fc3f7;
+            font-size: 1.2em;
+        }
+        
+        .btn-group {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+        
+        button {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.9em;
+            transition: all 0.3s;
+            flex: 1;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+        
+        .btn-play { background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); color: #000; }
+        .btn-pause { background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); color: #000; }
+        .btn-stop { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; }
+        .btn-toggle { background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%); color: #000; }
+        .btn-center { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+        
+        #info {
+            margin-top: 15px;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            font-size: 0.85em;
+            border-left: 4px solid #4fc3f7;
+        }
+        
+        .legend {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.85);
+            padding: 15px;
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+            font-size: 0.85em;
+        }
+        
+        .legend-item {
+            margin: 5px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 2px solid rgba(255,255,255,0.3);
+        }
+    </style>
+</head>
+<body>
+    <div id="viewer"></div>
+    
+    <div id="controls">
+        <h3>🎮 Controles</h3>
+        <div class="btn-group">
+            <button id="playBtn" class="btn-play">▶</button>
+            <button id="pauseBtn" class="btn-pause">⏸</button>
+            <button id="stopBtn" class="btn-stop">⏹</button>
+        </div>
+        <button id="toggleBtn" class="btn-toggle">💫 Suavizado</button>
+        <button id="recenterBtn" class="btn-center">📐 Centrar</button>
+        <div id="info">
+            <div id="status">Cargando...</div>
+        </div>
+    </div>
+    
+    <div class="legend">
+        <div class="legend-item">
+            <div class="legend-color" style="background: #00ff00;"></div>
+            <span>Pose (Cuerpo)</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background: #ff4444;"></div>
+            <span>Mano Izquierda</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background: #4444ff;"></div>
+            <span>Mano Derecha</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background: #ffff00;"></div>
+            <span>Rostro</span>
+        </div>
+    </div>
+    
+    <script src="viewer.js"></script>
+    <script>
+        let viewer;
+        
+        window.onload = function() {
+            viewer = new SkeletonViewer('viewer');
+            
+            // Intentar cargar archivo
+            fetch('./output/e_signavatar.json', {method: 'HEAD'}).then(r => {
+                if (r.ok) {
+                    viewer.loadSkeleton('./output/e_signavatar.json');
+                    updateStatus('✅ Cargado: e_signavatar.json');
+                } else {
+                    viewer.loadSkeleton('./output/hola_signavatar.json');
+                    updateStatus('✅ Cargado: hola_signavatar.json');
+                }
+            }).catch(_ => {
+                viewer.loadSkeleton('./output/hola_signavatar.json');
+                updateStatus('✅ Cargado: hola_signavatar.json');
+            });
+
+            // Controles
+            document.getElementById('playBtn').addEventListener('click', () => {
+                viewer.play();
+                updateStatus('▶ Reproduciendo');
+            });
+            
+            document.getElementById('pauseBtn').addEventListener('click', () => {
+                viewer.pause();
+                updateStatus('⏸ Pausado');
+            });
+            
+            document.getElementById('stopBtn').addEventListener('click', () => {
+                viewer.stop();
+                updateStatus('⏹ Detenido');
+            });
+            
+            document.getElementById('toggleBtn').addEventListener('click', () => {
+                viewer.toggleInterpolation();
+                updateStatus('💫 Suavizado: ' + (viewer.interpolationEnabled ? 'ON' : 'OFF'));
+            });
+            
+            document.getElementById('recenterBtn').addEventListener('click', () => {
+                viewer.autoFitCamera();
+                updateStatus('📐 Cámara centrada');
+            });
+        }
+        
+        function updateStatus(msg) {
+            document.getElementById('status').textContent = msg;
+        }
+    </script>
+</body>
+</html>

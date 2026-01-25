@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Test Rápido - Gestos</title>
+    <style>
+        body { 
+            font-family: monospace; 
+            background: #1a1a2e; 
+            color: white; 
+            padding: 20px; 
+        }
+        button { 
+            padding: 15px 30px; 
+            margin: 10px; 
+            font-size: 16px; 
+            cursor: pointer;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+        }
+        #canvas { 
+            width: 800px; 
+            height: 600px; 
+            background: #2d2d44; 
+            margin: 20px 0;
+        }
+        #console {
+            background: #000;
+            color: #0f0;
+            padding: 15px;
+            height: 300px;
+            overflow-y: auto;
+            font-family: 'Courier New';
+            border-radius: 8px;
+        }
+        .log { margin: 3px 0; }
+        .error { color: #ff6b6b; }
+        .success { color: #51cf66; }
+        .warning { color: #ffd43b; }
+    </style>
+</head>
+<body>
+    <h1>🔍 Test Rápido - Sistema de Gestos Faciales</h1>
+    
+    <div>
+        <button onclick="test()">▶️ INICIAR TEST COMPLETO</button>
+        <button onclick="testAngry()">😠 Test ANGRY</button>
+        <button onclick="testHappy()">😊 Test HAPPY</button>
+        <button onclick="testSad()">😢 Test SAD</button>
+        <button onclick="clearConsole()">🗑️ Limpiar</button>
+    </div>
+    
+    <canvas id="canvas"></canvas>
+    
+    <h3>Console Output:</h3>
+    <div id="console"></div>
+
+    <script src="facial_expression_system.js"></script>
+    <script type="module">
+        import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.module.js';
+        import { GLTFLoader } from 'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/jsm/loaders/GLTFLoader.js';
+        import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/jsm/controls/OrbitControls.js';
+
+        let scene, camera, renderer, controls, clock;
+        let luisModel, facialSystem;
+
+        // Redirigir console.log
+        const originalLog = console.log;
+        const originalWarn = console.warn;
+        const originalError = console.error;
+        
+        function logToDiv(message, type = 'log') {
+            const div = document.getElementById('console');
+            const entry = document.createElement('div');
+            entry.className = `log ${type}`;
+            entry.textContent = message;
+            div.appendChild(entry);
+            div.scrollTop = div.scrollHeight;
+        }
+        
+        console.log = function(...args) {
+            logToDiv(args.join(' '), 'log');
+            originalLog.apply(console, args);
+        };
+        
+        console.warn = function(...args) {
+            logToDiv('⚠️ ' + args.join(' '), 'warning');
+            originalWarn.apply(console, args);
+        };
+        
+        console.error = function(...args) {
+            logToDiv('❌ ' + args.join(' '), 'error');
+            originalError.apply(console, args);
+        };
+        
+        window.clearConsole = function() {
+            document.getElementById('console').innerHTML = '';
+        };
+
+        function setupScene() {
+            const canvas = document.getElementById('canvas');
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x2d2d44);
+            
+            camera = new THREE.PerspectiveCamera(50, 800/600, 0.1, 1000);
+            camera.position.set(0, 1.6, 2);
+            
+            renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+            renderer.setSize(800, 600);
+            
+            controls = new OrbitControls(camera, canvas);
+            controls.target.set(0, 1.4, 0);
+            controls.update();
+            
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
+            scene.add(ambientLight);
+            
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            directionalLight.position.set(5, 10, 5);
+            scene.add(directionalLight);
+            
+            clock = new THREE.Clock();
+        }
+
+        async function loadModel() {
+            console.log('📦 Cargando modelo Luis.glb...');
+            const loader = new GLTFLoader();
+            
+            try {
+                const gltf = await new Promise((resolve, reject) => {
+                    loader.load('output/glb/Luis/Luis.glb', resolve, undefined, reject);
+                });
+                
+                luisModel = gltf.scene;
+                scene.add(luisModel);
+                
+                const box = new THREE.Box3().setFromObject(luisModel);
+                const center = box.getCenter(new THREE.Vector3());
+                luisModel.position.sub(center);
+                luisModel.position.y = 0;
+                
+                console.log('✅ Modelo cargado');
+                
+                // Analizar meshes
+                let meshCount = 0;
+                luisModel.traverse((child) => {
+                    if (child.isMesh && child.morphTargetInfluences) {
+                        meshCount++;
+                        console.log(`   Mesh: ${child.name} - ${child.morphTargetInfluences.length} morph targets`);
+                    }
+                });
+                console.log(`   Total meshes con morph targets: ${meshCount}`);
+                
+                return true;
+            } catch (error) {
+                console.error('Error cargando modelo:', error.message);
+                return false;
+            }
+        }
+
+        async function initFacialSystem() {
+            console.log('🎭 Inicializando sistema de gestos...');
+            
+            facialSystem = new FacialExpressionSystem();
+            
+            const configLoaded = await facialSystem.loadConfig('facial_expressions_config.json');
+            if (!configLoaded) {
+                console.error('No se pudo cargar configuración');
+                return false;
+            }
+            
+            facialSystem.initializeWithModel(luisModel);
+            
+            const info = facialSystem.getDebugInfo();
+            console.log(`   Meshes: ${info.meshCount}`);
+            console.log(`   Morph targets: ${info.availableMorphTargets}`);
+            
+            return true;
+        }
+
+        function verifyMorphTargets() {
+            console.log('\n🔍 Verificando morph targets activos:');
+            let hasNonZero = false;
+            let totalActive = 0;
+            
+            luisModel.traverse((child) => {
+                if (child.isMesh && child.morphTargetInfluences) {
+                    for (let i = 0; i < child.morphTargetInfluences.length; i++) {
+                        const value = child.morphTargetInfluences[i];
+                        if (value > 0.01) {
+                            hasNonZero = true;
+                            totalActive++;
+                            
+                            let targetName = `index_${i}`;
+                            if (child.morphTargetDictionary) {
+                                for (const [name, index] of Object.entries(child.morphTargetDictionary)) {
+                                    if (index === i) {
+                                        targetName = name;
+                                        break;
+                                    }
+                                }
+                            }
+                            
+                            console.log(`   ${child.name}[${i}] ${targetName}: ${value.toFixed(3)}`);
+                        }
+                    }
+                }
+            });
+            
+            if (!hasNonZero) {
+                console.error('❌ NINGÚN morph target está activado');
+                console.error('   Las expresiones NO se están aplicando!');
+            } else {
+                console.log(`✅ ${totalActive} morph targets activos`);
+            }
+        }
+
+        window.test = async function() {
+            clearConsole();
+            console.log('='.repeat(50));
+            console.log('INICIANDO TEST COMPLETO');
+            console.log('='.repeat(50));
+            
+            setupScene();
+            
+            const modelLoaded = await loadModel();
+            if (!modelLoaded) return;
+            
+            const systemReady = await initFacialSystem();
+            if (!systemReady) return;
+            
+            console.log('\n✅ Sistema listo');
+            console.log('\nAplicando expresión ANGRY...');
+            facialSystem.setExpression('angry', 0);
+            
+            setTimeout(() => {
+                verifyMorphTargets();
+            }, 500);
+            
+            animate();
+        };
+
+        window.testAngry = function() {
+            if (!facialSystem) { console.error('Ejecuta TEST primero'); return; }
+            console.log('\n😠 Aplicando ANGRY...');
+            facialSystem.setExpression('angry', 0);
+            setTimeout(verifyMorphTargets, 500);
+        };
+
+        window.testHappy = function() {
+            if (!facialSystem) { console.error('Ejecuta TEST primero'); return; }
+            console.log('\n😊 Aplicando HAPPY...');
+            facialSystem.setExpression('happy', 0);
+            setTimeout(verifyMorphTargets, 500);
+        };
+
+        window.testSad = function() {
+            if (!facialSystem) { console.error('Ejecuta TEST primero'); return; }
+            console.log('\n😢 Aplicando SAD...');
+            facialSystem.setExpression('sad', 0);
+            setTimeout(verifyMorphTargets, 500);
+        };
+
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            const delta = clock.getDelta();
+            if (facialSystem) {
+                facialSystem.update(delta);
+            }
+            
+            controls.update();
+            renderer.render(scene, camera);
+        }
+        
+        console.log('✅ Sistema cargado. Haz click en "INICIAR TEST COMPLETO"');
+    </script>
+</body>
+</html>

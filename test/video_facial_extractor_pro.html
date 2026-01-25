@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>🎯 Extractor PRECISO de Expresiones Faciales</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: #0a0e27;
+            color: #fff;
+            overflow: hidden;
+        }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: 400px 1fr 350px;
+            height: 100vh;
+        }
+        
+        .panel {
+            background: #151932;
+            border-right: 1px solid #2a2f4f;
+            overflow-y: auto;
+        }
+        
+        .panel-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        
+        .panel-header h2 {
+            font-size: 18px;
+            font-weight: 600;
+        }
+        
+        .panel-content {
+            padding: 20px;
+        }
+        
+        .center-panel {
+            display: flex;
+            flex-direction: column;
+            background: #0a0e27;
+        }
+        
+        .video-container {
+            position: relative;
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #000;
+        }
+        
+        #videoCanvas {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+        
+        .canvas-3d-container {
+            position: relative;
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        #canvas3d {
+            width: 100%;
+            height: 100%;
+        }
+        
+        .controls-bar {
+            background: #151932;
+            border-top: 1px solid #2a2f4f;
+            padding: 15px 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        }
+        
+        .btn-danger {
+            background: linear-gradient(135deg, #eb3349 0%, #f45c43 100%);
+        }
+        
+        .file-input-wrapper {
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .file-input-wrapper input[type=file] {
+            position: absolute;
+            left: -9999px;
+        }
+        
+        .progress-container {
+            flex: 1;
+            background: #0a0e27;
+            border-radius: 10px;
+            overflow: hidden;
+            height: 8px;
+        }
+        
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            transition: width 0.3s;
+        }
+        
+        .status-text {
+            font-size: 13px;
+            color: #a0a4b8;
+            min-width: 100px;
+        }
+        
+        .shape-key-item {
+            background: #0a0e27;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .shape-key-name {
+            flex: 1;
+            font-size: 12px;
+            color: #a0a4b8;
+        }
+        
+        .shape-key-value {
+            font-size: 14px;
+            font-weight: 600;
+            color: #667eea;
+            min-width: 50px;
+            text-align: right;
+        }
+        
+        .shape-key-bar {
+            width: 100px;
+            height: 6px;
+            background: #1a1f3a;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+        
+        .shape-key-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #38ef7d 100%);
+            transition: width 0.1s;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-card {
+            background: #0a0e27;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 28px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .stat-label {
+            font-size: 11px;
+            color: #6b7280;
+            margin-top: 5px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .quality-indicator {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px;
+            background: #0a0e27;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+        
+        .quality-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+        
+        .quality-dot.good { background: #38ef7d; }
+        .quality-dot.medium { background: #ffd93d; }
+        .quality-dot.bad { background: #f45c43; }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .section-title {
+            font-size: 11px;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin: 20px 0 10px 0;
+            font-weight: 600;
+        }
+        
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #0a0e27;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #2a2f4f;
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: #3a3f5f;
+        }
+    </style>
+</head>
+<body>
+    <div class="grid">
+        <!-- Panel izquierdo: Controles -->
+        <div class="panel">
+            <div class="panel-header">
+                <h2>🎯 Control y Configuración</h2>
+            </div>
+            <div class="panel-content">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value" id="fpsValue">--</div>
+                        <div class="stat-label">FPS</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="durationValue">--</div>
+                        <div class="stat-label">Duración (s)</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="framesProcessed">0</div>
+                        <div class="stat-label">Frames Procesados</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="totalFramesValue">--</div>
+                        <div class="stat-label">Total Frames</div>
+                    </div>
+                </div>
+                
+                <div class="quality-indicator" id="qualityIndicator">
+                    <div class="quality-dot good" id="qualityDot"></div>
+                    <div>
+                        <div style="font-size: 13px; font-weight: 600;" id="qualityText">Sistema Listo</div>
+                        <div style="font-size: 11px; color: #6b7280;" id="qualitySubtext">Esperando video...</div>
+                    </div>
+                </div>
+                
+                <div class="section-title">Video</div>
+                <div class="file-input-wrapper">
+                    <label for="videoInput" class="btn" style="display: block; text-align: center;">
+                        📂 Seleccionar Video
+                    </label>
+                    <input type="file" id="videoInput" accept="video/*">
+                </div>
+                <button class="btn btn-success" style="width: 100%; margin-top: 10px;" onclick="loadDefaultVideo()">
+                    📥 Cargar amar.mp4
+                </button>
+                
+                <div class="section-title">Procesamiento</div>
+                <button class="btn" id="analyzeBtn" style="width: 100%;" onclick="analyzeVideo()" disabled>
+                    🔍 Analizar Video
+                </button>
+                <button class="btn btn-success" id="syncBtn" style="width: 100%; margin-top: 10px;" onclick="toggleSync()" disabled>
+                    🔄 Sincronizar
+                </button>
+                <button class="btn btn-danger" id="stopBtn" style="width: 100%; margin-top: 10px; display: none;" onclick="stopAnalysis()">
+                    ⏹️ Detener
+                </button>
+                
+                <div class="section-title">Exportar</div>
+                <button class="btn" style="width: 100%;" onclick="exportJSON()" disabled id="exportBtn">
+                    💾 Exportar JSON
+                </button>
+                
+                <div class="section-title" style="margin-top: 30px;">Configuración Avanzada</div>
+                <div style="background: #0a0e27; padding: 15px; border-radius: 8px; font-size: 12px; color: #a0a4b8;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                        <span>Suavizado Temporal:</span>
+                        <span id="smoothingValue">5</span>
+                    </div>
+                    <input type="range" id="smoothingSlider" min="1" max="10" value="5" style="width: 100%;">
+                    
+                    <div style="display: flex; justify-content: space-between; margin: 15px 0 10px 0;">
+                        <span>Umbral de Ruido:</span>
+                        <span id="noiseValue">0.08</span>
+                    </div>
+                    <input type="range" id="noiseSlider" min="1" max="20" value="8" style="width: 100%;">
+                </div>
+            </div>
+        </div>
+        
+        <!-- Panel central: Video y 3D -->
+        <div class="center-panel">
+            <div class="video-container">
+                <canvas id="videoCanvas"></canvas>
+            </div>
+            <div class="canvas-3d-container">
+                <canvas id="canvas3d"></canvas>
+            </div>
+            <div class="controls-bar">
+                <button class="btn" onclick="video.currentTime = 0">⏮️</button>
+                <button class="btn" id="playPauseBtn" onclick="togglePlay()">▶️</button>
+                <div class="progress-container" onclick="seekVideo(event)">
+                    <div class="progress-bar" id="videoProgress"></div>
+                </div>
+                <div class="status-text" id="timeDisplay">00:00 / 00:00</div>
+            </div>
+        </div>
+        
+        <!-- Panel derecho: Shape Keys en tiempo real -->
+        <div class="panel">
+            <div class="panel-header">
+                <h2>📊 Shape Keys en Vivo</h2>
+            </div>
+            <div class="panel-content" id="shapeKeysPanel"></div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh@0.4.1633559619/face_mesh.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    
+    <script src="facial_extractor_engine.js"></script>
+</body>
+</html>

@@ -1,0 +1,102 @@
+{
+  "sign_name": "hola",
+  "duration": 1.5,
+  "fps": 30,
+  "total_frames": 45,
+  "keypoints": [
+    {
+      "frame": 0,
+      "time": 0.0,
+      "pose": {
+        "right_hand": {
+          "x": 0.5,
+          "y": 1.2,
+          "z": 0.3,
+          "rotation_x": 0,
+          "rotation_y": 0,
+          "rotation_z": 0
+        },
+        "right_arm": {
+          "elbow_angle": 90,
+          "shoulder_angle": 45
+        },
+        "head": {
+          "rotation_x": 0,
+          "rotation_y": 0,
+          "rotation_z": 0
+        }
+      }
+    },
+    {
+      "frame": 15,
+      "time": 0.5,
+      "pose": {
+        "right_hand": {
+          "x": 0.6,
+          "y": 1.4,
+          "z": 0.4,
+          "rotation_x": 10,
+          "rotation_y": 15,
+          "rotation_z": 0
+        },
+        "right_arm": {
+          "elbow_angle": 100,
+          "shoulder_angle": 60
+        },
+        "head": {
+          "rotation_x": 5,
+          "rotation_y": 0,
+          "rotation_z": 0
+        }
+      }
+    },
+    {
+      "frame": 30,
+      "time": 1.0,
+      "pose": {
+        "right_hand": {
+          "x": 0.7,
+          "y": 1.5,
+          "z": 0.5,
+          "rotation_x": 0,
+          "rotation_y": 20,
+          "rotation_z": 5
+        },
+        "right_arm": {
+          "elbow_angle": 110,
+          "shoulder_angle": 70
+        },
+        "head": {
+          "rotation_x": 0,
+          "rotation_y": 5,
+          "rotation_z": 0
+        }
+      }
+    },
+    {
+      "frame": 45,
+      "time": 1.5,
+      "pose": {
+        "right_hand": {
+          "x": 0.5,
+          "y": 1.2,
+          "z": 0.3,
+          "rotation_x": 0,
+          "rotation_y": 0,
+          "rotation_z": 0
+        },
+        "right_arm": {
+          "elbow_angle": 90,
+          "shoulder_angle": 45
+        },
+        "head": {
+          "rotation_x": 0,
+          "rotation_y": 0,
+          "rotation_z": 0
+        }
+      }
+    }
+  ],
+  "description": "Seña de saludo 'hola' en lengua de señas venezolana",
+  "category": "saludo"
+}

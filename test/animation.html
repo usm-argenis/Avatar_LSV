@@ -1,0 +1,1308 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nancy - Sistema de Animaciones</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            overflow: hidden;
+            color: white;
+        }
+
+        #app {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #header {
+            background: rgba(0, 0, 0, 0.9);
+            padding: 20px 30px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* Controles superiores */
+        .top-controls {
+            position: absolute;
+            top: 15px;
+            right: 30px;
+            display: flex;
+            gap: 10px;
+            z-index: 100;
+        }
+
+        .control-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            color: white;
+            padding: 10px 18px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, opacity 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .control-btn:active {
+            transform: scale(0.95);
+        }
+
+        .control-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .control-btn.pause {
+            background: linear-gradient(135deg, #FFA500 0%, #FF6B35 100%);
+        }
+
+        .control-btn.replay {
+            background: linear-gradient(135deg, #4CAF50 0%, #45B7D1 100%);
+        }
+
+        /* Barra inferior con input */
+        .bottom-input-bar {
+            background: rgba(0, 0, 0, 0.95);
+            padding: 15px 30px;
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.5);
+        }
+
+        .text-input-bottom {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            color: white;
+            padding: 12px 16px;
+            font-size: 16px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        .text-input-bottom:focus {
+            border-color: #667eea;
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .text-input-bottom::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .animate-btn-bottom {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+            white-space: nowrap;
+        }
+
+        .animate-btn-bottom:active {
+            transform: scale(0.95);
+        }
+
+        .animate-btn-bottom:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .header-title {
+            font-size: 28px;
+            font-weight: bold;
+            color: #f093fb;
+        }
+        
+        .avatar-selector {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .avatar-btn {
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 14px;
+        }
+        
+        .avatar-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+        
+        .avatar-btn.active {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            border-color: #f093fb;
+        }
+
+        #viewer-container {
+            flex: 1;
+            position: relative;
+            background: linear-gradient(180deg, #1a1a2e 0%, #2d2d44 100%);
+        }
+
+        #canvas-3d {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Ocultar panel de traducción original */
+        #translation-panel {
+            display: none !important;
+        }
+
+        #translation-panel-hidden {
+            background: rgba(0, 0, 0, 0.95);
+            padding: 25px 40px;
+            box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.7);
+        }
+
+        .input-group {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        #text-input {
+            flex: 1;
+            padding: 15px 20px;
+            font-size: 16px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(240, 147, 251, 0.5);
+            border-radius: 12px;
+            color: white;
+            outline: none;
+        }
+
+        #text-input:focus {
+            border-color: #f093fb;
+            box-shadow: 0 0 0 4px rgba(240, 147, 251, 0.2);
+        }
+
+        #text-input::placeholder {
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        #translate-btn {
+            padding: 15px 40px;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        #translate-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 25px rgba(245, 87, 108, 0.6);
+        }
+
+        .status {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.85);
+            padding: 15px 25px;
+            border-radius: 12px;
+            font-size: 14px;
+            z-index: 50;
+        }
+
+        .sign-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .chip {
+            padding: 8px 15px;
+            background: rgba(240, 147, 251, 0.2);
+            border: 1px solid rgba(240, 147, 251, 0.5);
+            border-radius: 20px;
+            font-size: 14px;
+        }
+
+        .chip.active {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        #loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        #loading.hidden {
+            display: none;
+        }
+
+        .spinner {
+            width: 70px;
+            height: 70px;
+            border: 5px solid rgba(255, 255, 255, 0.2);
+            border-top: 5px solid #f093fb;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 25px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            font-size: 20px;
+            color: #f093fb;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <div id="header">
+            <div class="header-title" id="header-title">👩 Nancy - Sistema de Animaciones LSV</div>
+            <div class="avatar-selector" id="avatar-selector"></div>
+        </div>
+
+        <div id="viewer-container">
+            <canvas id="canvas-3d"></canvas>
+            <div class="status" id="status">Cargando...</div>
+            
+            <!-- Controles superiores (pause/replay) -->
+            <div class="top-controls">
+                <button id="pause-btn" class="control-btn">⏸️ Pausar</button>
+                <button id="replay-btn" class="control-btn">🔄 Repetir</button>
+            </div>
+        </div>
+
+        <!-- Barra inferior con input de texto -->
+        <div class="bottom-input-bar">
+            <input 
+                type="text" 
+                id="text-input-bottom" 
+                class="text-input-bottom" 
+                placeholder="Escribe una frase en español..." 
+                autocomplete="off"
+            />
+            <button id="animate-btn" class="animate-btn">🎬 Animar</button>
+        </div>
+
+        <div id="translation-panel">
+            <div class="sign-chips" id="chips"></div>
+        </div>
+    </div>
+
+    <div id="loading">
+        <div class="spinner"></div>
+        <div class="loading-text" id="loading-text">Cargando Nancy...</div>
+    </div>
+
+    <!-- Sistema de Gestos Faciales -->
+    <script src="facial_expression_system.js"></script>
+    
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.module.js",
+                "three/examples/": "https://cdn.jsdelivr.net/npm/three@0.128.0/examples/"
+            }
+        }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+        import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+
+        let scene, camera, renderer, controls, clock;
+        let nancyModel, mixer;
+        let animationCache = new Map();
+        let currentAction = null;
+
+        // Sistema de gestos faciales
+        let facialSystem = null;
+
+        // Estado del sistema
+        let avatarActual = 'Nancy';
+        
+        // Variables de control
+        let isPaused = false;
+        let ultimoTexto = '';
+        let isAnimating = false;
+        let animacionesActuales = [];
+        
+        // Diccionario de mapeo (válido para todos los avatares)
+        const DICCIONARIO = {
+            // Alfabeto
+            'a': { categoria: 'alfabeto', archivo: 'a' },
+            'b': { categoria: 'alfabeto', archivo: 'b' },
+            'c': { categoria: 'alfabeto', archivo: 'c' },
+            'd': { categoria: 'alfabeto', archivo: 'd' },
+            'e': { categoria: 'alfabeto', archivo: 'e' },
+            'f': { categoria: 'alfabeto', archivo: 'f' },
+            'g': { categoria: 'alfabeto', archivo: 'g' },
+            'h': { categoria: 'alfabeto', archivo: 'h' },
+            'i': { categoria: 'alfabeto', archivo: 'i' },
+            'j': { categoria: 'alfabeto', archivo: 'j' },
+            'k': { categoria: 'alfabeto', archivo: 'k' },
+            'l': { categoria: 'alfabeto', archivo: 'l' },
+            'm': { categoria: 'alfabeto', archivo: 'm' },
+            'n': { categoria: 'alfabeto', archivo: 'n' },
+            'ñ': { categoria: 'alfabeto', archivo: 'ñ' },
+            'o': { categoria: 'alfabeto', archivo: 'o' },
+            'p': { categoria: 'alfabeto', archivo: 'p' },
+            'q': { categoria: 'alfabeto', archivo: 'q' },
+            'r': { categoria: 'alfabeto', archivo: 'r' },
+            's': { categoria: 'alfabeto', archivo: 's' },
+            't': { categoria: 'alfabeto', archivo: 't' },
+            'u': { categoria: 'alfabeto', archivo: 'u' },
+            'v': { categoria: 'alfabeto', archivo: 'v' },
+            'w': { categoria: 'alfabeto', archivo: 'w' },
+            'x': { categoria: 'alfabeto', archivo: 'x' },
+            'y': { categoria: 'alfabeto', archivo: 'y' },
+            'z': { categoria: 'alfabeto', archivo: 'z' },
+
+            // Cortesía
+            'a la orden': { categoria: 'cortesia', archivo: 'a la orden' },
+            'buen provecho': { categoria: 'cortesia', archivo: 'buen provecho' },
+            'cortesia': { categoria: 'cortesia', archivo: 'cortesia' },
+            'gracias': { categoria: 'cortesia', archivo: 'gracias' },
+            'muchas gracias': { categoria: 'cortesia', archivo: 'muchas gracias' },
+            'mucho gusto': { categoria: 'cortesia', archivo: 'mucho gusto' },
+            'permiso': { categoria: 'cortesia', archivo: 'permiso' },
+            
+            // Días de la semana
+            'domingo': { categoria: 'dias_semana', archivo: 'domingo' },
+            'jueves': { categoria: 'dias_semana', archivo: 'jueves' },
+            'lunes': { categoria: 'dias_semana', archivo: 'lunes' },
+            'martes': { categoria: 'dias_semana', archivo: 'martes' },
+            'miercoles': { categoria: 'dias_semana', archivo: 'miercoles' },
+            'sabado': { categoria: 'dias_semana', archivo: 'sabado' },
+            'viernes': { categoria: 'dias_semana', archivo: 'viernes' },
+            
+            // Expresiones
+            'abril': { categoria: 'expresiones', archivo: 'abril' },
+            'agosto': { categoria: 'expresiones', archivo: 'agosto' },
+            'bien': { categoria: 'expresiones', archivo: 'bien' },
+            'como': { categoria: 'expresiones', archivo: 'como' },
+            'cual': { categoria: 'expresiones', archivo: 'cual' },
+            'cuando': { categoria: 'expresiones', archivo: 'cuando' },
+            'cuantos': { categoria: 'expresiones', archivo: 'cuantos' },
+            'de nada': { categoria: 'expresiones', archivo: 'de nada' },
+            'diciembre': { categoria: 'expresiones', archivo: 'diciembre' },
+            'donde': { categoria: 'expresiones', archivo: 'donde' },
+            'donde (especifico)': { categoria: 'expresiones', archivo: 'donde (especifico)' },
+            'enero': { categoria: 'expresiones', archivo: 'enero' },
+            'expresiones': { categoria: 'expresiones', archivo: 'expresiones' },
+            'febrero': { categoria: 'expresiones', archivo: 'febrero' },
+            'interrogantes': { categoria: 'expresiones', archivo: 'interrogantes' },
+            'julio': { categoria: 'expresiones', archivo: 'julio' },
+            'junio': { categoria: 'expresiones', archivo: 'junio' },
+            'mal': { categoria: 'expresiones', archivo: 'mal' },
+            'marzo': { categoria: 'expresiones', archivo: 'marzo' },
+            'mayo': { categoria: 'expresiones', archivo: 'mayo' },
+            'no': { categoria: 'expresiones', archivo: 'no' },
+            'noviembre': { categoria: 'expresiones', archivo: 'noviembre' },
+            'octubre': { categoria: 'expresiones', archivo: 'octubre' },
+            'porque': { categoria: 'expresiones', archivo: 'porque' },
+            'que': { categoria: 'expresiones', archivo: 'que' },
+            'quien': { categoria: 'expresiones', archivo: 'quien' },
+            'saludas a': { categoria: 'expresiones', archivo: 'saludas a' },
+            'septiembre': { categoria: 'expresiones', archivo: 'septiembre' },
+            'regular': { categoria: 'expresiones', archivo: 'regular' },
+            'si': { categoria: 'expresiones', archivo: 'si' },
+            
+            // Preguntas
+            'como estas': { categoria: 'preguntas', archivo: 'como estas' },
+            'cual es tu nombre': { categoria: 'preguntas', archivo: 'cual es tu nombre' },
+            'cual es tu sena': { categoria: 'preguntas', archivo: 'cual es tu sena' },
+            'que tal': { categoria: 'preguntas', archivo: 'que tal' },
+            
+            // Preposiciones
+            'algo': { categoria: 'preposicion', archivo: 'algo' },
+            'alguien': { categoria: 'preposicion', archivo: 'alguien' },
+            'algun': { categoria: 'preposicion', archivo: 'algun' },
+            'bastante': { categoria: 'preposicion', archivo: 'bastante' },
+            'cualquier': { categoria: 'preposicion', archivo: 'cualquier' },
+            'demasiado': { categoria: 'preposicion', archivo: 'demasiado' },
+            'mucho': { categoria: 'preposicion', archivo: 'mucho' },
+            'nada': { categoria: 'preposicion', archivo: 'nada' },
+            'nadie': { categoria: 'preposicion', archivo: 'nadie' },
+            'ningun': { categoria: 'preposicion', archivo: 'ningun' },
+            'otro': { categoria: 'preposicion', archivo: 'otro' },
+            'poco': { categoria: 'preposicion', archivo: 'poco' },
+            'quienquiera': { categoria: 'preposicion', archivo: 'quienquiera' },
+            'todo': { categoria: 'preposicion', archivo: 'todo' },
+
+            // Pronombres
+            'el': { categoria: 'pronombres', archivo: 'el' },
+            'ella': { categoria: 'pronombres', archivo: 'ella' },
+            'ellas': { categoria: 'pronombres', archivo: 'ellas' },
+            'ellos': { categoria: 'pronombres', archivo: 'ellos' },
+            'nosotros': { categoria: 'pronombres', archivo: 'nosotros' },
+            'tu': { categoria: 'pronombres', archivo: 'tu' },
+            'ustedes': { categoria: 'pronombres', archivo: 'ustedes' },
+            'yo': { categoria: 'pronombres', archivo: 'yo' },
+            
+            // Saludos
+            'adios': { categoria: 'saludos', archivo: 'adios' },
+            'bienvenido': { categoria: 'saludos', archivo: 'bienvenido' },
+            'buenas noches': { categoria: 'saludos', archivo: 'buenas noches' },
+            'buenas tardes': { categoria: 'saludos', archivo: 'buenas tardes' },
+            'buenos dias': { categoria: 'saludos', archivo: 'buenos dias' },
+            'chao': { categoria: 'saludos', archivo: 'chao' },
+            'hola': { categoria: 'saludos', archivo: 'hola' },
+            
+            // Tiempo
+            'anteayer': { categoria: 'tiempo', archivo: 'anteayer' },
+            'ayer': { categoria: 'tiempo', archivo: 'ayer' },
+            'calendario': { categoria: 'tiempo', archivo: 'calendario' },
+            'fin de semana': { categoria: 'tiempo', archivo: 'fin de semana' },
+            'hoy': { categoria: 'tiempo', archivo: 'hoy' },
+            'manana': { categoria: 'tiempo', archivo: 'manana' },
+            'mañana': { categoria: 'tiempo', archivo: 'manana' },
+            'mes': { categoria: 'tiempo', archivo: 'mes' },
+            'pasado manana': { categoria: 'tiempo', archivo: 'pasado manana' },
+            'semana': { categoria: 'tiempo', archivo: 'semana' }
+            //preposicion
+            
+        };
+
+        // ============================================
+        // INTEGRACIÓN CON API DE IA
+        // ============================================
+        const API_URL = 'http://localhost:5000/api/translate';
+        const useAPI = true; // Cambiar a false para usar solo diccionario local
+
+        /**
+         * Función para traducir texto usando la API con IA
+         * La API maneja automáticamente el deletreo de palabras desconocidas
+         */
+        async function traducirConAPI(texto) {
+            try {
+                console.log('🌐 Consultando API con IA...');
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        texto: texto,
+                        deletrear_desconocidas: true, // Habilitar deletreo automático
+                        duracion_deletreo: 1.2 // Animaciones de deletreo más rápidas
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`API error: ${response.status}`);
+                }
+
+                const data = await response.json();
+                console.log('✅ Respuesta de API:', data);
+                return data;
+            } catch (error) {
+                console.error('❌ Error en API:', error);
+                return null;
+            }
+        }
+        
+        // Configuración de avatares
+        const AVATARES_CONFIG = {
+            'Nancy': { nombre: '👩 Nancy', color: '#f093fb' },
+            'Duvall': { nombre: '👨 Duvall', color: '#4facfe' },
+            'Luis': { nombre: '👦 Luis', color: '#43e97b' },
+            'Nina': { nombre: '👧 Nina', color: '#ee5a6f' },
+            'Carla': { nombre: '👩 Carla', color: '#FF6B9D' },
+            'Argenis': { nombre: '👨 Argenis', color: '#2ECC71' }
+        };
+
+        async function init() {
+            setupScene();
+            crearSelectorAvatares();
+            
+            // Inicializar sistema de gestos faciales
+            facialSystem = new FacialExpressionSystem();
+            await facialSystem.loadConfig('facial_expressions_config.json');
+            console.log('✅ Sistema de gestos faciales inicializado');
+            
+            // Obtener parámetros desde URL
+            const params = new URLSearchParams(window.location.search);
+            const avatarParam = params.get('avatar') || 'Nancy';
+            const textoParam = params.get('texto') || params.get('text') || '';
+            const autoplay = params.get('autoplay') === 'true';
+            
+            await cargarAvatar(avatarParam);
+            setupEventListeners();
+            
+            // Si hay texto en URL, cargarlo y opcionalmente reproducir
+            if (textoParam) {
+                document.getElementById('text-input-bottom').value = textoParam;
+                if (autoplay) {
+                    setTimeout(() => {
+                        const texto = textoParam.trim();
+                        if (texto && !isAnimating) {
+                            traducirYAnimar(texto);
+                        }
+                    }, 500);
+                }
+            }
+            
+            animate();
+        }
+        
+        function crearSelectorAvatares() {
+            const container = document.getElementById('avatar-selector');
+            Object.keys(AVATARES_CONFIG).forEach(nombre => {
+                const btn = document.createElement('button');
+                btn.className = `avatar-btn ${nombre === avatarActual ? 'active' : ''}`;
+                btn.textContent = AVATARES_CONFIG[nombre].nombre;
+                btn.id = `btn-${nombre}`;
+                btn.onclick = () => cambiarAvatar(nombre);
+                container.appendChild(btn);
+            });
+        }
+        
+        async function cambiarAvatar(nuevoAvatar) {
+            if (nuevoAvatar === avatarActual) return;
+            
+            document.getElementById('status').textContent = `🔄 Cambiando a ${nuevoAvatar}...`;
+            
+            // Actualizar botones
+            document.querySelectorAll('.avatar-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.getElementById(`btn-${nuevoAvatar}`).classList.add('active');
+            
+            await cargarAvatar(nuevoAvatar);
+        }
+
+        function setupScene() {
+            const container = document.getElementById('viewer-container');
+            const canvas = document.getElementById('canvas-3d');
+            
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x1a1a2e);
+            
+            camera = new THREE.PerspectiveCamera(
+                50,
+                container.clientWidth / container.clientHeight,
+                0.1,
+                1000
+            );
+            camera.position.set(0, 1.6, 3);
+            
+            renderer = new THREE.WebGLRenderer({ 
+                canvas: canvas,
+                antialias: true
+            });
+            renderer.setSize(container.clientWidth, container.clientHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+            
+            controls = new OrbitControls(camera, canvas);
+            controls.target.set(0, 1.2, 0);
+            controls.update();
+            
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+            scene.add(ambientLight);
+            
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            directionalLight.position.set(5, 10, 5);
+            scene.add(directionalLight);
+            
+            const backLight = new THREE.DirectionalLight(0xf093fb, 0.4);
+            backLight.position.set(-5, 5, -5);
+            scene.add(backLight);
+            
+            clock = new THREE.Clock();
+            
+            window.addEventListener('resize', () => {
+                camera.aspect = container.clientWidth / container.clientHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(container.clientWidth, container.clientHeight);
+            });
+        }
+
+        async function cargarAvatar(nombreAvatar) {
+            return new Promise(async (resolve, reject) => {
+                const loader = new GLTFLoader();
+                const loadingText = document.getElementById('loading-text');
+                const loadingDiv = document.getElementById('loading');
+                
+                loadingDiv.classList.remove('hidden');
+                loadingText.textContent = `Cargando ${nombreAvatar}...`;
+                
+                // Determinar género según el avatar
+                const genero = (nombreAvatar === 'Nancy' || nombreAvatar === 'Nina' || nombreAvatar === 'Carla') ? 'Mujer' : 'Hombre';
+                
+                // Rutas a intentar: primero individual, luego género
+                const rutasIntento = [
+                    `output/glb/${nombreAvatar}/${nombreAvatar}.glb`,  // Prioridad: carpeta individual
+                    `output/glb/${genero}/${nombreAvatar}.glb`  // Fallback: estructura por género
+                ];
+                
+                let cargado = false;
+                
+                for (const ruta of rutasIntento) {
+                    if (cargado) break;
+                    
+                    try {
+                        const gltf = await new Promise((res, rej) => {
+                            loader.load(
+                                ruta,
+                                (result) => res(result),
+                                (progress) => {
+                                    const percent = (progress.loaded / progress.total) * 100;
+                                    loadingText.textContent = `Cargando ${nombreAvatar}... ${percent.toFixed(0)}%`;
+                                },
+                                (error) => rej(error)
+                            );
+                        });
+                        
+                        console.log(`✅ Avatar cargado desde: ${ruta}`);
+                        
+                        // Remover avatar anterior si existe
+                        if (nancyModel) {
+                            scene.remove(nancyModel);
+                            nancyModel.traverse((child) => {
+                                if (child.geometry) child.geometry.dispose();
+                                if (child.material) child.material.dispose();
+                            });
+                        }
+                        
+                        // Agregar nuevo avatar
+                        nancyModel = gltf.scene;
+                        scene.add(nancyModel);
+                        
+                        // Centrar modelo
+                        const box = new THREE.Box3().setFromObject(nancyModel);
+                        const center = box.getCenter(new THREE.Vector3());
+                        nancyModel.position.sub(center);
+                        nancyModel.position.y = 0;
+                        
+                        // Crear mixer
+                        mixer = new THREE.AnimationMixer(nancyModel);
+                        
+                        // Inicializar sistema de gestos faciales con el nuevo modelo
+                        if (facialSystem) {
+                            facialSystem.initializeWithModel(nancyModel);
+                            facialSystem.reset(); // Expresión neutral por defecto
+                            console.log('✅ Sistema de gestos faciales vinculado al modelo');
+                        }
+                        
+                        // Limpiar caché de animaciones
+                        animationCache.clear();
+                        
+                        // Actualizar estado
+                        avatarActual = nombreAvatar;
+                        
+                        // Actualizar UI
+                        document.getElementById('header-title').textContent = 
+                            `${AVATARES_CONFIG[nombreAvatar].nombre} - Sistema de Animaciones LSV`;
+                        document.getElementById('header-title').style.color = 
+                            AVATARES_CONFIG[nombreAvatar].color;
+                        
+                        loadingDiv.classList.add('hidden');
+                        document.getElementById('status').textContent = 
+                            `✅ ${nombreAvatar} cargado - Listo para animar`;
+                        
+                        cargado = true;
+                        resolve();
+                        
+                    } catch (error) {
+                        console.log(`⚠️ No se pudo cargar desde: ${ruta}`);
+                        // Continuar con siguiente ruta
+                    }
+                }
+                
+                if (!cargado) {
+                    console.error(`❌ Error cargando ${nombreAvatar} desde todas las rutas`);
+                    document.getElementById('status').textContent = `❌ Error al cargar ${nombreAvatar}`;
+                    loadingDiv.classList.add('hidden');
+                    reject(new Error(`No se pudo cargar ${nombreAvatar}`));
+                }
+            });
+        }
+
+        async function traducirYAnimar(texto) {
+            if (isAnimating) return;
+            
+            console.log(`🎭 Traducir: "${texto}"`);
+            isAnimating = true;
+            
+            let animacionesValidas = [];
+            let palabrasDeletreadas = [];
+            
+            // PRIMERO: Intentar con API (IA + deletreo automático)
+            if (useAPI) {
+                const resultadoAPI = await traducirConAPI(texto);
+                
+                if (resultadoAPI && resultadoAPI.animaciones && resultadoAPI.animaciones.length > 0) {
+                    console.log('✅ Usando traducciones de API con IA');
+                    
+                    // Convertir formato API al formato interno
+                    animacionesValidas = resultadoAPI.animaciones.map(anim => ({
+                        texto: anim.nombre,
+                        palabra: anim.nombre,
+                        categoria: anim.categoria,
+                        archivo: anim.archivo,
+                        es_deletreo: anim.es_deletreo || false,
+                        duracion: anim.duracion || null
+                    }));
+                    
+                    palabrasDeletreadas = resultadoAPI.palabras_deletreadas || [];
+                    
+                } else {
+                    console.log('⚠️ API no disponible, usando diccionario local');
+                }
+            }
+            
+            // FALLBACK: Si API falló o useAPI=false, usar diccionario local
+            if (animacionesValidas.length === 0) {
+                const palabras = texto.toLowerCase().trim().split(/\s+/);
+                
+                // Buscar frases compuestas primero (ej: "buenos dias", "muchas gracias")
+                let i = 0;
+                while (i < palabras.length) {
+                    let encontrada = false;
+                    
+                    // Intentar frases de 3 palabras
+                    if (i + 2 < palabras.length) {
+                        const frase3 = palabras.slice(i, i + 3).join(' ');
+                        if (DICCIONARIO[frase3]) {
+                            animacionesValidas.push({ 
+                                texto: frase3, 
+                                palabra: frase3,
+                                categoria: DICCIONARIO[frase3].categoria,
+                                archivo: DICCIONARIO[frase3].archivo,
+                                es_deletreo: false,
+                                duracion: null
+                            });
+                            i += 3;
+                            encontrada = true;
+                        }
+                    }
+                    
+                    // Intentar frases de 2 palabras
+                    if (!encontrada && i + 1 < palabras.length) {
+                        const frase2 = palabras.slice(i, i + 2).join(' ');
+                        if (DICCIONARIO[frase2]) {
+                            animacionesValidas.push({ 
+                                texto: frase2, 
+                                palabra: frase2,
+                                categoria: DICCIONARIO[frase2].categoria,
+                                archivo: DICCIONARIO[frase2].archivo,
+                                es_deletreo: false,
+                                duracion: null
+                            });
+                            i += 2;
+                            encontrada = true;
+                        }
+                    }
+                    
+                    // Palabra individual
+                    if (!encontrada) {
+                        if (DICCIONARIO[palabras[i]]) {
+                            animacionesValidas.push({ 
+                                texto: palabras[i], 
+                                palabra: palabras[i],
+                                categoria: DICCIONARIO[palabras[i]].categoria,
+                                archivo: DICCIONARIO[palabras[i]].archivo,
+                                es_deletreo: false,
+                                duracion: null
+                            });
+                        } else {
+                            console.warn(`⚠️ Palabra no encontrada: ${palabras[i]}`);
+                        }
+                        i++;
+                    }
+                }
+            }
+            
+            if (animacionesValidas.length === 0) {
+                document.getElementById('status').textContent = '⚠️ No se encontraron animaciones';
+                isAnimating = false;
+                return;
+            }
+            
+            console.log(`🎬 Secuencia: ${animacionesValidas.map(a => a.texto).join(' → ')}`);
+            
+            // Guardar secuencia actual
+            animacionesActuales = animacionesValidas;
+            
+            // Mostrar chips
+            mostrarChips(animacionesValidas);
+            
+            // Reproducir secuencia con indicador de progreso
+            for (let idx = 0; idx < animacionesValidas.length; idx++) {
+                const anim = animacionesValidas[idx];
+                activarChip(idx);
+                
+                // 🎭 APLICAR GESTO FACIAL basado en la palabra
+                if (facialSystem) {
+                    const expresionPalabra = facialSystem.getExpressionForWord(anim.palabra);
+                    if (expresionPalabra !== 'neutral') {
+                        console.log(`😊 Aplicando expresión: ${expresionPalabra} para "${anim.palabra}"`);
+                        facialSystem.setExpression(expresionPalabra, 0.3); // Transición de 0.3s
+                    }
+                }
+                
+                // Mostrar icono especial para deletreo
+                const icono = anim.es_deletreo ? '🔡' : '▶️';
+                document.getElementById('status').textContent = 
+                    `${icono} [${idx + 1}/${animacionesValidas.length}] ${anim.texto}`;
+                console.log(`🎬 [${idx + 1}/${animacionesValidas.length}] Reproduciendo: ${anim.texto}`);
+                
+                // Usar la nueva función con parámetros
+                await cargarYReproducirAnimacion(
+                    anim.palabra,
+                    anim.categoria,
+                    anim.archivo,
+                    anim.duracion
+                );
+                
+                // Volver a expresión neutral al final
+                if (facialSystem && idx < animacionesValidas.length - 1) {
+                    facialSystem.setExpression('neutral', 0.2);
+                }
+                
+                console.log(`✅ [${idx + 1}/${animacionesValidas.length}] Completado: ${anim.texto}`);
+            }
+            
+            // Mensaje final con información de palabras deletreadas
+            let mensajeFinal = '✅ Secuencia completada';
+            if (palabrasDeletreadas.length > 0) {
+                mensajeFinal += ` (Palabras deletreadas: ${palabrasDeletreadas.join(', ')})`;
+            }
+            document.getElementById('status').textContent = mensajeFinal;
+            isAnimating = false;
+        }
+
+        function mostrarChips(animaciones) {
+            const container = document.getElementById('chips');
+            container.innerHTML = '';
+            animaciones.forEach((anim, idx) => {
+                const chip = document.createElement('div');
+                chip.className = 'chip';
+                chip.id = `chip-${idx}`;
+                chip.textContent = anim.texto;
+                container.appendChild(chip);
+            });
+        }
+
+        function activarChip(index) {
+            document.querySelectorAll('.chip').forEach((chip, idx) => {
+                chip.classList.toggle('active', idx === index);
+            });
+        }
+
+        async function cargarYReproducirAnimacion(palabra, categoria = null, archivo = null, duracionCustom = null) {
+            const palabraNormalizada = palabra.toLowerCase().trim();
+            
+            // Si no se proporciona categoria/archivo, buscar en diccionario local
+            if (!categoria || !archivo) {
+                if (!DICCIONARIO[palabraNormalizada]) {
+                    return;
+                }
+                const info = DICCIONARIO[palabraNormalizada];
+                categoria = info.categoria;
+                archivo = info.archivo;
+            }
+            
+            document.getElementById('status').textContent = `▶️ ${palabra}`;
+            
+            // Verificar si ya está en caché (solo para animaciones sin duracion custom)
+            if (!duracionCustom && animationCache.has(palabraNormalizada)) {
+                console.log(`📦 Caché: ${palabra}`);
+                await reproducirAnimacion(animationCache.get(palabraNormalizada), palabra, duracionCustom);
+                return;
+            }
+            
+            // Cargar archivo completo original (modelo + animación)
+            const loader = new GLTFLoader();
+            
+            console.log(`🔍 Buscando: "${palabra}" en categoría: ${categoria}`);
+            
+            // Probar diferentes patrones de nombre
+            const patronesNombre = [
+                `${avatarActual}_resultado_${archivo}`,  // Nancy_resultado_hola
+                `${categoria}_${avatarActual}_resultado_${archivo}`,  // saludos_Nancy_resultado_hola
+            ];
+            
+            // Intentar cargar desde carpeta del avatar directamente
+            let cargado = false;
+            for (const patron of patronesNombre) {
+                if (cargado) break;
+                
+                const rutaCompleta = `output/glb/${avatarActual}/${categoria}/${patron}.glb`;
+                console.log(`🔄 Intentando: ${rutaCompleta}`);
+                
+                try {
+                    const gltf = await new Promise((resolve, reject) => {
+                        const timeout = setTimeout(() => reject(new Error('Timeout')), 3000);
+                        loader.load(
+                            rutaCompleta,
+                            (result) => {
+                                clearTimeout(timeout);
+                                resolve(result);
+                            },
+                            undefined,
+                            (error) => {
+                                clearTimeout(timeout);
+                                reject(error);
+                            }
+                        );
+                    });
+                    
+                    // ¡Encontrado!
+                    console.log(`✅ Cargado: ${rutaCompleta}`);
+                    
+                    // Remover modelo actual
+                    if (nancyModel) {
+                        scene.remove(nancyModel);
+                    }
+                    
+                    // Agregar nuevo modelo con animación
+                    nancyModel = gltf.scene;
+                    scene.add(nancyModel);
+                    
+                    // Configurar mixer
+                    mixer = new THREE.AnimationMixer(nancyModel);
+                    
+                    if (gltf.animations && gltf.animations.length > 0) {
+                        const clip = gltf.animations[0];
+                        // Esperar a que termine la animación (con duracion custom si aplica)
+                        await reproducirAnimacion(clip, palabra, duracionCustom);
+                    }
+                    
+                    cargado = true;
+                } catch (error) {
+                    // Continuar con siguiente patrón
+                }
+            }
+            
+            // Si no se cargó, intentar con otros avatares del mismo género
+            if (!cargado) {
+                const genero = (avatarActual === 'Nancy' || avatarActual === 'Nina' || avatarActual === 'Carla') ? 'Mujer' : 'Hombre';
+                const avataresToTry = genero === 'Mujer' ? ['Nancy', 'Nina', 'Carla'] : ['Duvall', 'Luis', 'Argenis'];
+                
+                for (const avatarIndividual of avataresToTry) {
+                    if (cargado) break;
+                    
+                    for (const patron of patronesNombre) {
+                        if (cargado) break;
+                        
+                        const rutaFallback = `output/glb/${avatarIndividual}/${categoria}/${patron}.glb`;
+                        console.log(`🔄 Intentando ${avatarIndividual}: ${rutaFallback}`);
+                        
+                        try {
+                            const gltf = await new Promise((resolve, reject) => {
+                                const timeout = setTimeout(() => reject(new Error('Timeout')), 3000);
+                                loader.load(
+                                    rutaFallback,
+                                    (result) => {
+                                        clearTimeout(timeout);
+                                        resolve(result);
+                                    },
+                                    undefined,
+                                    (error) => {
+                                        clearTimeout(timeout);
+                                        reject(error);
+                                    }
+                                );
+                            });
+                            
+                            console.log(`✅ Cargado: ${rutaFallback}`);
+                            
+                            // Remover modelo actual
+                            if (nancyModel) {
+                                scene.remove(nancyModel);
+                            }
+                            
+                            // Agregar nuevo modelo con animación
+                            nancyModel = gltf.scene;
+                            scene.add(nancyModel);
+                            
+                            // Configurar mixer
+                            mixer = new THREE.AnimationMixer(nancyModel);
+                            
+                            if (gltf.animations && gltf.animations.length > 0) {
+                                const clip = gltf.animations[0];
+                                // Esperar a que termine la animación (con duracion custom si aplica)
+                                await reproducirAnimacion(clip, palabra, duracionCustom);
+                            }
+                            
+                            cargado = true;
+                        } catch (error) {
+                            // Continuar con siguiente patrón o avatar
+                        }
+                    }
+                }
+            }
+            
+            if (!cargado) {
+                console.error(`❌ No se encontró: ${palabra} en ninguna ubicación`);
+            }
+            
+            return Promise.resolve();
+        }
+
+        // Variables para animación facial
+        let facialAnimationData = null;
+        let facialAnimationFrame = 0;
+        let facialAnimationPlaying = false;
+
+        // Cargar animación facial
+        async function cargarAnimacionFacial(palabra) {
+            const palabraNormalizada = palabra.toLowerCase().trim();
+            const rutaFacial = `output/glb/Rostro/${palabraNormalizada}.json`;
+            
+            try {
+                const response = await fetch(rutaFacial);
+                if (!response.ok) {
+                    console.log(`ℹ️ No hay animación facial para: ${palabra}`);
+                    return null;
+                }
+                
+                const data = await response.json();
+                console.log(`😊 Animación facial cargada: ${palabra} (${data.frames.length} frames)`);
+                return data;
+            } catch (error) {
+                console.log(`ℹ️ Sin expresión facial para: ${palabra}`);
+                return null;
+            }
+        }
+
+        // Aplicar frame de animación facial
+        function aplicarFrameFacial(frameData) {
+            if (!nancyModel || !frameData) return;
+            
+            nancyModel.traverse((child) => {
+                if (child.isMesh && child.morphTargetInfluences && child.morphTargetDictionary) {
+                    const shapeKeys = frameData.shape_keys || {};
+                    
+                    // Aplicar cada shape key
+                    for (const [shapeKeyName, value] of Object.entries(shapeKeys)) {
+                        const index = child.morphTargetDictionary[shapeKeyName];
+                        if (index !== undefined) {
+                            child.morphTargetInfluences[index] = value;
+                        }
+                    }
+                }
+            });
+        }
+
+        // Resetear expresión facial a neutral
+        function resetearExpresionFacial() {
+            if (!nancyModel) return;
+            
+            nancyModel.traverse((child) => {
+                if (child.isMesh && child.morphTargetInfluences) {
+                    for (let i = 0; i < child.morphTargetInfluences.length; i++) {
+                        child.morphTargetInfluences[i] = 0;
+                    }
+                }
+            });
+        }
+
+        async function reproducirAnimacion(clip, palabra, duracionCustom = null) {
+            return new Promise(async (resolve) => {
+                // Cargar animación facial si existe
+                facialAnimationData = await cargarAnimacionFacial(palabra);
+                facialAnimationFrame = 0;
+                facialAnimationPlaying = !!facialAnimationData;
+                
+                // Si hay animación facial JSON, desactivar sistema de expresiones
+                if (facialAnimationData && facialSystem) {
+                    facialSystem.disable();
+                    console.log('🎭 Sistema de expresiones desactivado (usando JSON)');
+                }
+                
+                // Detener animación actual SIN transición para fluidez
+                if (currentAction) {
+                    currentAction.stop();
+                }
+                
+                // Resetear expresión facial antes de empezar
+                resetearExpresionFacial();
+                
+                // Reproducir nueva animación inmediatamente
+                const action = mixer.clipAction(clip);
+                action.reset();
+                action.setLoop(THREE.LoopOnce);
+                action.clampWhenFinished = true;
+                
+                // Si hay duración custom (deletreo rápido), ajustar timeScale
+                if (duracionCustom && duracionCustom > 0) {
+                    const duracionOriginal = clip.duration;
+                    const timeScale = duracionOriginal / duracionCustom;
+                    action.timeScale = timeScale;
+                    console.log(`⏩ Velocidad ajustada: ${timeScale.toFixed(2)}x (${duracionOriginal.toFixed(2)}s → ${duracionCustom.toFixed(2)}s)`);
+                }
+                
+                action.play();
+                
+                currentAction = action;
+                
+                // Actualizar expresión facial sincronizada con animación
+                const startTime = Date.now();
+                
+                // Esperar a que termine la animación
+                const checkFinished = () => {
+                    if (isPaused) {
+                        // Si está pausado, seguir esperando
+                        setTimeout(checkFinished, 100);
+                        return;
+                    }
+                    
+                    // Actualizar frame facial basado en tiempo transcurrido
+                    if (facialAnimationPlaying && facialAnimationData) {
+                        const elapsed = (Date.now() - startTime) / 1000; // segundos
+                        const targetFrame = Math.floor(elapsed * facialAnimationData.fps);
+                        
+                        if (targetFrame < facialAnimationData.frames.length) {
+                            const frameData = facialAnimationData.frames[targetFrame];
+                            aplicarFrameFacial(frameData);
+                            facialAnimationFrame = targetFrame;
+                        }
+                    }
+                    
+                    // Verificar si la animación terminó
+                    if (action.time >= clip.duration - 0.05 || !action.isRunning()) {
+                        // Resetear expresión al terminar
+                        facialAnimationPlaying = false;
+                        resetearExpresionFacial();
+                        
+                        // Reactivar sistema de expresiones si estaba desactivado
+                        if (facialAnimationData && facialSystem) {
+                            facialSystem.enable();
+                            console.log('🎭 Sistema de expresiones reactivado');
+                        }
+                        
+                        console.log(`✅ Completada: ${palabra}`);
+                        resolve();
+                    } else {
+                        // Seguir esperando
+                        setTimeout(checkFinished, 50);
+                    }
+                };
+                
+                checkFinished();
+            });
+        }
+
+        function setupEventListeners() {
+            const inputBottom = document.getElementById('text-input-bottom');
+            const btnAnimate = document.getElementById('animate-btn');
+            const btnPause = document.getElementById('pause-btn');
+            const btnReplay = document.getElementById('replay-btn');
+            
+            // Botón Animar (barra inferior)
+            btnAnimate.addEventListener('click', () => {
+                const texto = inputBottom.value.trim();
+                if (texto && !isAnimating) {
+                    ultimoTexto = texto;
+                    traducirYAnimar(texto);
+                }
+            });
+            
+            // Enter en input (barra inferior)
+            inputBottom.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    const texto = inputBottom.value.trim();
+                    if (texto && !isAnimating) {
+                        ultimoTexto = texto;
+                        traducirYAnimar(texto);
+                    }
+                }
+            });
+            
+            // Botón Pausar/Reanudar
+            btnPause.addEventListener('click', () => {
+                if (!mixer || !currentAction) return;
+                
+                isPaused = !isPaused;
+                
+                if (isPaused) {
+                    mixer.timeScale = 0;
+                    btnPause.textContent = '▶️ Reanudar';
+                } else {
+                    mixer.timeScale = 1;
+                    btnPause.textContent = '⏸️ Pausar';
+                }
+            });
+            
+            // Botón Repetir
+            btnReplay.addEventListener('click', () => {
+                if (ultimoTexto && !isAnimating) {
+                    traducirYAnimar(ultimoTexto);
+                }
+            });
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            const delta = clock.getDelta();
+            
+            if (mixer) {
+                mixer.update(delta);
+            }
+            
+            // Actualizar sistema de gestos faciales
+            if (facialSystem) {
+                facialSystem.update(delta);
+            }
+            
+            controls.update();
+            renderer.render(scene, camera);
+        }
+
+        window.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>

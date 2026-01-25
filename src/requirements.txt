@@ -1,0 +1,26 @@
+# Dependencias para el sistema de IA de generación de animaciones
+
+# Core científico
+numpy>=1.24.0
+scipy>=1.10.0
+
+# Machine Learning (opcional, para modelos avanzados)
+# tensorflow>=2.13.0
+# torch>=2.0.0
+
+# NLP para español (opcional, para mejoras futuras)
+# transformers>=4.30.0
+# spacy>=3.6.0
+
+# Procesamiento de datos
+pandas>=2.0.0
+
+# Visualización y plotting
+matplotlib>=3.7.0
+
+# Formatos 3D
+# trimesh>=3.22.0
+# pygltflib>=1.15.0
+
+# Utilidades
+tqdm>=4.65.0

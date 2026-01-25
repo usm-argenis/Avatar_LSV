@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Test Mínimo - Shape Keys</title>
+    <style>
+        body {
+            font-family: Arial;
+            background: #1a1a2e;
+            color: white;
+            padding: 20px;
+        }
+        #c {
+            border: 2px solid #667eea;
+            border-radius: 10px;
+        }
+        .log {
+            background: #000;
+            color: #0f0;
+            padding: 10px;
+            margin-top: 20px;
+            font-family: 'Courier New';
+            max-height: 400px;
+            overflow-y: auto;
+            border-radius: 5px;
+            min-height: 200px;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 10px 5px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        button:hover {
+            background: #5568d3;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 Test Mínimo - Aplicación Directa de Shape Keys</h1>
+    <p>Este test aplica shape keys DIRECTAMENTE al modelo, sin usar el sistema de gestos.</p>
+    
+    <div>
+        <button onclick="applySmile()">😊 Sonrisa</button>
+        <button onclick="applyFrown()">😠 Ceño</button>
+        <button onclick="applyEyesWide()">😲 Ojos Abiertos</button>
+        <button onclick="applyBlink()">😑 Parpadeo</button>
+        <button onclick="resetAll()">😐 Reset</button>
+    </div>
+    
+    <canvas id="c" width="800" height="600"></canvas>
+    
+    <div class="log" id="log"></div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    
+    <script>
+
+        let model;
+        let meshesWithTargets = [];
+        
+        function log(msg) {
+            const logDiv = document.getElementById('log');
+            const time = new Date().toLocaleTimeString();
+            logDiv.innerHTML += `[${time}] ${msg}<br>`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+            console.log(msg);
+        }
+
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x2d2d44);
+        
+        const camera = new THREE.PerspectiveCamera(50, 800/600, 0.1, 1000);
+        camera.position.set(0, 1.6, 2);
+        
+        const renderer = new THREE.WebGLRenderer({
+            canvas: document.getElementById('c'),
+            antialias: true
+        });
+        
+        const controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.target.set(0, 1.4, 0);
+        controls.update();
+        
+        // Luces
+        scene.add(new THREE.AmbientLight(0xffffff, 0.7));
+        const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+        dirLight.position.set(5, 10, 5);
+        scene.add(dirLight);
+
+        log('🔄 Cargando Luis.glb...');
+
+        const loader = new THREE.GLTFLoader();
+        loader.load('output/glb/Luis/Luis.glb', (gltf) => {
+            model = gltf.scene;
+            scene.add(model);
+            
+            // Centrar
+            const box = new THREE.Box3().setFromObject(model);
+            const center = box.getCenter(new THREE.Vector3());
+            model.position.sub(center);
+            model.position.y = 0;
+            
+            log('✅ Modelo cargado exitosamente');
+            
+            // Analizar meshes con morph targets
+            model.traverse(child => {
+                if (child.isMesh && child.morphTargetInfluences && child.morphTargetInfluences.length > 0) {
+                    meshesWithTargets.push(child);
+                    log(`📦 Mesh encontrado: ${child.name}`);
+                    log(`   └─ ${child.morphTargetInfluences.length} morph targets`);
+                    
+                    if (child.morphTargetDictionary) {
+                        const keys = Object.keys(child.morphTargetDictionary);
+                        log(`   └─ Primeros 10: ${keys.slice(0, 10).join(', ')}`);
+                    }
+                }
+            });
+            
+            log(`\n✅ Total: ${meshesWithTargets.length} meshes con morph targets`);
+            log('\n💡 Haz click en los botones para probar shape keys');
+            
+        }, undefined, (error) => {
+            log(`❌ Error cargando modelo: ${error.message}`);
+        });
+
+        function applyShapeKey(name, value) {
+            log(`\n🎭 Aplicando "${name}" = ${value}`);
+            let applied = 0;
+            
+            meshesWithTargets.forEach(mesh => {
+                if (mesh.morphTargetDictionary && mesh.morphTargetDictionary[name] !== undefined) {
+                    const idx = mesh.morphTargetDictionary[name];
+                    mesh.morphTargetInfluences[idx] = value;
+                    applied++;
+                    log(`   ✓ ${mesh.name}[${idx}] = ${value}`);
+                }
+            });
+            
+            if (applied === 0) {
+                log(`   ❌ Shape key "${name}" no encontrado en ningún mesh`);
+            } else {
+                log(`   ✅ Aplicado en ${applied} meshes`);
+            }
+        }
+
+        window.applySmile = function() {
+            resetAll();
+            applyShapeKey('mouthSmileLeft', 0.9);
+            applyShapeKey('mouthSmileRight', 0.9);
+            applyShapeKey('cheekSquintLeft', 0.6);
+            applyShapeKey('cheekSquintRight', 0.6);
+        };
+
+        window.applyFrown = function() {
+            resetAll();
+            applyShapeKey('browDownLeft', 0.8);
+            applyShapeKey('browDownRight', 0.8);
+            applyShapeKey('mouthFrownLeft', 0.7);
+            applyShapeKey('mouthFrownRight', 0.7);
+            applyShapeKey('eyeSquintLeft', 0.6);
+            applyShapeKey('eyeSquintRight', 0.6);
+        };
+
+        window.applyEyesWide = function() {
+            resetAll();
+            applyShapeKey('eyeWideLeft', 1.0);
+            applyShapeKey('eyeWideRight', 1.0);
+            applyShapeKey('browInnerUp', 0.8);
+            applyShapeKey('browOuterUpLeft', 0.8);
+            applyShapeKey('browOuterUpRight', 0.8);
+        };
+
+        window.applyBlink = function() {
+            resetAll();
+            applyShapeKey('eyeBlinkLeft', 1.0);
+            applyShapeKey('eyeBlinkRight', 1.0);
+        };
+
+        window.resetAll = function() {
+            log('\n🔄 Reseteando todos los shape keys...');
+            let resetCount = 0;
+            
+            meshesWithTargets.forEach(mesh => {
+                for (let i = 0; i < mesh.morphTargetInfluences.length; i++) {
+                    if (mesh.morphTargetInfluences[i] !== 0) {
+                        mesh.morphTargetInfluences[i] = 0;
+                        resetCount++;
+                    }
+                }
+            });
+            
+            log(`   ✅ ${resetCount} valores reseteados a 0`);
+        };
+
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update();
+            renderer.render(scene, camera);
+        }
+        
+        animate();
+        
+        log('Sistema listo');
+    </script>
+</body>
+</html>

@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Prueba de Rutas GLB</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #1a1a2e;
+            color: white;
+        }
+        .test-result {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .success {
+            background: #2d4a2f;
+            border-left: 4px solid #4caf50;
+        }
+        .error {
+            background: #4a2d2d;
+            border-left: 4px solid #f44336;
+        }
+        button {
+            background: #4fc3f7;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #29b6f6;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 Prueba de Rutas de Animaciones GLB</h1>
+    <p>Verificando que las animaciones se pueden cargar correctamente...</p>
+    
+    <button onclick="testHombreRoutes()">Probar Rutas Hombre</button>
+    <button onclick="testMujerRoutes()">Probar Rutas Mujer</button>
+    <button onclick="testSpecificSign('hola', 'Duvall')">Probar "hola" con Duvall</button>
+    <button onclick="testSpecificSign('hola', 'Nancy')">Probar "hola" con Nancy</button>
+    
+    <div id="results"></div>
+
+    <script>
+        const resultsDiv = document.getElementById('results');
+        
+        async function testPath(path, description) {
+            try {
+                const response = await fetch(path, { method: 'HEAD' });
+                const success = response.ok;
+                
+                const div = document.createElement('div');
+                div.className = `test-result ${success ? 'success' : 'error'}`;
+                div.innerHTML = `
+                    <strong>${success ? '✅' : '❌'} ${description}</strong><br>
+                    <small>Ruta: ${path}</small><br>
+                    <small>Estado: ${response.status} ${response.statusText}</small>
+                `;
+                resultsDiv.appendChild(div);
+                
+                return success;
+            } catch (error) {
+                const div = document.createElement('div');
+                div.className = 'test-result error';
+                div.innerHTML = `
+                    <strong>❌ ${description}</strong><br>
+                    <small>Ruta: ${path}</small><br>
+                    <small>Error: ${error.message}</small>
+                `;
+                resultsDiv.appendChild(div);
+                return false;
+            }
+        }
+        
+        async function buildModelPath(avatar, sign) {
+            const categorias = [
+                'alfabeto', 'dias_semana', 'tiempo', 'pronombres', 
+                'saludos', 'cortesia', 'preguntas', 'expresiones'
+            ];
+            
+            const genero = (avatar === 'Nancy' || avatar === 'Nina') ? 'Mujer' : 'Hombre';
+            
+            for (const categoria of categorias) {
+                const categoryPath = `output/glb/${genero}/${categoria}/${sign}.glb`;
+                try {
+                    const response = await fetch(categoryPath, { method: 'HEAD' });
+                    if (response.ok) {
+                        return { path: categoryPath, found: true };
+                    }
+                } catch (e) {
+                    // Continuar
+                }
+            }
+            
+            return { path: null, found: false };
+        }
+        
+        async function testHombreRoutes() {
+            resultsDiv.innerHTML = '<h2>Probando Rutas - Hombre (Duvall/Luis)</h2>';
+            
+            const testSigns = ['hola', 'adios', 'gracias', 'yo', 'lunes'];
+            
+            for (const sign of testSigns) {
+                const result = await buildModelPath('Duvall', sign);
+                if (result.found) {
+                    await testPath(result.path, `Seña "${sign}" (Hombre)`);
+                } else {
+                    const div = document.createElement('div');
+                    div.className = 'test-result error';
+                    div.innerHTML = `<strong>❌ Seña "${sign}" no encontrada en ninguna categoría</strong>`;
+                    resultsDiv.appendChild(div);
+                }
+            }
+        }
+        
+        async function testMujerRoutes() {
+            resultsDiv.innerHTML = '<h2>Probando Rutas - Mujer (Nancy/Nina)</h2>';
+            
+            const testSigns = ['hola', 'adios', 'gracias', 'yo', 'lunes'];
+            
+            for (const sign of testSigns) {
+                const result = await buildModelPath('Nancy', sign);
+                if (result.found) {
+                    await testPath(result.path, `Seña "${sign}" (Mujer)`);
+                } else {
+                    const div = document.createElement('div');
+                    div.className = 'test-result error';
+                    div.innerHTML = `<strong>❌ Seña "${sign}" no encontrada en ninguna categoría</strong>`;
+                    resultsDiv.appendChild(div);
+                }
+            }
+        }
+        
+        async function testSpecificSign(sign, avatar) {
+            resultsDiv.innerHTML = `<h2>Probando Seña "${sign}" con Avatar ${avatar}</h2>`;
+            
+            const result = await buildModelPath(avatar, sign);
+            if (result.found) {
+                await testPath(result.path, `Seña "${sign}" con ${avatar}`);
+                
+                // Intentar cargar metadata
+                try {
+                    const response = await fetch(result.path);
+                    const blob = await response.blob();
+                    const size = (blob.size / 1024).toFixed(2);
+                    
+                    const div = document.createElement('div');
+                    div.className = 'test-result success';
+                    div.innerHTML = `
+                        <strong>📊 Información del Archivo</strong><br>
+                        <small>Tamaño: ${size} KB</small><br>
+                        <small>Tipo: ${blob.type}</small>
+                    `;
+                    resultsDiv.appendChild(div);
+                } catch (e) {
+                    console.error('Error obteniendo metadata:', e);
+                }
+            } else {
+                const div = document.createElement('div');
+                div.className = 'test-result error';
+                div.innerHTML = `<strong>❌ Seña "${sign}" no encontrada para ${avatar}</strong>`;
+                resultsDiv.appendChild(div);
+            }
+        }
+    </script>
+</body>
+</html>

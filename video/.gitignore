@@ -1,0 +1,40 @@
+# Videos originales (pueden ser muy pesados)
+*.mp4
+*.avi
+*.mov
+*.mkv
+*.flv
+*.wmv
+*.webm
+
+# Carpetas de salida
+output/
+videos_segmentados/
+alfabeto/
+numeros/
+saludos/
+
+# Archivos temporales de moviepy
+temp-audio.m4a
+*.m4a
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.env
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Sistema
+.DS_Store
+Thumbs.db

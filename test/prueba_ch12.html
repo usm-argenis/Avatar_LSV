@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prueba Ch12 con Animación B</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        #container {
+            width: 100vw;
+            height: 100vh;
+        }
+        #info {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: white;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 14px;
+            z-index: 1000;
+        }
+        #controls {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.7);
+            padding: 15px;
+            border-radius: 10px;
+            z-index: 1000;
+        }
+        button {
+            background: #4fc3f7;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 5px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        button:hover {
+            background: #0288d1;
+        }
+    </style>
+</head>
+<body>
+    <div id="container"></div>
+    <div id="info">
+        <h2>🎬 Prueba Ch12 con Animación</h2>
+        <p>Modelo: Ch12_nonPBR</p>
+        <p>Animación: Letra B (92 frames)</p>
+        <p id="status">Cargando...</p>
+    </div>
+    <div id="controls">
+        <button onclick="playAnimation()">▶️ Reproducir</button>
+        <button onclick="pauseAnimation()">⏸️ Pausar</button>
+        <button onclick="resetAnimation()">🔄 Reiniciar</button>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+
+    <script>
+        let scene, camera, renderer, mixer, controls;
+        let model, animation;
+
+        function init() {
+            // Escena
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x1a1a2e);
+
+            // Cámara
+            camera = new THREE.PerspectiveCamera(
+                45,
+                window.innerWidth / window.innerHeight,
+                0.1,
+                1000
+            );
+            camera.position.set(0, 1.6, 3);
+
+            // Renderer
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.shadowMap.enabled = true;
+            document.getElementById('container').appendChild(renderer.domElement);
+
+            // Controles
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.target.set(0, 1, 0);
+            controls.update();
+
+            // Luces
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+            scene.add(ambientLight);
+
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            directionalLight.position.set(5, 10, 7.5);
+            directionalLight.castShadow = true;
+            scene.add(directionalLight);
+
+            // Suelo
+            const floorGeometry = new THREE.PlaneGeometry(10, 10);
+            const floorMaterial = new THREE.MeshStandardMaterial({ 
+                color: 0x2c3e50,
+                roughness: 0.8
+            });
+            const floor = new THREE.Mesh(floorGeometry, floorMaterial);
+            floor.rotation.x = -Math.PI / 2;
+            floor.receiveShadow = true;
+            scene.add(floor);
+
+            // Cargar modelo
+            loadModel();
+
+            // Window resize
+            window.addEventListener('resize', onWindowResize, false);
+
+            // Animate
+            animate();
+        }
+
+        function loadModel() {
+            const loader = new THREE.GLTFLoader();
+            // Ruta relativa desde test/
+            const modelPath = './output/glb/cc/Ch12_con_animacion_b_FINAL.glb';
+            
+            document.getElementById('status').textContent = 'Cargando modelo...';
+
+            loader.load(
+                modelPath,
+                function(gltf) {
+                    model = gltf.scene;
+                    scene.add(model);
+
+                    // Configurar animaciones
+                    if (gltf.animations && gltf.animations.length > 0) {
+                        mixer = new THREE.AnimationMixer(model);
+                        animation = mixer.clipAction(gltf.animations[0]);
+                        
+                        console.log('✅ Animación cargada:', gltf.animations[0].name);
+                        console.log('   Duración:', gltf.animations[0].duration, 'segundos');
+                        console.log('   Tracks:', gltf.animations[0].tracks.length);
+                        
+                        document.getElementById('status').innerHTML = `
+                            ✅ Modelo cargado<br>
+                            🎬 Animación: ${gltf.animations[0].name}<br>
+                            ⏱️ Duración: ${gltf.animations[0].duration.toFixed(2)}s<br>
+                            📊 Tracks: ${gltf.animations[0].tracks.length}
+                        `;
+                        
+                        // Auto-reproducir
+                        animation.play();
+                    } else {
+                        document.getElementById('status').textContent = '⚠️ Sin animación';
+                        console.warn('No se encontraron animaciones');
+                    }
+
+                    // Posicionar modelo
+                    const box = new THREE.Box3().setFromObject(model);
+                    const center = box.getCenter(new THREE.Vector3());
+                    model.position.x -= center.x;
+                    model.position.y -= box.min.y;
+
+                    console.log('✅ Modelo cargado:', modelPath);
+                },
+                function(xhr) {
+                    const percent = (xhr.loaded / xhr.total * 100).toFixed(0);
+                    document.getElementById('status').textContent = `Cargando... ${percent}%`;
+                },
+                function(error) {
+                    console.error('❌ Error cargando modelo:', error);
+                    document.getElementById('status').textContent = '❌ Error al cargar';
+                }
+            );
+        }
+
+        function playAnimation() {
+            if (animation) {
+                animation.paused = false;
+                animation.play();
+            }
+        }
+
+        function pauseAnimation() {
+            if (animation) {
+                animation.paused = true;
+            }
+        }
+
+        function resetAnimation() {
+            if (animation) {
+                animation.stop();
+                animation.play();
+            }
+        }
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        const clock = new THREE.Clock();
+
+        function animate() {
+            requestAnimationFrame(animate);
+
+            const delta = clock.getDelta();
+            if (mixer) {
+                mixer.update(delta);
+            }
+
+            controls.update();
+            renderer.render(scene, camera);
+        }
+
+        init();
+    </script>
+</body>
+</html>

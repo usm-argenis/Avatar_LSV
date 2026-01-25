@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Test Debug GLB</title>
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.module.js",
+            "three/examples/": "https://cdn.jsdelivr.net/npm/three@0.128.0/examples/"
+        }
+    }
+    </script>
+    <style>
+        body { margin: 0; background: #1a1a2e; color: white; font-family: monospace; }
+        #info {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(0,0,0,0.9);
+            padding: 20px;
+            border-radius: 5px;
+            max-height: 90vh;
+            overflow-y: auto;
+            font-size: 12px;
+        }
+        .success { color: #4caf50; }
+        .error { color: #f44336; }
+        .info { color: #64b5f6; }
+        .warning { color: #ff9800; }
+    </style>
+</head>
+<body>
+    <div id="info">
+        <h3>🔍 Debug Detallado de GLB</h3>
+        <div id="status">Iniciando...</div>
+    </div>
+    <div id="container"></div>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+        import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+
+        const status = document.getElementById('status');
+        
+        function log(msg, type = 'info') {
+            const div = document.createElement('div');
+            div.className = type;
+            div.innerHTML = msg.replace(/\n/g, '<br>');
+            status.appendChild(div);
+            console.log(msg);
+        }
+
+        // Configurar escena
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x1a1a2e);
+
+        const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.set(0, 1.6, 3);
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.getElementById('container').appendChild(renderer.domElement);
+
+        const controls = new OrbitControls(camera, renderer.domElement);
+
+        // Luces
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+        scene.add(ambientLight);
+
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+        directionalLight.position.set(5, 10, 7.5);
+        scene.add(directionalLight);
+
+        // Función de animación
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update();
+            renderer.render(scene, camera);
+        }
+        animate();
+
+        // Test detallado
+        log('🔬 Iniciando análisis detallado...', 'info');
+        
+        const testPath = 'output/glb/Mujer/saludos/hola.glb';
+        
+        log(`\n📂 Archivo: ${testPath}`, 'info');
+        
+        // Primero verificar que existe
+        try {
+            const headResponse = await fetch(testPath, { method: 'HEAD' });
+            log(`\n✅ Archivo existe`, 'success');
+            log(`   Tamaño: ${(headResponse.headers.get('content-length') / 1024).toFixed(2)} KB`, 'info');
+            log(`   Tipo: ${headResponse.headers.get('content-type')}`, 'info');
+        } catch (e) {
+            log(`\n❌ Error verificando archivo: ${e.message}`, 'error');
+        }
+
+        // Ahora intentar cargar
+        log(`\n⏳ Cargando GLB...`, 'info');
+        
+        const loader = new GLTFLoader();
+        
+        // Agregar listeners detallados
+        loader.manager.onStart = (url, itemsLoaded, itemsTotal) => {
+            log(`   Manager.onStart: ${url}`, 'info');
+        };
+        
+        loader.manager.onProgress = (url, itemsLoaded, itemsTotal) => {
+            log(`   Progress: ${itemsLoaded}/${itemsTotal}`, 'info');
+        };
+        
+        loader.manager.onError = (url) => {
+            log(`   ❌ Manager.onError: ${url}`, 'error');
+        };
+        
+        try {
+            const gltf = await new Promise((resolve, reject) => {
+                loader.load(
+                    testPath,
+                    (gltf) => {
+                        log(`\n✅ GLB Cargado!`, 'success');
+                        log(`\n📊 Estructura del GLTF:`, 'info');
+                        log(`   - scene: ${gltf.scene ? 'OK' : 'NULL'}`, gltf.scene ? 'success' : 'error');
+                        log(`   - animations: ${gltf.animations.length}`, 'info');
+                        log(`   - cameras: ${gltf.cameras.length}`, 'info');
+                        log(`   - scenes: ${gltf.scenes.length}`, 'info');
+                        log(`   - asset: ${JSON.stringify(gltf.asset, null, 2)}`, 'info');
+                        
+                        if (gltf.scene) {
+                            log(`\n🌲 Jerarquía de la escena:`, 'info');
+                            let indent = 0;
+                            gltf.scene.traverse((node) => {
+                                const spaces = '   '.repeat(indent);
+                                let nodeInfo = `${spaces}└─ ${node.name || '(sin nombre)'}`;
+                                nodeInfo += ` [${node.type}]`;
+                                if (node.isSkinnedMesh) nodeInfo += ' (SkinnedMesh)';
+                                if (node.isMesh) nodeInfo += ' (Mesh)';
+                                if (node.isBone) nodeInfo += ' (Bone)';
+                                log(nodeInfo, 'info');
+                                indent++;
+                            });
+                            
+                            log(`\n🔢 Conteo de nodos:`, 'info');
+                            let meshCount = 0, boneCount = 0, skinnedMeshCount = 0;
+                            gltf.scene.traverse((node) => {
+                                if (node.isMesh) meshCount++;
+                                if (node.isBone) boneCount++;
+                                if (node.isSkinnedMesh) skinnedMeshCount++;
+                            });
+                            log(`   Meshes: ${meshCount}`, 'info');
+                            log(`   SkinnedMeshes: ${skinnedMeshCount}`, 'info');
+                            log(`   Bones: ${boneCount}`, 'info');
+                        }
+                        
+                        if (gltf.animations.length > 0) {
+                            log(`\n🎬 Animaciones:`, 'info');
+                            gltf.animations.forEach((anim, i) => {
+                                log(`   [${i}] ${anim.name}`, 'info');
+                                log(`       Duración: ${anim.duration.toFixed(2)}s`, 'info');
+                                log(`       Tracks: ${anim.tracks.length}`, 'info');
+                            });
+                        }
+                        
+                        resolve(gltf);
+                    },
+                    (progress) => {
+                        if (progress.lengthComputable) {
+                            const percent = (progress.loaded / progress.total * 100).toFixed(2);
+                            log(`   Descargando: ${percent}%`, 'info');
+                        }
+                    },
+                    (error) => {
+                        log(`\n❌ ERROR al cargar:`, 'error');
+                        log(`   Mensaje: ${error.message}`, 'error');
+                        log(`   Stack: ${error.stack}`, 'error');
+                        console.error('Error completo:', error);
+                        reject(error);
+                    }
+                );
+            });
+            
+            log(`\n✅ Test completado exitosamente!`, 'success');
+            
+            // Agregar a la escena
+            scene.add(gltf.scene);
+            log(`\n✅ Modelo agregado a la escena`, 'success');
+            
+        } catch (error) {
+            log(`\n❌ FALLO TOTAL:`, 'error');
+            log(`   ${error.message}`, 'error');
+            if (error.stack) {
+                log(`\n📚 Stack trace:`, 'error');
+                log(error.stack, 'error');
+            }
+        }
+    </script>
+</body>
+</html>

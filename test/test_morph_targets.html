@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Morph Targets - Duvall A</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background: #1a1a2e;
+            color: white;
+            font-family: 'Segoe UI', sans-serif;
+        }
+        #container {
+            display: flex;
+            gap: 20px;
+        }
+        #canvas-container {
+            flex: 1;
+            height: 80vh;
+            background: #0f0f1e;
+            border-radius: 10px;
+        }
+        #info {
+            width: 300px;
+            background: rgba(255,255,255,0.1);
+            padding: 20px;
+            border-radius: 10px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        h2 {
+            margin-top: 0;
+            color: #4fc3f7;
+        }
+        .weight-info {
+            margin: 10px 0;
+            padding: 10px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 5px;
+            font-size: 12px;
+        }
+        .mesh-info {
+            margin: 15px 0;
+            border-left: 3px solid #4fc3f7;
+            padding-left: 10px;
+        }
+        button {
+            background: #4fc3f7;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px 0;
+            width: 100%;
+        }
+        button:hover {
+            background: #81d4fa;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        .status.ok { background: rgba(76, 175, 80, 0.2); }
+        .status.warning { background: rgba(255, 193, 7, 0.2); }
+        .status.error { background: rgba(244, 67, 54, 0.2); }
+    </style>
+</head>
+<body>
+    <h1>🔬 Test de Morph Targets - Duvall A</h1>
+    
+    <div id="container">
+        <div id="canvas-container"></div>
+        <div id="info">
+            <h2>📊 Información</h2>
+            <div id="status"></div>
+            <div id="meshes"></div>
+            <div id="animation-info"></div>
+            <button onclick="playAnimation()">▶️ Reproducir Animación</button>
+            <button onclick="pauseAnimation()">⏸️ Pausar</button>
+            <button onclick="resetAnimation()">🔄 Reiniciar</button>
+            <button onclick="toggleWireframe()">🔲 Wireframe</button>
+        </div>
+    </div>
+
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+            "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+        }
+    }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+        let scene, camera, renderer, controls;
+        let model, mixer, action;
+        let meshesWithMorphs = [];
+
+        function init() {
+            // Escena
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x0f0f1e);
+
+            // Cámara
+            camera = new THREE.PerspectiveCamera(
+                50,
+                window.innerWidth / window.innerHeight,
+                0.1,
+                1000
+            );
+            camera.position.set(0, 1.6, 3);
+
+            // Renderer
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(
+                document.getElementById('canvas-container').offsetWidth,
+                window.innerHeight * 0.8
+            );
+            document.getElementById('canvas-container').appendChild(renderer.domElement);
+
+            // Controles
+            controls = new OrbitControls(camera, renderer.domElement);
+            controls.target.set(0, 1.2, 0);
+            controls.update();
+
+            // Luces
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+            scene.add(ambientLight);
+
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            directionalLight.position.set(5, 10, 5);
+            scene.add(directionalLight);
+
+            // Cargar modelo
+            loadModel();
+
+            // Loop de renderizado
+            animate();
+        }
+
+        function loadModel() {
+            updateStatus('Cargando modelo...', 'warning');
+
+            const loader = new GLTFLoader();
+            const modelPath = 'output/glb/Duvall/alfabeto/Duvall_resultado_a.glb';
+
+            loader.load(
+                modelPath,
+                (gltf) => {
+                    model = gltf.scene;
+                    scene.add(model);
+
+                    // Analizar morph targets
+                    analyzeMorphTargets(model);
+
+                    // Configurar animación
+                    if (gltf.animations && gltf.animations.length > 0) {
+                        mixer = new THREE.AnimationMixer(model);
+                        action = mixer.clipAction(gltf.animations[0]);
+                        
+                        displayAnimationInfo(gltf.animations[0]);
+                        updateStatus('✅ Modelo cargado correctamente', 'ok');
+                    } else {
+                        updateStatus('⚠️ No se encontraron animaciones', 'warning');
+                    }
+
+                    // Centrar modelo
+                    const box = new THREE.Box3().setFromObject(model);
+                    const center = box.getCenter(new THREE.Vector3());
+                    model.position.sub(center);
+                    model.position.y = 0;
+                },
+                (progress) => {
+                    const percent = (progress.loaded / progress.total) * 100;
+                    updateStatus(`Cargando: ${percent.toFixed(0)}%`, 'warning');
+                },
+                (error) => {
+                    console.error('Error:', error);
+                    updateStatus('❌ Error al cargar el modelo', 'error');
+                }
+            );
+        }
+
+        function analyzeMorphTargets(object) {
+            meshesWithMorphs = [];
+
+            object.traverse((child) => {
+                if (child.isMesh && child.morphTargetInfluences) {
+                    const morphCount = child.morphTargetInfluences.length;
+                    if (morphCount > 0) {
+                        meshesWithMorphs.push({
+                            name: child.name,
+                            mesh: child,
+                            morphCount: morphCount,
+                            influences: child.morphTargetInfluences
+                        });
+
+                        console.log(`Mesh: ${child.name}`);
+                        console.log(`  Morph targets: ${morphCount}`);
+                        console.log(`  Dictionary:`, child.morphTargetDictionary);
+                        console.log(`  Initial influences:`, child.morphTargetInfluences.slice(0, 5));
+                    }
+                }
+            });
+
+            displayMeshInfo();
+        }
+
+        function displayMeshInfo() {
+            const meshesDiv = document.getElementById('meshes');
+            
+            if (meshesWithMorphs.length === 0) {
+                meshesDiv.innerHTML = '<div class="status error">❌ No se encontraron morph targets</div>';
+                return;
+            }
+
+            let html = '<h3>🦴 Meshes con Morph Targets:</h3>';
+            
+            meshesWithMorphs.forEach(info => {
+                html += `
+                    <div class="mesh-info">
+                        <strong>${info.name}</strong><br>
+                        Morph targets: ${info.morphCount}<br>
+                        <small>Influences activos: ${info.influences.filter(v => v !== 0).length}</small>
+                    </div>
+                `;
+            });
+
+            meshesDiv.innerHTML = html;
+        }
+
+        function displayAnimationInfo(clip) {
+            const div = document.getElementById('animation-info');
+            
+            // Buscar tracks de morph targets
+            const morphTracks = clip.tracks.filter(track => 
+                track.name.includes('.morphTargetInfluences')
+            );
+
+            let html = '<h3>🎬 Animación:</h3>';
+            html += `<div class="weight-info">
+                Nombre: ${clip.name}<br>
+                Duración: ${clip.duration.toFixed(2)}s<br>
+                Tracks totales: ${clip.tracks.length}<br>
+                Tracks de morphs: ${morphTracks.length}
+            </div>`;
+
+            if (morphTracks.length > 0) {
+                html += '<h4>Tracks de Morph:</h4>';
+                morphTracks.forEach((track, i) => {
+                    const nodeName = track.name.split('.')[0];
+                    const values = track.values;
+                    const maxValue = Math.max(...values);
+                    const minValue = Math.min(...values);
+                    const hasMovement = maxValue - minValue > 0.001;
+
+                    html += `
+                        <div class="weight-info" style="background: ${hasMovement ? 'rgba(76,175,80,0.2)' : 'rgba(244,67,54,0.2)'}">
+                            ${nodeName}<br>
+                            <small>
+                                ${track.times.length} keyframes<br>
+                                ${values.length} valores<br>
+                                Rango: ${minValue.toFixed(3)} - ${maxValue.toFixed(3)}
+                                ${hasMovement ? ' ✅' : ' ❌ SIN CAMBIOS'}
+                            </small>
+                        </div>
+                    `;
+                });
+            } else {
+                html += '<div class="status error">❌ No hay tracks de morphTargetInfluences</div>';
+            }
+
+            div.innerHTML = html;
+        }
+
+        function updateStatus(message, type = 'ok') {
+            const statusDiv = document.getElementById('status');
+            statusDiv.innerHTML = `<div class="status ${type}">${message}</div>`;
+        }
+
+        window.playAnimation = () => {
+            if (action) {
+                action.reset();
+                action.play();
+                updateStatus('▶️ Reproduciendo animación', 'ok');
+            }
+        };
+
+        window.pauseAnimation = () => {
+            if (action) {
+                action.paused = !action.paused;
+                updateStatus(action.paused ? '⏸️ Pausado' : '▶️ Reproduciendo', 'ok');
+            }
+        };
+
+        window.resetAnimation = () => {
+            if (action) {
+                action.reset();
+                action.stop();
+                updateStatus('🔄 Animación reiniciada', 'ok');
+            }
+        };
+
+        window.toggleWireframe = () => {
+            if (model) {
+                model.traverse((child) => {
+                    if (child.isMesh) {
+                        child.material.wireframe = !child.material.wireframe;
+                    }
+                });
+            }
+        };
+
+        function animate() {
+            requestAnimationFrame(animate);
+
+            if (mixer) {
+                mixer.update(0.016);
+
+                // Monitorear morph influences en tiempo real
+                if (meshesWithMorphs.length > 0 && action && action.isRunning()) {
+                    const sample = meshesWithMorphs[0];
+                    const activeInfluences = sample.influences.filter(v => Math.abs(v) > 0.001);
+                    if (activeInfluences.length > 0) {
+                        console.log('Active influences:', activeInfluences.length, 'Max:', Math.max(...activeInfluences));
+                    }
+                }
+            }
+
+            controls.update();
+            renderer.render(scene, camera);
+        }
+
+        // Inicializar
+        init();
+
+        // Resize
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight * 0.8);
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>✅ Verificación Final del Sistema</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            color: white;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(0,0,0,0.8);
+            border-radius: 15px;
+            padding: 30px;
+        }
+        h1 { margin-bottom: 30px; text-align: center; font-size: 32px; }
+        .test-section {
+            background: rgba(255,255,255,0.05);
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border-left: 4px solid #4fc3f7;
+        }
+        .test-section h2 {
+            color: #4fc3f7;
+            margin-bottom: 15px;
+            font-size: 20px;
+        }
+        .test-item {
+            padding: 12px;
+            margin: 8px 0;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .test-item.success {
+            background: rgba(76, 175, 80, 0.2);
+            border-left: 3px solid #4caf50;
+        }
+        .test-item.error {
+            background: rgba(244, 67, 54, 0.2);
+            border-left: 3px solid #f44336;
+        }
+        .test-item.pending {
+            background: rgba(255, 152, 0, 0.2);
+            border-left: 3px solid #ff9800;
+        }
+        .status { font-weight: bold; font-size: 20px; }
+        .details { font-size: 13px; opacity: 0.8; margin-top: 5px; }
+        button {
+            background: #4fc3f7;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 10px 5px;
+            transition: all 0.3s;
+        }
+        button:hover {
+            background: #29b6f6;
+            transform: translateY(-2px);
+        }
+        .summary {
+            background: rgba(79, 195, 247, 0.2);
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 30px;
+            text-align: center;
+        }
+        .summary h3 {
+            font-size: 24px;
+            margin-bottom: 15px;
+        }
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 20px;
+        }
+        .stat {
+            text-align: center;
+        }
+        .stat-value {
+            font-size: 36px;
+            font-weight: bold;
+        }
+        .stat-label {
+            font-size: 14px;
+            opacity: 0.8;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>✅ Verificación Final del Sistema LSV</h1>
+        
+        <div style="text-align: center; margin-bottom: 30px;">
+            <button onclick="runAllTests()">🚀 Ejecutar Todas las Pruebas</button>
+            <button onclick="testStructure()">📁 Verificar Estructura</button>
+            <button onclick="testAvatars()">👥 Verificar Avatares</button>
+            <button onclick="testAnimations()">🎬 Verificar Animaciones</button>
+        </div>
+
+        <div id="results"></div>
+
+        <div id="summary" class="summary" style="display: none;">
+            <h3>📊 Resumen</h3>
+            <div class="stats">
+                <div class="stat">
+                    <div class="stat-value" id="total-tests">0</div>
+                    <div class="stat-label">Total de Pruebas</div>
+                </div>
+                <div class="stat" style="color: #4caf50;">
+                    <div class="stat-value" id="passed-tests">0</div>
+                    <div class="stat-label">✅ Exitosas</div>
+                </div>
+                <div class="stat" style="color: #f44336;">
+                    <div class="stat-value" id="failed-tests">0</div>
+                    <div class="stat-label">❌ Fallidas</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let totalTests = 0;
+        let passedTests = 0;
+        let failedTests = 0;
+
+        function updateSummary() {
+            document.getElementById('total-tests').textContent = totalTests;
+            document.getElementById('passed-tests').textContent = passedTests;
+            document.getElementById('failed-tests').textContent = failedTests;
+            document.getElementById('summary').style.display = 'block';
+        }
+
+        function addTestResult(section, name, success, details = '') {
+            totalTests++;
+            if (success) passedTests++;
+            else failedTests++;
+
+            const item = document.createElement('div');
+            item.className = `test-item ${success ? 'success' : 'error'}`;
+            item.innerHTML = `
+                <div>
+                    <div><strong>${name}</strong></div>
+                    ${details ? `<div class="details">${details}</div>` : ''}
+                </div>
+                <div class="status">${success ? '✅' : '❌'}</div>
+            `;
+            section.appendChild(item);
+            updateSummary();
+        }
+
+        async function testStructure() {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '';
+
+            const section = document.createElement('div');
+            section.className = 'test-section';
+            section.innerHTML = '<h2>📁 Verificación de Estructura de Carpetas</h2>';
+            resultsDiv.appendChild(section);
+
+            // Test carpetas principales
+            const folders = [
+                { path: 'output/glb/Hombre', name: 'Carpeta Hombre' },
+                { path: 'output/glb/Mujer', name: 'Carpeta Mujer' }
+            ];
+
+            for (const folder of folders) {
+                try {
+                    const response = await fetch(folder.path + '/cortesia/gracias.glb', { method: 'HEAD' });
+                    addTestResult(section, folder.name, response.ok, folder.path);
+                } catch (e) {
+                    addTestResult(section, folder.name, false, `Error: ${e.message}`);
+                }
+            }
+
+            // Test categorías
+            const categories = ['cortesia', 'saludos', 'pronombres', 'dias_semana', 'tiempo', 'preguntas', 'expresiones'];
+            for (const cat of categories) {
+                const testPath = `output/glb/Hombre/${cat}/`;
+                try {
+                    // Intentar cargar un archivo conocido de cada categoría
+                    const testFiles = {
+                        'cortesia': 'gracias.glb',
+                        'saludos': 'hola.glb',
+                        'pronombres': 'yo.glb',
+                        'dias_semana': 'lunes.glb',
+                        'tiempo': 'hoy.glb',
+                        'preguntas': 'como estas.glb',
+                        'expresiones': 'expresiones.glb'
+                    };
+                    const response = await fetch(testPath + testFiles[cat], { method: 'HEAD' });
+                    addTestResult(section, `Categoría: ${cat}`, response.ok, testPath + testFiles[cat]);
+                } catch (e) {
+                    addTestResult(section, `Categoría: ${cat}`, false, `No se pudo verificar`);
+                }
+            }
+        }
+
+        async function testAvatars() {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '';
+
+            const section = document.createElement('div');
+            section.className = 'test-section';
+            section.innerHTML = '<h2>👥 Verificación de Avatares</h2>';
+            resultsDiv.appendChild(section);
+
+            const avatars = ['Duvall', 'Luis', 'Nancy', 'Nina'];
+            
+            for (const avatar of avatars) {
+                const genero = (avatar === 'Nancy' || avatar === 'Nina') ? 'Mujer' : 'Hombre';
+                const path = `output/glb/${avatar}/${avatar}.glb`;
+                
+                try {
+                    const response = await fetch(path, { method: 'HEAD' });
+                    addTestResult(section, `Avatar ${avatar}`, response.ok, `Género: ${genero}, Ruta: ${path}`);
+                } catch (e) {
+                    addTestResult(section, `Avatar ${avatar}`, false, `Error: ${e.message}`);
+                }
+            }
+
+            // Verificar que Remy y Carlos no existan
+            const removed = ['Remy', 'Carlos'];
+            for (const avatar of removed) {
+                const path = `output/glb/${avatar}/${avatar}.glb`;
+                try {
+                    const response = await fetch(path, { method: 'HEAD' });
+                    addTestResult(section, `${avatar} eliminado`, !response.ok, 'Correctamente removido');
+                } catch (e) {
+                    addTestResult(section, `${avatar} eliminado`, true, 'Correctamente removido');
+                }
+            }
+        }
+
+        async function testAnimations() {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '';
+
+            const section = document.createElement('div');
+            section.className = 'test-section';
+            section.innerHTML = '<h2>🎬 Verificación de Animaciones</h2>';
+            resultsDiv.appendChild(section);
+
+            const testCases = [
+                { avatar: 'Duvall', sign: 'hola', genero: 'Hombre', categoria: 'saludos' },
+                { avatar: 'Luis', sign: 'gracias', genero: 'Hombre', categoria: 'cortesia' },
+                { avatar: 'Nancy', sign: 'adios', genero: 'Mujer', categoria: 'saludos' },
+                { avatar: 'Nina', sign: 'yo', genero: 'Mujer', categoria: 'pronombres' },
+                { avatar: 'Duvall', sign: 'lunes', genero: 'Hombre', categoria: 'dias_semana' },
+                { avatar: 'Nancy', sign: 'como estas', genero: 'Mujer', categoria: 'preguntas' }
+            ];
+
+            for (const test of testCases) {
+                const path = `output/glb/${test.genero}/${test.categoria}/${test.sign}.glb`;
+                
+                try {
+                    const response = await fetch(path, { method: 'HEAD' });
+                    const success = response.ok;
+                    
+                    addTestResult(
+                        section,
+                        `${test.avatar} - "${test.sign}"`,
+                        success,
+                        `${path} ${success ? `(${response.status})` : '(No encontrado)'}`
+                    );
+                } catch (e) {
+                    addTestResult(section, `${test.avatar} - "${test.sign}"`, false, `Error: ${e.message}`);
+                }
+            }
+        }
+
+        async function runAllTests() {
+            document.getElementById('results').innerHTML = '<div style="text-align: center; padding: 40px;"><h2>⏳ Ejecutando pruebas...</h2></div>';
+            
+            totalTests = 0;
+            passedTests = 0;
+            failedTests = 0;
+
+            await testStructure();
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            await testAvatars();
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            await testAnimations();
+
+            if (failedTests === 0) {
+                const success = document.createElement('div');
+                success.className = 'test-section';
+                success.style.borderLeftColor = '#4caf50';
+                success.innerHTML = `
+                    <h2 style="color: #4caf50; text-align: center; font-size: 28px;">
+                        🎉 ¡TODAS LAS PRUEBAS PASARON EXITOSAMENTE!
+                    </h2>
+                    <p style="text-align: center; margin-top: 15px; font-size: 18px;">
+                        El sistema está funcionando correctamente con la nueva estructura.
+                    </p>
+                `;
+                document.getElementById('results').appendChild(success);
+            }
+        }
+
+        // Auto-ejecutar al cargar
+        window.addEventListener('load', () => {
+            setTimeout(runAllTests, 1000);
+        });
+    </script>
+</body>
+</html>

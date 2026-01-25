@@ -1,0 +1,1543 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editor de Señas LSV - Ajuste de Manos</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            overflow: hidden;
+            color: white;
+        }
+
+        #container {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+        }
+
+        /* Panel superior - Carga de archivo */
+        #top-panel {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.9);
+            padding: 20px 30px;
+            border-radius: 15px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+            z-index: 100;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            border: 2px solid rgba(46, 213, 115, 0.3);
+        }
+
+        #top-panel h3 {
+            color: #2ed573;
+            margin-right: 10px;
+        }
+
+        .file-input-wrapper {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        #fbx-search {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: 2px solid #2ed573;
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-size: 14px;
+            min-width: 250px;
+        }
+
+        #fbx-search::placeholder {
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #2ed573 0%, #26d0ce 100%);
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(46, 213, 115, 0.4);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+
+        /* Panel izquierdo - Control de manos */
+        #left-panel {
+            position: absolute;
+            top: 100px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.9);
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+            z-index: 100;
+            max-width: 350px;
+            max-height: calc(100vh - 140px);
+            overflow-y: auto;
+            border: 2px solid rgba(79, 195, 247, 0.3);
+        }
+
+        #left-panel h2 {
+            color: #4fc3f7;
+            margin-bottom: 20px;
+            font-size: 20px;
+            border-bottom: 2px solid #4fc3f7;
+            padding-bottom: 10px;
+        }
+
+        .hand-section {
+            margin-bottom: 25px;
+        }
+
+        .hand-section h3 {
+            color: #26d0ce;
+            font-size: 16px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .finger-group {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+        }
+
+        .finger-group h4 {
+            color: #ffd93d;
+            font-size: 14px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .finger-group h4:hover {
+            color: #ffe066;
+        }
+
+        .collapse-icon {
+            transition: transform 0.3s ease;
+        }
+
+        .collapse-icon.collapsed {
+            transform: rotate(-90deg);
+        }
+
+        .finger-controls {
+            display: grid;
+            gap: 8px;
+        }
+
+        .finger-controls.collapsed {
+            display: none;
+        }
+
+        .slider-control {
+            display: grid;
+            grid-template-columns: 80px 1fr 50px;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .slider-label {
+            color: #aaa;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .slider {
+            -webkit-appearance: none;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 3px;
+            outline: none;
+        }
+
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #4fc3f7;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(79, 195, 247, 0.5);
+        }
+
+        .slider::-webkit-slider-thumb:hover {
+            background: #81d4fa;
+            transform: scale(1.1);
+        }
+
+        .slider-value {
+            color: #4fc3f7;
+            font-size: 12px;
+            font-weight: bold;
+            text-align: right;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .action-buttons button {
+            flex: 1;
+            padding: 10px;
+            font-size: 13px;
+        }
+
+        /* Panel derecho - Timeline y poses */
+        #right-panel {
+            position: absolute;
+            top: 100px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.9);
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+            z-index: 100;
+            width: 300px;
+            max-height: calc(100vh - 140px);
+            overflow-y: auto;
+            border: 2px solid rgba(255, 107, 107, 0.3);
+        }
+
+        #right-panel h2 {
+            color: #ff6b6b;
+            margin-bottom: 20px;
+            font-size: 20px;
+            border-bottom: 2px solid #ff6b6b;
+            padding-bottom: 10px;
+        }
+
+        .timeline-control {
+            margin-bottom: 20px;
+        }
+
+        .timeline-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 12px;
+            color: #aaa;
+        }
+
+        #timeline {
+            width: 100%;
+            height: 6px;
+            -webkit-appearance: none;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 3px;
+        }
+
+        #timeline::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #ff6b6b;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(255, 107, 107, 0.5);
+        }
+
+        .frame-controls {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .frame-controls button {
+            flex: 1;
+            padding: 8px;
+            font-size: 12px;
+        }
+
+        .pose-section {
+            margin-top: 20px;
+        }
+
+        .pose-section h3 {
+            color: #ffd93d;
+            font-size: 16px;
+            margin-bottom: 12px;
+        }
+
+        .pose-list {
+            display: grid;
+            gap: 8px;
+        }
+
+        .pose-item {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .pose-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: #4fc3f7;
+        }
+
+        .pose-item.active {
+            border-color: #2ed573;
+            background: rgba(46, 213, 115, 0.1);
+        }
+
+        .pose-name {
+            font-weight: bold;
+            color: white;
+            margin-bottom: 4px;
+        }
+
+        .pose-frame {
+            font-size: 11px;
+            color: #888;
+        }
+
+        /* Panel inferior - Exportación */
+        #bottom-panel {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.9);
+            padding: 20px 30px;
+            border-radius: 15px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+            z-index: 100;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            border: 2px solid rgba(255, 215, 61, 0.3);
+        }
+
+        .export-section {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .export-section label {
+            color: #ffd93d;
+            font-weight: bold;
+        }
+
+        #export-name {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: 2px solid #ffd93d;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            min-width: 200px;
+        }
+
+        /* Loading overlay */
+        #loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            color: white;
+            z-index: 200;
+            background: rgba(0, 0, 0, 0.9);
+            padding: 40px 60px;
+            border-radius: 20px;
+            display: none;
+        }
+
+        .spinner {
+            border: 5px solid rgba(255, 255, 255, 0.2);
+            border-top: 5px solid #2ed573;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Info badge */
+        .info-badge {
+            position: absolute;
+            bottom: 100px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 12px 18px;
+            border-radius: 10px;
+            font-size: 13px;
+            color: #aaa;
+            max-width: 250px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .info-badge strong {
+            color: #2ed573;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        /* Mode indicator */
+        .mode-indicator {
+            position: absolute;
+            top: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(46, 213, 115, 0.9);
+            color: white;
+            padding: 12px 25px;
+            border-radius: 25px;
+            font-weight: bold;
+            font-size: 14px;
+            box-shadow: 0 4px 15px rgba(46, 213, 115, 0.4);
+            z-index: 150;
+            display: none;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        .mode-indicator.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateX(-50%) translateY(-10px); }
+            to { opacity: 1; transform: translateX(-50%) translateY(0); }
+        }
+
+        /* Scrollbar personalizado */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(79, 195, 247, 0.5);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(79, 195, 247, 0.8);
+        }
+
+        /* Toggle switch */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .switch-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(255, 255, 255, 0.2);
+            transition: 0.4s;
+            border-radius: 24px;
+        }
+
+        .switch-slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: 0.4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .switch-slider {
+            background-color: #2ed573;
+        }
+
+        input:checked + .switch-slider:before {
+            transform: translateX(26px);
+        }
+    </style>
+</head>
+<body>
+    <div id="container"></div>
+
+    <!-- Loading -->
+    <div id="loading">
+        <div class="spinner"></div>
+        <div style="font-size: 18px; color: #2ed573;">Cargando modelo...</div>
+    </div>
+
+    <!-- Panel superior - Carga -->
+    <div id="top-panel">
+        <h3>📂 Editor de Señas LSV</h3>
+        <div class="file-input-wrapper">
+            <input type="text" id="fbx-search" placeholder="Ej: Remy_resultado_b.fbx">
+            <button class="btn" id="load-btn">Cargar FBX</button>
+            <button class="btn btn-danger" id="reset-btn">⟲ Reset</button>
+            <button class="btn btn-primary" id="debug-btn">🔍 Debug</button>
+        </div>
+    </div>
+
+    <!-- Panel izquierdo - Control de manos -->
+    <div id="left-panel">
+        <h2>✋ Control de Manos</h2>
+        
+        <!-- Mano Derecha -->
+        <div class="hand-section">
+            <h3>👉 Mano Derecha (Right)</h3>
+            <div id="right-hand-controls"></div>
+        </div>
+
+        <!-- Mano Izquierda -->
+        <div class="hand-section">
+            <h3>👈 Mano Izquierda (Left)</h3>
+            <div id="left-hand-controls"></div>
+        </div>
+
+        <div class="action-buttons">
+            <button class="btn btn-primary" id="save-pose-btn">💾 Guardar Pose</button>
+            <button class="btn" id="mirror-btn">🔄 Espejo</button>
+        </div>
+    </div>
+
+    <!-- Panel derecho - Timeline -->
+    <div id="right-panel">
+        <h2>⏱️ Timeline & Poses</h2>
+        
+        <div class="timeline-control">
+            <div class="timeline-info">
+                <span>Frame: <strong id="current-frame">0</strong></span>
+                <span>Total: <strong id="total-frames">0</strong></span>
+            </div>
+            <input type="range" id="timeline" min="0" max="100" value="0" step="1">
+            <div class="frame-controls">
+                <button class="btn" id="prev-frame-btn">◀</button>
+                <button class="btn btn-primary" id="play-pause-btn">▶️</button>
+                <button class="btn" id="next-frame-btn">▶</button>
+            </div>
+        </div>
+
+        <div class="pose-section">
+            <h3>📌 Poses Guardadas</h3>
+            <div class="pose-list" id="pose-list">
+                <div style="color: #666; font-size: 12px; text-align: center; padding: 20px;">
+                    No hay poses guardadas.<br>Ajusta los dedos y presiona "💾 Guardar Pose"
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Panel inferior - Exportación -->
+    <div id="bottom-panel">
+        <div class="export-section">
+            <label>💾 Exportar como:</label>
+            <input type="text" id="export-name" placeholder="mi_sena_editada">
+            <button class="btn" id="export-json-btn">📄 JSON</button>
+            <button class="btn btn-primary" id="apply-all-btn">✨ Aplicar a Todos</button>
+        </div>
+    </div>
+
+    <!-- Info badge -->
+    <div class="info-badge">
+        <strong>🎮 Controles:</strong>
+        Mouse + Arrastrar: Rotar<br>
+        Rueda: Zoom<br>
+        Sliders: Ajustar dedos
+    </div>
+
+    <!-- Mode indicator -->
+    <div class="mode-indicator" id="mode-indicator">
+        ✏️ MODO EDICIÓN - Animación pausada
+    </div>
+
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+            "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+        }
+    }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+        import { FBXLoader } from 'three/addons/loaders/FBXLoader.js';
+
+        // Variables globales
+        let scene, camera, renderer, controls;
+        let mixer, clock;
+        let currentModel = null;
+        let armature = null;
+        let isPlaying = false;
+        let currentFrame = 0;
+        let totalFrames = 0;
+        let savedPoses = [];
+        let originalBoneRotations = new Map();
+        let currentBoneRotations = new Map();
+        let skeletonHelper = null;
+        let isManualMode = false; // Modo edición manual
+        let lastMixerTime = 0;
+
+        // Estructura de dedos
+        const FINGER_STRUCTURE = {
+            thumb: { name: 'Pulgar', joints: ['1', '2', '3'] },
+            index: { name: 'Índice', joints: ['1', '2', '3'] },
+            middle: { name: 'Medio', joints: ['1', '2', '3'] },
+            ring: { name: 'Anular', joints: ['1', '2', '3'] },
+            pinky: { name: 'Meñique', joints: ['1', '2', '3'] }
+        };
+
+        // Mapeo de huesos (DeepMotion style)
+        const BONE_NAMES = {
+            right: {
+                thumb: ['r_thumb1_JNT', 'r_thumb2_JNT', 'r_thumb3_JNT'],
+                index: ['r_index1_JNT', 'r_index2_JNT', 'r_index3_JNT'],
+                middle: ['r_middle1_JNT', 'r_middle2_JNT', 'r_middle3_JNT'],
+                ring: ['r_ring1_JNT', 'r_ring2_JNT', 'r_ring3_JNT'],
+                pinky: ['r_pinky1_JNT', 'r_pinky2_JNT', 'r_pinky3_JNT']
+            },
+            left: {
+                thumb: ['l_thumb1_JNT', 'l_thumb2_JNT', 'l_thumb3_JNT'],
+                index: ['l_index1_JNT', 'l_index2_JNT', 'l_index3_JNT'],
+                middle: ['l_middle1_JNT', 'l_middle2_JNT', 'l_middle3_JNT'],
+                ring: ['l_ring1_JNT', 'l_ring2_JNT', 'l_ring3_JNT'],
+                pinky: ['l_pinky1_JNT', 'l_pinky2_JNT', 'l_pinky3_JNT']
+            }
+        };
+
+        // Referencias DOM
+        const elements = {
+            loading: document.getElementById('loading'),
+            fbxSearch: document.getElementById('fbx-search'),
+            loadBtn: document.getElementById('load-btn'),
+            resetBtn: document.getElementById('reset-btn'),
+            debugBtn: document.getElementById('debug-btn'),
+            timeline: document.getElementById('timeline'),
+            currentFrameDisplay: document.getElementById('current-frame'),
+            totalFramesDisplay: document.getElementById('total-frames'),
+            playPauseBtn: document.getElementById('play-pause-btn'),
+            prevFrameBtn: document.getElementById('prev-frame-btn'),
+            nextFrameBtn: document.getElementById('next-frame-btn'),
+            savePoseBtn: document.getElementById('save-pose-btn'),
+            mirrorBtn: document.getElementById('mirror-btn'),
+            poseList: document.getElementById('pose-list'),
+            exportName: document.getElementById('export-name'),
+            exportJsonBtn: document.getElementById('export-json-btn'),
+            applyAllBtn: document.getElementById('apply-all-btn'),
+            rightHandControls: document.getElementById('right-hand-controls'),
+            leftHandControls: document.getElementById('left-hand-controls'),
+            modeIndicator: document.getElementById('mode-indicator')
+        };
+
+        // Inicializar escena
+        function init() {
+            // Escena
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x1a1a2e);
+
+            // Cámara
+            camera = new THREE.PerspectiveCamera(
+                50,
+                window.innerWidth / window.innerHeight,
+                0.1,
+                1000
+            );
+            camera.position.set(0, 1.5, 4);
+
+            // Renderer
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            document.getElementById('container').appendChild(renderer.domElement);
+
+            // Controles
+            controls = new OrbitControls(camera, renderer.domElement);
+            controls.target.set(0, 1, 0);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.05;
+            controls.minDistance = 1;
+            controls.maxDistance = 20;
+            controls.maxPolarAngle = Math.PI / 1.5;
+
+            // Iluminación
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+            scene.add(ambientLight);
+
+            const mainLight = new THREE.DirectionalLight(0xffffff, 1.2);
+            mainLight.position.set(3, 5, 4);
+            mainLight.castShadow = true;
+            scene.add(mainLight);
+
+            const fillLight = new THREE.DirectionalLight(0x4fc3f7, 0.5);
+            fillLight.position.set(-3, 3, -2);
+            scene.add(fillLight);
+
+            // Grid
+            const gridHelper = new THREE.GridHelper(10, 20, 0x444444, 0x222222);
+            scene.add(gridHelper);
+
+            // Clock
+            clock = new THREE.Clock();
+
+            // Event listeners
+            window.addEventListener('resize', onWindowResize);
+            elements.loadBtn.addEventListener('click', loadFBXFromInput);
+            elements.resetBtn.addEventListener('click', resetAllBones);
+            elements.debugBtn.addEventListener('click', toggleDebugInfo);
+            elements.fbxSearch.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') loadFBXFromInput();
+            });
+            elements.timeline.addEventListener('input', onTimelineChange);
+            elements.playPauseBtn.addEventListener('click', togglePlayPause);
+            elements.prevFrameBtn.addEventListener('click', () => changeFrame(-1));
+            elements.nextFrameBtn.addEventListener('click', () => changeFrame(1));
+            elements.savePoseBtn.addEventListener('click', savePose);
+            elements.mirrorBtn.addEventListener('click', mirrorHands);
+            elements.exportJsonBtn.addEventListener('click', exportJSON);
+            elements.applyAllBtn.addEventListener('click', applyToAllFrames);
+
+            // Crear controles de dedos
+            createFingerControls();
+
+            // Iniciar render loop
+            animate();
+        }
+
+        function createFingerControls() {
+            // Mano derecha
+            Object.keys(FINGER_STRUCTURE).forEach(fingerKey => {
+                const finger = FINGER_STRUCTURE[fingerKey];
+                createFingerGroup('right', fingerKey, finger.name, elements.rightHandControls);
+            });
+
+            // Mano izquierda
+            Object.keys(FINGER_STRUCTURE).forEach(fingerKey => {
+                const finger = FINGER_STRUCTURE[fingerKey];
+                createFingerGroup('left', fingerKey, finger.name, elements.leftHandControls);
+            });
+        }
+
+        function createFingerGroup(hand, fingerKey, fingerName, container) {
+            const group = document.createElement('div');
+            group.className = 'finger-group';
+            
+            const header = document.createElement('h4');
+            header.innerHTML = `${fingerName} <span class="collapse-icon">▼</span>`;
+            header.onclick = () => toggleFingerGroup(controls);
+            
+            const controls = document.createElement('div');
+            controls.className = 'finger-controls';
+            controls.id = `${hand}-${fingerKey}-controls`;
+
+            // Crear sliders para cada articulación
+            const bones = BONE_NAMES[hand][fingerKey];
+            bones.forEach((boneName, index) => {
+                const jointNum = index + 1;
+                createSlider(controls, boneName, `Joint ${jointNum}`, hand, fingerKey, index);
+            });
+
+            group.appendChild(header);
+            group.appendChild(controls);
+            container.appendChild(group);
+        }
+
+        function createSlider(container, boneName, label, hand, finger, jointIndex) {
+            const control = document.createElement('div');
+            control.className = 'slider-control';
+
+            const labelEl = document.createElement('span');
+            labelEl.className = 'slider-label';
+            labelEl.textContent = label;
+
+            const slider = document.createElement('input');
+            slider.type = 'range';
+            slider.className = 'slider';
+            slider.min = '-90';
+            slider.max = '90';
+            slider.value = '0';
+            slider.step = '1';
+            slider.dataset.boneName = boneName;
+            slider.dataset.hand = hand;
+            slider.dataset.finger = finger;
+            slider.dataset.joint = jointIndex;
+
+            const valueDisplay = document.createElement('span');
+            valueDisplay.className = 'slider-value';
+            valueDisplay.textContent = '0°';
+
+            slider.addEventListener('input', (e) => {
+                const value = parseInt(e.target.value);
+                valueDisplay.textContent = `${value}°`;
+                
+                // Activar modo manual al mover slider
+                if (!isManualMode) {
+                    enterManualMode();
+                }
+                
+                updateBoneRotation(boneName, value);
+            });
+
+            control.appendChild(labelEl);
+            control.appendChild(slider);
+            control.appendChild(valueDisplay);
+            container.appendChild(control);
+        }
+
+        function toggleFingerGroup(controls) {
+            const icon = controls.previousElementSibling.querySelector('.collapse-icon');
+            controls.classList.toggle('collapsed');
+            icon.classList.toggle('collapsed');
+        }
+
+        function loadFBXFromInput() {
+            const filename = elements.fbxSearch.value.trim();
+            if (!filename) {
+                alert('⚠️ Por favor ingresa un nombre de archivo');
+                return;
+            }
+
+            let path = filename;
+            if (!path.toLowerCase().endsWith('.fbx')) {
+                path += '.fbx';
+            }
+            path = `../output/${path}`;
+
+            loadFBX(path);
+        }
+
+        function loadFBX(path) {
+            console.log('🔄 Cargando FBX:', path);
+            elements.loading.style.display = 'block';
+
+            // Limpiar modelo anterior
+            if (currentModel) {
+                scene.remove(currentModel);
+                if (skeletonHelper) {
+                    scene.remove(skeletonHelper);
+                    skeletonHelper = null;
+                }
+                currentModel = null;
+                armature = null;
+                originalBoneRotations.clear();
+                currentBoneRotations.clear();
+            }
+
+            const loader = new FBXLoader();
+            loader.load(
+                path,
+                (fbx) => {
+                    elements.loading.style.display = 'none';
+                    currentModel = fbx;
+                    fbx.scale.set(0.01, 0.01, 0.01);
+
+                    // Centrar
+                    const box = new THREE.Box3().setFromObject(fbx);
+                    const center = box.getCenter(new THREE.Vector3());
+                    fbx.position.x = -center.x;
+                    fbx.position.z = -center.z;
+                    fbx.position.y = -box.min.y;
+
+                    // Configurar meshes
+                    let meshCount = 0;
+                    fbx.traverse((child) => {
+                        if (child.isMesh) {
+                            meshCount++;
+                            child.castShadow = true;
+                            child.receiveShadow = true;
+
+                            // Mejorar materiales
+                            if (child.material) {
+                                if (Array.isArray(child.material)) {
+                                    child.material.forEach(mat => {
+                                        mat.roughness = 0.6;
+                                        mat.metalness = 0.1;
+                                        mat.needsUpdate = true;
+                                    });
+                                } else {
+                                    child.material.roughness = 0.6;
+                                    child.material.metalness = 0.1;
+                                    child.material.needsUpdate = true;
+                                }
+                            }
+
+                            // Ocultar tren inferior
+                            const name = child.name.toLowerCase();
+                            if (name.includes('bottoms') || name.includes('shoes') || 
+                                name.includes('pants') || name.includes('legs') ||
+                                name.includes('foot') || name.includes('toe')) {
+                                child.visible = false;
+                                console.log('🙈 Ocultando:', child.name);
+                            }
+                        }
+                    });
+
+                    console.log('🎨 Meshes encontrados:', meshCount);
+
+                    scene.add(fbx);
+
+                    // Buscar armature de forma más robusta
+                    if (!armature) {
+                        fbx.traverse((child) => {
+                            if (child.isSkinnedMesh && child.skeleton) {
+                                armature = child.skeleton.bones[0];
+                                while (armature.parent && armature.parent.type === 'Bone') {
+                                    armature = armature.parent;
+                                }
+                                console.log('✅ Armature encontrado via SkinnedMesh');
+                            }
+                        });
+                    }
+
+                    // Buscar huesos directamente
+                    if (!armature) {
+                        let bones = [];
+                        fbx.traverse((child) => {
+                            if (child.type === 'Bone') {
+                                bones.push(child);
+                            }
+                        });
+                        if (bones.length > 0) {
+                            // Encontrar el hueso raíz (el que tiene más hijos)
+                            armature = bones.reduce((root, bone) => {
+                                let depth = 0;
+                                let parent = bone.parent;
+                                while (parent && parent.type === 'Bone') {
+                                    depth++;
+                                    parent = parent.parent;
+                                }
+                                if (!root || depth < root.depth) {
+                                    return { bone, depth };
+                                }
+                                return root;
+                            }, null).bone;
+                            console.log('✅ Armature encontrado via búsqueda de huesos');
+                        }
+                    }
+
+                    if (!armature) {
+                        console.warn('⚠️ No se encontró armature');
+                    }
+
+                    // Configurar animación
+                    if (fbx.animations.length > 0) {
+                        mixer = new THREE.AnimationMixer(fbx);
+                        const clip = fbx.animations[0];
+                        const action = mixer.clipAction(clip);
+                        action.play();
+                        action.paused = true; // Iniciar pausado para edición
+
+                        const fps = 30;
+                        totalFrames = Math.round(clip.duration * fps);
+                        elements.totalFramesDisplay.textContent = totalFrames;
+                        elements.timeline.max = totalFrames - 1;
+
+                        // Guardar rotaciones después de que la animación esté lista
+                        mixer.update(0);
+                        saveOriginalRotations();
+
+                        console.log('🎬 Animación cargada:', totalFrames, 'frames (pausada para edición)');
+                    }
+
+                    // Ajustar cámara
+                    const size = box.getSize(new THREE.Vector3());
+                    const maxDim = Math.max(size.x, size.y, size.z);
+                    const fov = camera.fov * (Math.PI / 180);
+                    let cameraDistance = maxDim / (2 * Math.tan(fov / 2));
+                    cameraDistance *= 2; // Multiplicador para dar espacio
+
+                    camera.position.set(0, size.y * 0.6, cameraDistance);
+                    camera.lookAt(0, size.y * 0.5, 0);
+                    controls.target.set(0, size.y * 0.5, 0);
+                    controls.update();
+
+                    console.log('✅ FBX cargado exitosamente');
+                    console.log('📏 Tamaño:', size);
+                    console.log('📷 Cámara distancia:', cameraDistance);
+
+                    // Crear skeleton helper (opcional, activar con debug)
+                    if (armature) {
+                        // El helper se añadirá con el botón debug
+                        console.log('💡 Presiona "🔍 Debug" para ver skeleton');
+                    }
+                },
+                (xhr) => {
+                    console.log(`📊 ${(xhr.loaded / xhr.total * 100).toFixed(1)}%`);
+                },
+                (error) => {
+                    elements.loading.style.display = 'none';
+                    console.error('❌ Error:', error);
+                    alert(`❌ Error cargando FBX:\n${path}\n\nVerifica que el archivo existe en output/`);
+                }
+            );
+        }
+
+        function saveOriginalRotations() {
+            if (!currentModel) return;
+
+            originalBoneRotations.clear();
+            currentBoneRotations.clear();
+
+            currentModel.traverse((bone) => {
+                if (bone.type === 'Bone') {
+                    originalBoneRotations.set(bone.name, bone.rotation.clone());
+                    currentBoneRotations.set(bone.name, bone.rotation.clone());
+                }
+            });
+
+            console.log(`💾 Rotaciones originales guardadas: ${originalBoneRotations.size} huesos`);
+        }
+
+        function enterManualMode() {
+            isManualMode = true;
+            
+            // Mostrar indicador
+            elements.modeIndicator.classList.add('active');
+            
+            // Pausar animación si está reproduciendo
+            if (isPlaying) {
+                isPlaying = false;
+                elements.playPauseBtn.textContent = '▶️';
+            }
+
+            // Guardar estado actual como base para edición
+            if (mixer) {
+                lastMixerTime = mixer.time;
+            }
+
+            console.log('✏️ Modo edición manual activado - Animación PAUSADA');
+        }
+
+        function exitManualMode() {
+            isManualMode = false;
+            
+            // Ocultar indicador
+            elements.modeIndicator.classList.remove('active');
+            
+            // Restaurar a estado de animación
+            if (mixer && lastMixerTime !== undefined) {
+                mixer.setTime(lastMixerTime);
+            }
+
+            console.log('🎬 Modo animación restaurado');
+        }
+
+        function updateBoneRotation(boneName, angleDegrees) {
+            if (!currentModel) {
+                console.warn('⚠️ No hay modelo cargado');
+                return;
+            }
+
+            // Buscar hueso en todo el modelo
+            let bone = null;
+            currentModel.traverse((child) => {
+                if (child.type === 'Bone' && child.name === boneName) {
+                    bone = child;
+                }
+            });
+
+            if (bone) {
+                // Convertir a radianes
+                const angleRad = THREE.MathUtils.degToRad(angleDegrees);
+                
+                // Aplicar rotación en eje Z (flexión de dedos)
+                const original = originalBoneRotations.get(boneName);
+                if (original) {
+                    bone.rotation.z = original.z + angleRad;
+                    currentBoneRotations.set(boneName, bone.rotation.clone());
+                } else {
+                    // Si no hay original, usar rotación actual como base
+                    bone.rotation.z += angleRad;
+                }
+
+                // Forzar actualización de la matriz del hueso
+                bone.updateMatrixWorld(true);
+            } else {
+                // Solo mostrar warning la primera vez
+                if (!window.warnedBones) window.warnedBones = new Set();
+                if (!window.warnedBones.has(boneName)) {
+                    console.warn(`⚠️ Hueso no encontrado: ${boneName}`);
+                    window.warnedBones.add(boneName);
+                }
+            }
+        }
+
+        function resetAllBones() {
+            if (!currentModel) return;
+
+            // Salir de modo manual
+            isManualMode = false;
+            elements.modeIndicator.classList.remove('active');
+
+            // Si hay animación, actualizar al frame actual
+            if (mixer) {
+                const currentTime = currentFrame / 30;
+                mixer.setTime(currentTime);
+                saveOriginalRotations(); // Actualizar base
+            }
+
+            // Resetear sliders
+            document.querySelectorAll('.slider').forEach(slider => {
+                slider.value = 0;
+                slider.nextElementSibling.textContent = '0°';
+            });
+
+            console.log('🔄 Reset completado - Frame actual restaurado');
+        }
+
+        function toggleDebugInfo() {
+            if (!currentModel) {
+                alert('⚠️ Carga un FBX primero');
+                return;
+            }
+
+            console.log('='.repeat(60));
+            console.log('🔍 DEBUG INFO');
+            console.log('='.repeat(60));
+
+            // Info del modelo
+            const box = new THREE.Box3().setFromObject(currentModel);
+            const size = box.getSize(new THREE.Vector3());
+            const center = box.getCenter(new THREE.Vector3());
+            
+            console.log('📦 MODELO:');
+            console.log('  Tamaño:', size);
+            console.log('  Centro:', center);
+            console.log('  Posición:', currentModel.position);
+            console.log('  Escala:', currentModel.scale);
+
+            // Info de meshes
+            let meshes = [];
+            let bones = [];
+            currentModel.traverse((child) => {
+                if (child.isMesh) {
+                    meshes.push({
+                        name: child.name,
+                        visible: child.visible,
+                        vertices: child.geometry ? child.geometry.attributes.position.count : 0
+                    });
+                }
+                if (child.type === 'Bone') {
+                    bones.push(child.name);
+                }
+            });
+
+            console.log('\n🎨 MESHES:', meshes.length);
+            meshes.forEach((m, i) => {
+                console.log(`  ${i + 1}. ${m.name} - ${m.vertices} verts - ${m.visible ? 'Visible' : 'Oculto'}`);
+            });
+
+            console.log('\n🦴 HUESOS:', bones.length);
+            console.log('Primeros 20:', bones.slice(0, 20));
+
+            // Buscar huesos de dedos
+            const fingerBones = bones.filter(b => 
+                b.includes('thumb') || b.includes('index') || b.includes('middle') || 
+                b.includes('ring') || b.includes('pinky')
+            );
+            console.log('\n✋ HUESOS DE DEDOS:', fingerBones.length);
+            console.log(fingerBones);
+
+            // Info de cámara
+            console.log('\n📷 CÁMARA:');
+            console.log('  Posición:', camera.position);
+            console.log('  Target:', controls.target);
+            console.log('  FOV:', camera.fov);
+
+            // Toggle skeleton helper
+            if (skeletonHelper) {
+                scene.remove(skeletonHelper);
+                skeletonHelper = null;
+                console.log('\n👻 Skeleton helper DESACTIVADO');
+            } else if (armature) {
+                // Buscar SkinnedMesh para el helper
+                let skinnedMesh = null;
+                currentModel.traverse((child) => {
+                    if (child.isSkinnedMesh && !skinnedMesh) {
+                        skinnedMesh = child;
+                    }
+                });
+
+                if (skinnedMesh) {
+                    skeletonHelper = new THREE.SkeletonHelper(currentModel);
+                    skeletonHelper.material.linewidth = 2;
+                    scene.add(skeletonHelper);
+                    console.log('\n👻 Skeleton helper ACTIVADO (líneas verdes)');
+                } else {
+                    console.log('\n⚠️ No se encontró SkinnedMesh para skeleton helper');
+                }
+            }
+
+            console.log('='.repeat(60));
+        }
+
+        function savePose() {
+            if (!currentModel) {
+                alert('⚠️ Carga un FBX primero');
+                return;
+            }
+
+            const pose = {
+                name: `Pose ${savedPoses.length + 1}`,
+                frame: currentFrame,
+                timestamp: new Date().toLocaleTimeString(),
+                rotations: {},
+                sliderValues: {} // Guardar valores de sliders también
+            };
+
+            // Guardar rotaciones actuales de todos los huesos modificables
+            Object.values(BONE_NAMES.right).flat().forEach(boneName => {
+                const bone = findBone(boneName);
+                if (bone) {
+                    const original = originalBoneRotations.get(boneName);
+                    const current = bone.rotation;
+                    
+                    // Guardar si hay diferencia
+                    if (!original || Math.abs(current.z - original.z) > 0.01) {
+                        pose.rotations[boneName] = {
+                            x: current.x,
+                            y: current.y,
+                            z: current.z
+                        };
+
+                        // Guardar valor del slider
+                        const slider = document.querySelector(`[data-bone-name="${boneName}"]`);
+                        if (slider) {
+                            pose.sliderValues[boneName] = parseInt(slider.value);
+                        }
+                    }
+                }
+            });
+
+            // Lo mismo para mano izquierda
+            Object.values(BONE_NAMES.left).flat().forEach(boneName => {
+                const bone = findBone(boneName);
+                if (bone) {
+                    const original = originalBoneRotations.get(boneName);
+                    const current = bone.rotation;
+                    
+                    if (!original || Math.abs(current.z - original.z) > 0.01) {
+                        pose.rotations[boneName] = {
+                            x: current.x,
+                            y: current.y,
+                            z: current.z
+                        };
+
+                        const slider = document.querySelector(`[data-bone-name="${boneName}"]`);
+                        if (slider) {
+                            pose.sliderValues[boneName] = parseInt(slider.value);
+                        }
+                    }
+                }
+            });
+
+            if (Object.keys(pose.rotations).length === 0) {
+                alert('⚠️ No hay modificaciones para guardar. Mueve los sliders primero.');
+                return;
+            }
+
+            savedPoses.push(pose);
+            updatePoseList();
+            console.log('💾 Pose guardada:', pose);
+            console.log(`   ${Object.keys(pose.rotations).length} huesos modificados`);
+        }
+
+        function findBone(boneName) {
+            let bone = null;
+            if (currentModel) {
+                currentModel.traverse((child) => {
+                    if (child.type === 'Bone' && child.name === boneName) {
+                        bone = child;
+                    }
+                });
+            }
+            return bone;
+        }
+
+        function updatePoseList() {
+            if (savedPoses.length === 0) {
+                elements.poseList.innerHTML = `
+                    <div style="color: #666; font-size: 12px; text-align: center; padding: 20px;">
+                        No hay poses guardadas.
+                    </div>
+                `;
+                return;
+            }
+
+            elements.poseList.innerHTML = savedPoses.map((pose, index) => `
+                <div class="pose-item" onclick="loadPose(${index})">
+                    <div class="pose-name">${pose.name}</div>
+                    <div class="pose-frame">Frame ${pose.frame} • ${pose.timestamp}</div>
+                </div>
+            `).join('');
+        }
+
+        window.loadPose = function(index) {
+            const pose = savedPoses[index];
+            if (!pose || !currentModel) return;
+
+            // Entrar en modo manual
+            enterManualMode();
+
+            // Ir al frame de la pose si existe mixer
+            if (mixer && pose.frame !== undefined) {
+                currentFrame = pose.frame;
+                elements.timeline.value = currentFrame;
+                elements.currentFrameDisplay.textContent = currentFrame;
+                const time = currentFrame / 30;
+                mixer.setTime(time);
+                saveOriginalRotations();
+            }
+
+            // Aplicar rotaciones guardadas
+            Object.keys(pose.rotations).forEach(boneName => {
+                const bone = findBone(boneName);
+                const rot = pose.rotations[boneName];
+                if (bone && rot) {
+                    bone.rotation.set(rot.x, rot.y, rot.z);
+                    bone.updateMatrixWorld(true);
+                }
+            });
+
+            // Actualizar sliders con valores guardados
+            if (pose.sliderValues) {
+                Object.keys(pose.sliderValues).forEach(boneName => {
+                    const slider = document.querySelector(`[data-bone-name="${boneName}"]`);
+                    if (slider) {
+                        const value = pose.sliderValues[boneName];
+                        slider.value = value;
+                        slider.nextElementSibling.textContent = `${value}°`;
+                    }
+                });
+            }
+
+            // Marcar pose activa
+            document.querySelectorAll('.pose-item').forEach((item, i) => {
+                item.classList.toggle('active', i === index);
+            });
+
+            console.log('📌 Pose cargada:', pose.name);
+            console.log(`   Frame: ${pose.frame}, Huesos: ${Object.keys(pose.rotations).length}`);
+        };
+
+        function mirrorHands() {
+            if (!currentModel) return;
+
+            // Activar modo manual
+            if (!isManualMode) {
+                enterManualMode();
+            }
+
+            // Copiar rotaciones de mano derecha a izquierda
+            Object.keys(BONE_NAMES.right).forEach(fingerKey => {
+                BONE_NAMES.right[fingerKey].forEach((rightBone, index) => {
+                    const leftBone = BONE_NAMES.left[fingerKey][index];
+                    
+                    const rightBoneObj = findBone(rightBone);
+                    const leftBoneObj = findBone(leftBone);
+                    
+                    if (rightBoneObj && leftBoneObj) {
+                        leftBoneObj.rotation.copy(rightBoneObj.rotation);
+                        leftBoneObj.updateMatrixWorld(true);
+                        
+                        // Actualizar slider izquierdo
+                        const rightSlider = document.querySelector(`[data-bone-name="${rightBone}"]`);
+                        const leftSlider = document.querySelector(`[data-bone-name="${leftBone}"]`);
+                        
+                        if (rightSlider && leftSlider) {
+                            leftSlider.value = rightSlider.value;
+                            leftSlider.nextElementSibling.textContent = rightSlider.nextElementSibling.textContent;
+                        }
+                    }
+                });
+            });
+
+            console.log('🔄 Manos espejadas');
+        }
+
+        function exportJSON() {
+            if (savedPoses.length === 0) {
+                alert('⚠️ No hay poses guardadas para exportar');
+                return;
+            }
+
+            const exportName = elements.exportName.value.trim() || 'poses_editadas';
+            
+            const data = {
+                version: '1.0',
+                created: new Date().toISOString(),
+                source: elements.fbxSearch.value,
+                totalFrames: totalFrames,
+                poses: savedPoses
+            };
+
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${exportName}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+
+            console.log('📄 JSON exportado:', exportName);
+        }
+
+        function applyToAllFrames() {
+            alert('🚧 Función en desarrollo\n\nEsta función aplicará los ajustes actuales a todos los frames de la animación.');
+        }
+
+        function onTimelineChange(e) {
+            currentFrame = parseInt(e.target.value);
+            elements.currentFrameDisplay.textContent = currentFrame;
+
+            // Salir de modo manual al cambiar frame
+            isManualMode = false;
+            elements.modeIndicator.classList.remove('active');
+
+            if (mixer) {
+                const time = currentFrame / 30; // 30 fps
+                mixer.setTime(time);
+                
+                // Actualizar rotaciones base del nuevo frame
+                saveOriginalRotations();
+                
+                // Resetear sliders
+                document.querySelectorAll('.slider').forEach(slider => {
+                    slider.value = 0;
+                    slider.nextElementSibling.textContent = '0°';
+                });
+            }
+        }
+
+        function togglePlayPause() {
+            // Salir de modo manual si estamos reproduciendo
+            if (!isPlaying) {
+                isManualMode = false;
+            }
+
+            isPlaying = !isPlaying;
+            elements.playPauseBtn.textContent = isPlaying ? '⏸' : '▶️';
+
+            if (isPlaying) {
+                // Resetear sliders al reproducir
+                document.querySelectorAll('.slider').forEach(slider => {
+                    slider.value = 0;
+                    slider.nextElementSibling.textContent = '0°';
+                });
+            }
+        }
+
+        function changeFrame(delta) {
+            // Salir de modo manual
+            isManualMode = false;
+            elements.modeIndicator.classList.remove('active');
+
+            currentFrame = Math.max(0, Math.min(totalFrames - 1, currentFrame + delta));
+            elements.timeline.value = currentFrame;
+            elements.currentFrameDisplay.textContent = currentFrame;
+
+            if (mixer) {
+                const time = currentFrame / 30;
+                mixer.setTime(time);
+                
+                // Actualizar rotaciones base
+                saveOriginalRotations();
+                
+                // Resetear sliders
+                document.querySelectorAll('.slider').forEach(slider => {
+                    slider.value = 0;
+                    slider.nextElementSibling.textContent = '0°';
+                });
+            }
+        }
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+
+            // Solo actualizar mixer si está reproduciendo Y NO en modo manual
+            if (mixer && isPlaying && !isManualMode) {
+                const delta = clock.getDelta();
+                mixer.update(delta);
+
+                // Actualizar timeline
+                const time = mixer.time;
+                currentFrame = Math.round(time * 30);
+                elements.timeline.value = currentFrame;
+                elements.currentFrameDisplay.textContent = currentFrame;
+                
+                // Actualizar rotaciones base continuamente
+                lastMixerTime = time;
+            }
+
+            controls.update();
+            renderer.render(scene, camera);
+        }
+
+        // Iniciar
+        init();
+    </script>
+</body>
+</html>

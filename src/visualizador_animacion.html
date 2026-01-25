@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visualizador de Animaciones - LSV</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 1200px;
+            width: 100%;
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1em;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .control-group {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+        }
+
+        .control-group label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+            width: 100%;
+        }
+
+        .file-input-wrapper input[type=file] {
+            position: absolute;
+            left: -9999px;
+        }
+
+        .file-input-label {
+            display: block;
+            padding: 15px;
+            background: #667eea;
+            color: white;
+            text-align: center;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .file-input-label:hover {
+            background: #764ba2;
+            transform: translateY(-2px);
+        }
+
+        .file-name {
+            margin-top: 10px;
+            font-size: 0.9em;
+            color: #666;
+            text-align: center;
+        }
+
+        .animation-canvas {
+            background: #1a1a2e;
+            border-radius: 10px;
+            min-height: 500px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .avatar-container {
+            position: relative;
+            width: 400px;
+            height: 500px;
+        }
+
+        .avatar-body {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Avatar SVG */
+        .avatar-head {
+            fill: #ffd6a5;
+            stroke: #333;
+            stroke-width: 2;
+        }
+
+        .avatar-body-part {
+            fill: #4a90e2;
+            stroke: #333;
+            stroke-width: 2;
+        }
+
+        .avatar-hand {
+            fill: #ffd6a5;
+            stroke: #333;
+            stroke-width: 2;
+        }
+
+        .playback-controls {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .playback-controls.active {
+            display: block;
+        }
+
+        .play-button {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 8px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-right: 10px;
+        }
+
+        .play-button:hover {
+            background: #218838;
+            transform: scale(1.05);
+        }
+
+        .pause-button {
+            background: #ffc107;
+            color: #333;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 8px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .pause-button:hover {
+            background: #e0a800;
+        }
+
+        .timeline {
+            margin-top: 20px;
+        }
+
+        .timeline-slider {
+            width: 100%;
+            height: 8px;
+            border-radius: 4px;
+            background: #ddd;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        .timeline-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #667eea;
+            cursor: pointer;
+        }
+
+        .animation-info {
+            margin-top: 15px;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+        }
+
+        .info-box {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            border: 2px solid #e0e0e0;
+        }
+
+        .info-label {
+            font-size: 0.9em;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .info-value {
+            font-size: 1.5em;
+            font-weight: 600;
+            color: #667eea;
+        }
+
+        .placeholder-text {
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 1.2em;
+            text-align: center;
+        }
+
+        .error-message {
+            background: #ff4444;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            display: none;
+        }
+
+        .success-message {
+            background: #00C851;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎬 Visualizador de Animaciones 3D</h1>
+            <p>Lengua de Señas Venezolana</p>
+        </div>
+
+        <div class="content">
+            <div class="controls">
+                <div class="control-group">
+                    <label>📁 Cargar Animación JSON</label>
+                    <div class="file-input-wrapper">
+                        <input type="file" id="jsonFile" accept=".json">
+                        <label for="jsonFile" class="file-input-label">
+                            Seleccionar Archivo
+                        </label>
+                    </div>
+                    <div class="file-name" id="fileName">Ningún archivo seleccionado</div>
+                </div>
+
+                <div class="control-group">
+                    <label>🎨 Opciones Rápidas</label>
+                    <select id="quickLoad" style="width: 100%; padding: 15px; border-radius: 8px; border: 2px solid #ddd; font-size: 1em;">
+                        <option value="">Seleccionar animación...</option>
+                        <option value="output_yo.json">YO</option>
+                        <option value="output_hola.json">HOLA</option>
+                        <option value="output_gracias.json">GRACIAS</option>
+                        <option value="output_hola_gracias.json">HOLA GRACIAS</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="animation-canvas" id="canvas">
+                <svg class="avatar-container" id="avatarSvg" viewBox="0 0 400 500">
+                    <!-- Cabeza -->
+                    <circle class="avatar-head" cx="200" cy="80" r="40" id="head"/>
+                    
+                    <!-- Cuerpo -->
+                    <rect class="avatar-body-part" x="170" y="120" width="60" height="100" rx="10" id="body"/>
+                    
+                    <!-- Brazo derecho -->
+                    <g id="rightArm">
+                        <line x1="170" y1="130" x2="120" y2="180" stroke="#4a90e2" stroke-width="12" stroke-linecap="round" id="upperArm"/>
+                        <line x1="120" y1="180" x2="100" y2="240" stroke="#4a90e2" stroke-width="10" stroke-linecap="round" id="lowerArm"/>
+                        <!-- Mano derecha -->
+                        <circle class="avatar-hand" cx="100" cy="240" r="15" id="rightHand"/>
+                    </g>
+                    
+                    <!-- Brazo izquierdo -->
+                    <g id="leftArm">
+                        <line x1="230" y1="130" x2="280" y2="180" stroke="#4a90e2" stroke-width="12" stroke-linecap="round"/>
+                        <line x1="280" y1="180" x2="300" y2="240" stroke="#4a90e2" stroke-width="10" stroke-linecap="round"/>
+                        <circle class="avatar-hand" cx="300" cy="240" r="15"/>
+                    </g>
+                    
+                    <!-- Piernas -->
+                    <g id="legs">
+                        <line x1="185" y1="220" x2="170" y2="320" stroke="#4a90e2" stroke-width="12" stroke-linecap="round"/>
+                        <line x1="215" y1="220" x2="230" y2="320" stroke="#4a90e2" stroke-width="12" stroke-linecap="round"/>
+                    </g>
+                </svg>
+                
+                <div class="placeholder-text" id="placeholder">
+                    Carga un archivo JSON para ver la animación
+                </div>
+            </div>
+
+            <div class="playback-controls" id="playbackControls">
+                <div style="text-align: center; margin-bottom: 20px;">
+                    <button class="play-button" id="playButton">▶ Reproducir</button>
+                    <button class="pause-button" id="pauseButton">⏸ Pausar</button>
+                </div>
+
+                <div class="timeline">
+                    <input type="range" class="timeline-slider" id="timeline" min="0" max="100" value="0">
+                </div>
+
+                <div class="animation-info">
+                    <div class="info-box">
+                        <div class="info-label">Frame Actual</div>
+                        <div class="info-value" id="currentFrame">0</div>
+                    </div>
+                    <div class="info-box">
+                        <div class="info-label">Total Frames</div>
+                        <div class="info-value" id="totalFrames">0</div>
+                    </div>
+                    <div class="info-box">
+                        <div class="info-label">Duración</div>
+                        <div class="info-value" id="duration">0s</div>
+                    </div>
+                    <div class="info-box">
+                        <div class="info-label">FPS</div>
+                        <div class="info-value" id="fps">30</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="error-message" id="errorMessage"></div>
+            <div class="success-message" id="successMessage"></div>
+        </div>
+    </div>
+
+    <script>
+        let animationData = null;
+        let currentFrameIndex = 0;
+        let isPlaying = false;
+        let animationInterval = null;
+
+        const jsonFileInput = document.getElementById('jsonFile');
+        const fileNameDisplay = document.getElementById('fileName');
+        const quickLoadSelect = document.getElementById('quickLoad');
+        const playbackControls = document.getElementById('playbackControls');
+        const playButton = document.getElementById('playButton');
+        const pauseButton = document.getElementById('pauseButton');
+        const timeline = document.getElementById('timeline');
+        const placeholder = document.getElementById('placeholder');
+        const errorMessage = document.getElementById('errorMessage');
+        const successMessage = document.getElementById('successMessage');
+
+        // Cargar archivo JSON
+        jsonFileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                fileNameDisplay.textContent = file.name;
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    try {
+                        animationData = JSON.parse(event.target.result);
+                        loadAnimation();
+                        showSuccess(`✅ Animación "${file.name}" cargada correctamente`);
+                    } catch (error) {
+                        showError('❌ Error al leer el archivo JSON');
+                    }
+                };
+                reader.readAsText(file);
+            }
+        });
+
+        // Carga rápida
+        quickLoadSelect.addEventListener('change', async (e) => {
+            const fileName = e.target.value;
+            if (fileName) {
+                try {
+                    const response = await fetch(fileName);
+                    if (response.ok) {
+                        animationData = await response.json();
+                        loadAnimation();
+                        showSuccess(`✅ Animación "${fileName}" cargada`);
+                    } else {
+                        showError(`❌ No se encontró el archivo ${fileName}`);
+                    }
+                } catch (error) {
+                    showError('❌ Error al cargar la animación');
+                }
+            }
+        });
+
+        function loadAnimation() {
+            if (!animationData || !animationData.frames) {
+                showError('❌ Datos de animación inválidos');
+                return;
+            }
+
+            placeholder.style.display = 'none';
+            playbackControls.classList.add('active');
+
+            // Actualizar información
+            document.getElementById('totalFrames').textContent = animationData.frames.length;
+            document.getElementById('duration').textContent = animationData.duration?.toFixed(2) + 's' || '0s';
+            document.getElementById('fps').textContent = animationData.fps || 30;
+
+            timeline.max = animationData.frames.length - 1;
+            currentFrameIndex = 0;
+            updateFrame();
+        }
+
+        function updateFrame() {
+            if (!animationData || currentFrameIndex >= animationData.frames.length) return;
+
+            const frame = animationData.frames[currentFrameIndex];
+            const pose = frame.keypoints?.pose || frame.pose;
+
+            if (pose && pose.right_hand) {
+                // Actualizar posición de la mano derecha
+                const hand = document.getElementById('rightHand');
+                const x = 200 + (pose.right_hand.x - 0.5) * 300; // Escalar coordenadas
+                const y = 240 - (pose.right_hand.y - 1.2) * 200;
+                
+                hand.setAttribute('cx', x);
+                hand.setAttribute('cy', y);
+
+                // Rotar cabeza si hay datos
+                if (pose.head) {
+                    const head = document.getElementById('head');
+                    head.setAttribute('transform', `rotate(${pose.head.rotation_z || 0} 200 80)`);
+                }
+            }
+
+            // Actualizar UI
+            document.getElementById('currentFrame').textContent = currentFrameIndex + 1;
+            timeline.value = currentFrameIndex;
+        }
+
+        // Controles de reproducción
+        playButton.addEventListener('click', () => {
+            if (!animationData) return;
+            
+            isPlaying = true;
+            const fps = animationData.fps || 30;
+            const frameTime = 1000 / fps;
+
+            animationInterval = setInterval(() => {
+                currentFrameIndex++;
+                if (currentFrameIndex >= animationData.frames.length) {
+                    currentFrameIndex = 0; // Loop
+                }
+                updateFrame();
+            }, frameTime);
+        });
+
+        pauseButton.addEventListener('click', () => {
+            isPlaying = false;
+            if (animationInterval) {
+                clearInterval(animationInterval);
+                animationInterval = null;
+            }
+        });
+
+        timeline.addEventListener('input', (e) => {
+            if (isPlaying) {
+                pauseButton.click();
+            }
+            currentFrameIndex = parseInt(e.target.value);
+            updateFrame();
+        });
+
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorMessage.style.display = 'block';
+            setTimeout(() => {
+                errorMessage.style.display = 'none';
+            }, 5000);
+        }
+
+        function showSuccess(message) {
+            successMessage.textContent = message;
+            successMessage.style.display = 'block';
+            setTimeout(() => {
+                successMessage.style.display = 'none';
+            }, 3000);
+        }
+    </script>
+</body>
+</html>

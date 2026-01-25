@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verificar Animación - Leonard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        #info {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        
+        .stats {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        
+        .stat {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .stat-value {
+            font-size: 32px;
+            font-weight: bold;
+        }
+        
+        .stat-label {
+            font-size: 14px;
+            opacity: 0.9;
+            margin-top: 5px;
+        }
+        
+        #container {
+            flex: 1;
+            position: relative;
+        }
+        
+        #controls {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 15px;
+            text-align: center;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+        }
+        
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 0 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: transform 0.2s;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 8px rgba(0,0,0,0.15);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        #fileInput {
+            margin: 20px;
+        }
+        
+        .loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            text-align: center;
+        }
+        
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div id="info">
+        <h1>🎬 Verificador de Animación FBX</h1>
+        <p>Leonard con Animación transferida de Remy</p>
+        
+        <div style="margin: 20px 0;">
+            <input type="file" id="fileInput" accept=".fbx" />
+            <p style="color: #666; font-size: 14px; margin-top: 10px;">
+                O arrastra el archivo <strong>Leonard_con_animacion_b.fbx</strong> aquí
+            </p>
+        </div>
+        
+        <div class="stats">
+            <div class="stat">
+                <div class="stat-value" id="frames">-</div>
+                <div class="stat-label">Frames</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="bones">-</div>
+                <div class="stat-label">Huesos Animados</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="keyframes">-</div>
+                <div class="stat-label">Keyframes</div>
+            </div>
+        </div>
+    </div>
+    
+    <div id="container">
+        <div id="loading" class="loading" style="display: none;">
+            <div class="spinner"></div>
+            <div>Cargando modelo...</div>
+        </div>
+    </div>
+    
+    <div id="controls">
+        <button id="playBtn" onclick="toggleAnimation()">▶ Reproducir</button>
+        <button onclick="resetCamera()">🎥 Reset Cámara</button>
+        <button onclick="toggleWireframe()">🔲 Wireframe</button>
+        <label style="margin-left: 20px;">
+            Velocidad: <input type="range" id="speedSlider" min="0.1" max="2" step="0.1" value="1" 
+                onchange="updateSpeed(this.value)">
+            <span id="speedValue">1.0x</span>
+        </label>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/FBXLoader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    
+    <script>
+        let scene, camera, renderer, controls, mixer, clock, model;
+        let isPlaying = false;
+        let wireframe = false;
+        let animationSpeed = 1.0;
+        
+        // Inicializar escena
+        function init() {
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0xf0f0f0);
+            
+            // Cámara
+            camera = new THREE.PerspectiveCamera(
+                45,
+                window.innerWidth / (window.innerHeight - 200),
+                0.1,
+                1000
+            );
+            camera.position.set(0, 1.6, 3);
+            
+            // Renderer
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            const container = document.getElementById('container');
+            renderer.setSize(window.innerWidth, window.innerHeight - 200);
+            container.appendChild(renderer.domElement);
+            
+            // Controles
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.target.set(0, 1, 0);
+            controls.update();
+            
+            // Luces
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+            scene.add(ambientLight);
+            
+            const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            dirLight.position.set(5, 10, 7.5);
+            scene.add(dirLight);
+            
+            // Grid
+            const gridHelper = new THREE.GridHelper(10, 10);
+            scene.add(gridHelper);
+            
+            clock = new THREE.Clock();
+            
+            // Drag and drop
+            container.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                container.style.background = 'rgba(102, 126, 234, 0.1)';
+            });
+            
+            container.addEventListener('dragleave', () => {
+                container.style.background = '';
+            });
+            
+            container.addEventListener('drop', (e) => {
+                e.preventDefault();
+                container.style.background = '';
+                const file = e.dataTransfer.files[0];
+                if (file && file.name.endsWith('.fbx')) {
+                    loadFBX(file);
+                }
+            });
+            
+            // File input
+            document.getElementById('fileInput').addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    loadFBX(file);
+                }
+            });
+            
+            // Cargar modelo por defecto
+            loadDefaultModel();
+            
+            animate();
+        }
+        
+        function loadDefaultModel() {
+            const loader = new THREE.FBXLoader();
+            document.getElementById('loading').style.display = 'block';
+            
+            loader.load('../output/Leonard_con_animacion_b.fbx', (fbx) => {
+                if (model) scene.remove(model);
+                
+                model = fbx;
+                scene.add(model);
+                
+                // Configurar animación
+                if (fbx.animations && fbx.animations.length > 0) {
+                    mixer = new THREE.AnimationMixer(fbx);
+                    const action = mixer.clipAction(fbx.animations[0]);
+                    action.play();
+                    isPlaying = true;
+                    document.getElementById('playBtn').textContent = '⏸ Pausar';
+                    
+                    // Actualizar stats
+                    const animation = fbx.animations[0];
+                    const duration = animation.duration;
+                    const fps = 30; // Asumiendo 30 FPS
+                    const frames = Math.floor(duration * fps);
+                    
+                    document.getElementById('frames').textContent = frames;
+                    
+                    // Contar huesos animados
+                    const bones = new Set();
+                    animation.tracks.forEach(track => {
+                        const boneName = track.name.split('.')[0];
+                        bones.add(boneName);
+                    });
+                    document.getElementById('bones').textContent = bones.size;
+                    document.getElementById('keyframes').textContent = animation.tracks.length;
+                }
+                
+                document.getElementById('loading').style.display = 'none';
+            }, 
+            (progress) => {
+                console.log((progress.loaded / progress.total * 100) + '% loaded');
+            },
+            (error) => {
+                console.error('Error cargando FBX:', error);
+                document.getElementById('loading').innerHTML = 
+                    '<div style="color: red;">❌ Error al cargar</div>' +
+                    '<div style="font-size: 12px; margin-top: 10px;">Asegúrate de que el servidor HTTP está corriendo</div>';
+            });
+        }
+        
+        function loadFBX(file) {
+            const reader = new FileReader();
+            document.getElementById('loading').style.display = 'block';
+            
+            reader.onload = function(e) {
+                const loader = new THREE.FBXLoader();
+                loader.load(URL.createObjectURL(file), (fbx) => {
+                    if (model) scene.remove(model);
+                    
+                    model = fbx;
+                    scene.add(model);
+                    
+                    if (fbx.animations && fbx.animations.length > 0) {
+                        mixer = new THREE.AnimationMixer(fbx);
+                        const action = mixer.clipAction(fbx.animations[0]);
+                        action.play();
+                        isPlaying = true;
+                        document.getElementById('playBtn').textContent = '⏸ Pausar';
+                        
+                        const animation = fbx.animations[0];
+                        const duration = animation.duration;
+                        const fps = 30;
+                        const frames = Math.floor(duration * fps);
+                        
+                        document.getElementById('frames').textContent = frames;
+                        
+                        const bones = new Set();
+                        animation.tracks.forEach(track => {
+                            const boneName = track.name.split('.')[0];
+                            bones.add(boneName);
+                        });
+                        document.getElementById('bones').textContent = bones.size;
+                        document.getElementById('keyframes').textContent = animation.tracks.length;
+                    }
+                    
+                    document.getElementById('loading').style.display = 'none';
+                });
+            };
+            
+            reader.readAsArrayBuffer(file);
+        }
+        
+        function toggleAnimation() {
+            if (!mixer) return;
+            
+            isPlaying = !isPlaying;
+            
+            if (isPlaying) {
+                mixer.timeScale = animationSpeed;
+                document.getElementById('playBtn').textContent = '⏸ Pausar';
+            } else {
+                mixer.timeScale = 0;
+                document.getElementById('playBtn').textContent = '▶ Reproducir';
+            }
+        }
+        
+        function resetCamera() {
+            camera.position.set(0, 1.6, 3);
+            controls.target.set(0, 1, 0);
+            controls.update();
+        }
+        
+        function toggleWireframe() {
+            wireframe = !wireframe;
+            if (model) {
+                model.traverse((child) => {
+                    if (child.isMesh) {
+                        child.material.wireframe = wireframe;
+                    }
+                });
+            }
+        }
+        
+        function updateSpeed(value) {
+            animationSpeed = parseFloat(value);
+            document.getElementById('speedValue').textContent = value + 'x';
+            if (mixer && isPlaying) {
+                mixer.timeScale = animationSpeed;
+            }
+        }
+        
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            const delta = clock.getDelta();
+            if (mixer && isPlaying) {
+                mixer.update(delta);
+            }
+            
+            controls.update();
+            renderer.render(scene, camera);
+        }
+        
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / (window.innerHeight - 200);
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight - 200);
+        });
+        
+        init();
+    </script>
+</body>
+</html>

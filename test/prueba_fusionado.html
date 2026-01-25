@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Avatar de Traducción LSV</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f4f4f4;
+        }
+        #container {
+            display: flex;
+            height: 100vh;
+        }
+        #left-panel {
+            width: 30%;
+            background: #ffffff;
+            padding: 20px;
+            overflow-y: auto;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+        }
+        #viewer {
+            width: 70%;
+            background: #000;
+        }
+        .opt-box {
+            background: #fafafa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+        }
+        .word-tag {
+            display: inline-block;
+            padding: 4px 8px;
+            background: #d1ffd1;
+            margin: 3px;
+            border-radius: 5px;
+        }
+        .word-tag.missing {
+            background: #ffd1d1;
+        }
+    </style>
+</head>
+<body>
+
+<div id="container">
+    <div id="left-panel">
+        <h2>Traductor LSV</h2>
+
+        <input id="sign-search-input" type="text" placeholder="Escribe una frase..." style="width: 70%; padding: 8px;">
+        <button id="sign-search-btn" style="padding: 8px 12px;">Buscar</button>
+
+        <h3>Optimización</h3>
+        <div class="opt-box">
+            <strong>Texto original:</strong>
+            <p id="opt-original">—</p>
+
+            <strong>Texto corregido:</strong>
+            <p id="opt-corregido">—</p>
+
+            <strong>Orden LSV:</strong>
+            <p id="opt-lsv">—</p>
+
+            <strong>Cobertura del vocabulario:</strong>
+            <p id="opt-coverage">0%</p>
+
+            <strong>Palabras disponibles:</strong>
+            <div id="opt-disponibles"></div>
+
+            <strong>Palabras faltantes:</strong>
+            <div id="opt-faltantes"></div>
+        </div>
+    </div>
+
+    <div id="viewer">
+        <iframe id="viewer-frame" src="about:blank" style="width:100%; height:100%; border:none;"></iframe>
+    </div>
+</div>
+
+<script>
+async function optimizarTextoAPI(texto) {
+    try {
+        const response = await fetch('http://localhost:8000/api/optimizar', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ texto: texto })
+        });
+
+        if (!response.ok) {
+            throw new Error("Error HTTP " + response.status);
+        }
+
+        const data = await response.json();
+
+        document.getElementById('opt-original').textContent = data.texto_original;
+        document.getElementById('opt-corregido').textContent = data.texto_corregido;
+        document.getElementById('opt-lsv').textContent = data.texto_lsv;
+        document.getElementById('opt-coverage').textContent = data.porcentaje_cobertura.toFixed(1) + "%";
+
+        const disp = document.getElementById('opt-disponibles');
+        disp.innerHTML = "";
+        data.palabras_disponibles.forEach(p => {
+            const tag = document.createElement("span");
+            tag.className = "word-tag";
+            tag.textContent = p;
+            disp.appendChild(tag);
+        });
+
+        const falt = document.getElementById('opt-faltantes');
+        falt.innerHTML = "";
+        data.palabras_faltantes.forEach(p => {
+            const tag = document.createElement("span");
+            tag.className = "word-tag missing";
+            tag.textContent = p;
+            falt.appendChild(tag);
+        });
+
+    } catch (error) {
+        alert("❌ Error al conectar con la API:" + error.message);
+    }
+}
+
+document.getElementById('sign-search-btn').addEventListener('click', () => {
+    const text = document.getElementById('sign-search-input').value.trim();
+    if (text.length > 0) {
+        optimizarTextoAPI(text);
+    }
+});
+</script>
+
+</body>
+</html>

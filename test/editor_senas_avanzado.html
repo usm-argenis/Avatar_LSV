@@ -1,0 +1,1175 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editor Avanzado de Señas LSV - Mejoramiento de Dedos</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            overflow: hidden;
+        }
+
+        #container {
+            display: grid;
+            grid-template-columns: 350px 1fr 350px;
+            grid-template-rows: 60px 1fr 150px;
+            height: 100vh;
+            gap: 10px;
+            padding: 10px;
+        }
+
+        #header {
+            grid-column: 1 / -1;
+            background: rgba(0, 0, 0, 0.8);
+            border-radius: 10px;
+            padding: 15px 30px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        #header h1 {
+            font-size: 24px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        #leftPanel {
+            background: rgba(0, 0, 0, 0.7);
+            border-radius: 10px;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        #viewer {
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 10px;
+            position: relative;
+        }
+
+        #canvas3d {
+            width: 100%;
+            height: 100%;
+            border-radius: 10px;
+        }
+
+        #rightPanel {
+            background: rgba(0, 0, 0, 0.7);
+            border-radius: 10px;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        #controls {
+            grid-column: 1 / -1;
+            background: rgba(0, 0, 0, 0.8);
+            border-radius: 10px;
+            padding: 15px 30px;
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .section {
+            margin-bottom: 25px;
+        }
+
+        .section h3 {
+            margin-bottom: 15px;
+            color: #4fc3f7;
+            font-size: 16px;
+            border-bottom: 2px solid #4fc3f7;
+            padding-bottom: 8px;
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 13px;
+            color: #b0bec5;
+        }
+
+        .input-group input,
+        .input-group select {
+            width: 100%;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 5px;
+            color: white;
+            font-size: 14px;
+        }
+
+        .input-group input[type="number"] {
+            width: 100%;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            cursor: pointer;
+            font-weight: 600;
+            transition: transform 0.2s;
+            font-size: 14px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-small {
+            padding: 5px 15px;
+            font-size: 12px;
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #eb3349 0%, #f45c43 100%);
+        }
+
+        .finger-controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr 1fr;
+            gap: 10px;
+        }
+
+        .axis-control {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 10px;
+            border-radius: 5px;
+            text-align: center;
+        }
+
+        .axis-control label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 5px;
+            font-size: 16px;
+        }
+
+        .axis-control input {
+            width: 100%;
+            padding: 5px;
+            text-align: center;
+        }
+
+        .status {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.85);
+            padding: 15px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            z-index: 10;
+        }
+
+        .timeline {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .timeline input[type="range"] {
+            flex: 1;
+        }
+
+        .frame-info {
+            font-weight: bold;
+            min-width: 100px;
+        }
+
+        #boneSelector {
+            max-height: 300px;
+        }
+
+        #boneSelector option {
+            padding: 8px;
+            background: #1a1a2e;
+            color: white;
+        }
+
+        #currentBoneName {
+            min-height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .info-box {
+            background: rgba(76, 175, 80, 0.2);
+            border-left: 4px solid #4caf50;
+            padding: 12px;
+            border-radius: 5px;
+            font-size: 12px;
+            line-height: 1.6;
+        }
+
+        .warning-box {
+            background: rgba(255, 152, 0, 0.2);
+            border-left: 4px solid #ff9800;
+            padding: 12px;
+            border-radius: 5px;
+            font-size: 12px;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+
+        .interpolation-info {
+            background: rgba(33, 150, 243, 0.2);
+            border: 1px solid #2196f3;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+            font-size: 11px;
+        }
+
+        .interpolation-info strong {
+            color: #4fc3f7;
+        }
+
+        #log {
+            max-height: 200px;
+            overflow-y: auto;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 10px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            margin-top: 10px;
+        }
+
+        .log-entry {
+            margin-bottom: 5px;
+            padding: 3px;
+        }
+
+        .log-success {
+            color: #4caf50;
+        }
+
+        .log-error {
+            color: #f44336;
+        }
+
+        .log-info {
+            color: #2196f3;
+        }
+
+        .log-warning {
+            color: #ff9800;
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.5);
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <!-- Header -->
+        <div id="header">
+            <h1>
+                <span>✋</span>
+                Editor Avanzado de Señas LSV
+            </h1>
+            <div style="display: flex; gap: 15px;">
+                <button class="btn btn-success" onclick="previewModifications()">
+                    🎬 Previsualizar
+                </button>
+                <button class="btn" onclick="applyModifications()">
+                    💾 Aplicar y Exportar
+                </button>
+            </div>
+        </div>
+
+        <!-- Left Panel: Load & Configuration -->
+        <div id="leftPanel">
+            <div class="section">
+                <h3>📁 Cargar Seña GLB</h3>
+                <div class="input-group">
+                    <label>Ruta del archivo GLB:</label>
+                    <input type="text" id="glbPath" placeholder="output/glb/Duvall/alfabeto/Duvall_resultado_a.glb" value="output/glb/Duvall/alfabeto/Duvall_resultado_a.glb">
+                </div>
+                <button class="btn" onclick="loadGLB()" style="width: 100%;">
+                    Cargar GLB
+                </button>
+            </div>
+
+            <div class="section">
+                <h3>⚙️ Configuración de Frames</h3>
+                <div class="warning-box">
+                    <strong>📐 Cálculo Automático de Interpolación</strong><br>
+                    El sistema calculará transiciones suaves automáticamente.
+                </div>
+                <div class="input-group">
+                    <label>Frame Inicial (ej: 20):</label>
+                    <input type="number" id="frameStart" value="20" min="0">
+                </div>
+                <div class="input-group">
+                    <label>Frame Final (ej: 35):</label>
+                    <input type="number" id="frameEnd" value="35" min="0">
+                </div>
+                <div class="input-group">
+                    <label>Frames de Repetición (ej: 5):</label>
+                    <input type="number" id="frameRepeat" value="5" min="1">
+                </div>
+                <div class="interpolation-info" id="interpolationCalc" style="display: none;">
+                    <strong>✓ Interpolación Calculada:</strong><br>
+                    <span id="calcDetails"></span>
+                </div>
+                <button class="btn" id="calcButton" onclick="calculateInterpolation()" style="width: 100%; margin-top: 10px;">
+                    🧮 Calcular Interpolación
+                </button>
+            </div>
+
+            <div class="section">
+                <h3>🖐️ Seleccionar Hueso de Mano</h3>
+                <div class="info-box">
+                    Selecciona un hueso específico. Los valores se guardan automáticamente.
+                </div>
+                <div class="input-group">
+                    <label>Hueso actual:</label>
+                    <select id="boneSelector" onchange="changeBone()" style="width: 100%; padding: 10px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 5px; color: white; font-size: 13px;">
+                        <option value="">-- Selecciona un hueso --</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label>Hueso seleccionado:</label>
+                    <div id="currentBoneName" style="background: rgba(103, 126, 234, 0.3); padding: 10px; border-radius: 5px; border: 2px solid #667eea; font-weight: bold; text-align: center;">
+                        Ninguno
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Center: 3D Viewer -->
+        <div id="viewer">
+            <div class="status" id="status">
+                ⏸️ Sin animación cargada
+            </div>
+            <canvas id="canvas3d"></canvas>
+        </div>
+
+        <!-- Right Panel: Finger Controls -->
+        <div id="rightPanel">
+            <div class="section">
+                <h3>🎮 Control de Dedos (WXYZ)</h3>
+                <div class="info-box">
+                    <strong>W:</strong> Rotación X<br>
+                    <strong>X:</strong> Rotación Y<br>
+                    <strong>Y:</strong> Rotación Z<br>
+                    <strong>Z:</strong> Intensidad/Scale
+                </div>
+                <div class="finger-controls">
+                    <div class="axis-control">
+                        <label>W (X)</label>
+                        <input type="number" id="axisW" value="0" step="0.01" onchange="updateAxisValues()">
+                        <input type="range" id="rangeW" min="-3.14" max="3.14" step="0.01" value="0" oninput="updateFromSlider('W')">
+                    </div>
+                    <div class="axis-control">
+                        <label>X (Y)</label>
+                        <input type="number" id="axisX" value="0" step="0.01" onchange="updateAxisValues()">
+                        <input type="range" id="rangeX" min="-3.14" max="3.14" step="0.01" value="0" oninput="updateFromSlider('X')">
+                    </div>
+                    <div class="axis-control">
+                        <label>Y (Z)</label>
+                        <input type="number" id="axisY" value="0" step="0.01" onchange="updateAxisValues()">
+                        <input type="range" id="rangeY" min="-3.14" max="3.14" step="0.01" value="0" oninput="updateFromSlider('Y')">
+                    </div>
+                    <div class="axis-control">
+                        <label>Z (Scale)</label>
+                        <input type="number" id="axisZ" value="1" step="0.01" onchange="updateAxisValues()">
+                        <input type="range" id="rangeZ" min="0.1" max="2" step="0.01" value="1" oninput="updateFromSlider('Z')">
+                    </div>
+                </div>
+                <button class="btn btn-success" onclick="applyToSelectedBones()" style="width: 100%; margin-top: 15px;">
+                    💾 Guardar Valores del Hueso Actual
+                </button>
+                <button class="btn" onclick="removeCurrentBone()" style="width: 100%; margin-top: 10px; background: linear-gradient(135deg, #eb3349 0%, #f45c43 100%);">
+                    🗑️ Eliminar Modificación Actual
+                </button>
+            </div>
+
+            <div class="sect actual: <strong id="selectedCount">0</strong></p>
+                    <p>Total modificaciones: <strong id="modCount">0</strong></p>
+                    <p>Estado interpolación: <strong id="interpStatus">No calculada</strong></p>
+                </div>
+                <button class="btn btn-small" onclick="showAllModifications()" style="width: 100%; margin-top: 10px;">
+                    📋 Ver Todas las Modificaciones
+                </buttonp>Huesos seleccionados: <strong id="selectedCount">0</strong></p>
+                    <p>Modificaciones activas: <strong id="modCount">0</strong></p>
+                    <p>Estado interpolación: <strong id="interpStatus">No calculada</strong></p>
+                </div>
+            </div>
+
+            <div class="section">
+                <h3>📝 Log de Operaciones</h3>
+                <div id="log"></div>
+            </div>
+        </div>
+
+        <!-- Bottom: Timeline Controls -->
+        <div id="controls">
+            <button class="btn btn-small" onclick="playPause()">
+                <span id="playIcon">▶️</span> <span id="playText">Play</span>
+            </button>
+            <button class="btn btn-small" onclick="stopAnimation()">
+                ⏹️ Stop
+            </button>
+            <div class="timeline">
+                <span class="frame-info" id="frameInfo">Frame: 0 / 0</span>
+                <input type="range" id="timeline" min="0" max="100" value="0" oninput="seekFrame()">
+                <select id="speedControl" onchange="changeSpeed()">
+                    <option value="0.25">0.25x</option>
+                    <option value="0.5">0.5x</option>
+                    <option value="1" selected>1x</option>
+                    <option value="1.5">1.5x</option>
+                    <option value="2">2x</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==================== VARIABLES GLOBALES ====================
+        let scene, camera, renderer, controls;
+        let avatarModel, mixer, currentAction;
+        let currentClip = null;
+        let isPlaying = false;
+        let clock = new THREE.Clock();
+        let playbackSpeed = 1;
+
+        // Configuración de edición
+        let currentSelectedBone = null; // Hueso actualmente seleccionado
+        let boneModifications = new Map(); // bone -> {w, x, y, z}
+        let interpolationConfig = null;
+        let modifiedClip = null;
+        let allHandBones = []; // Todos los huesos de manos detectados
+
+        // Nombres de huesos de dedos/manos (se detectarán automáticamente)
+        const handBonePatterns = [
+            'hand', 'thumb', 'index', 'middle', 'ring', 'pinky', 'little',
+            'mano', 'pulgar', 'indice', 'medio', 'anular', 'meñique',
+            'finger', 'dedo', 'Hand', 'Thumb', 'Index', 'Middle', 'Ring', 'Pinky',
+            'RightHand', 'LeftHand'
+        ];
+
+        // ==================== INICIALIZACIÓN ====================
+        function init() {
+            const canvas = document.getElementById('canvas3d');
+            const viewer = document.getElementById('viewer');
+
+            // Escena
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x1a1a2e);
+
+            // Cámara
+            camera = new THREE.PerspectiveCamera(
+                45,
+                viewer.clientWidth / viewer.clientHeight,
+                0.1,
+                1000
+            );
+            camera.position.set(0, 1.6, 3);
+
+            // Renderer
+            renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+            renderer.setSize(viewer.clientWidth, viewer.clientHeight);
+            renderer.shadowMap.enabled = true;
+
+            // Controles
+            controls = new THREE.OrbitControls(camera, canvas);
+            controls.target.set(0, 1, 0);
+            controls.update();
+
+            // Luces
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+            scene.add(ambientLight);
+
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            directionalLight.position.set(5, 10, 5);
+            directionalLight.castShadow = true;
+            scene.add(directionalLight);
+
+            // Grid
+            const gridHelper = new THREE.GridHelper(10, 10);
+            scene.add(gridHelper);
+
+            // Resize handler
+            window.addEventListener('resize', onWindowResize);
+
+            // Start render loop
+            animate();
+
+            log('Sistema inicializado correctamente', 'success');
+        }
+
+        function onWindowResize() {
+            const viewer = document.getElementById('viewer');
+            camera.aspect = viewer.clientWidth / viewer.clientHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(viewer.clientWidth, viewer.clientHeight);
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+
+            if (mixer && isPlaying) {
+                const delta = clock.getDelta() * playbackSpeed;
+                mixer.update(delta);
+                
+                if (currentAction) {
+                    const time = currentAction.time;
+                    const duration = currentAction.getClip().duration;
+                    const fps = 30; // Asumiendo 30 fps
+                    const currentFrame = Math.floor(time * fps);
+                    const totalFrames = Math.floor(duration * fps);
+                    
+                    document.getElementById('frameInfo').textContent = `Frame: ${currentFrame} / ${totalFrames}`;
+                    document.getElementById('timeline').value = (time / duration) * 100;
+                }
+            }
+
+            controls.update();
+            renderer.render(scene, camera);
+        }
+
+        // ==================== CARGA DE GLB ====================
+        async function loadGLB() {
+            const path = document.getElementById('glbPath').value.trim();
+            if (!path) {
+                log('Por favor ingresa una ruta válida', 'error');
+                return;
+            }
+
+            log(`Cargando GLB: ${path}`, 'info');
+
+            const loader = new THREE.GLTFLoader();
+            
+            try {
+                const gltf = await new Promise((resolve, reject) => {
+                    loader.load(path, resolve, undefined, reject);
+                });
+
+                // Limpiar escena anterior
+                if (avatarModel) {
+                    scene.remove(avatarModel);
+                }
+                if (mixer) {
+                    mixer.stopAllAction();
+                }
+
+                avatarModel = gltf.scene;
+                scene.add(avatarModel);
+
+                // Configurar animación
+                if (gltf.animations && gltf.animations.length > 0) {
+                    mixer = new THREE.AnimationMixer(avatarModel);
+                    currentClip = gltf.animations[0];
+                    currentAction = mixer.clipAction(currentClip);
+                    currentAction.play();
+                    isPlaying = true;
+
+                    const duration = currentClip.duration;
+                    const fps = 30;
+                    const totalFrames = Math.floor(duration * fps);
+                    
+                    document.getElementById('timeline').max = 100;
+                    
+                    log(`GLB cargado: ${totalFrames} frames, ${duration.toFixed(2)}s`, 'success');
+                    updateStatus(`▶️ Reproduciendo - ${totalFrames} frames`);
+
+                    // Detectar huesos de dedos
+                    detectFingerBones();
+                } else {
+                    log('No se encontraron animaciones en el GLB', 'warning');
+                }
+
+            } catch (error) {
+                log(`Error al cargar GLB: ${error.message}`, 'error');
+            }
+        }
+
+        // ==================== DETECCIÓN DE HUESOS ====================
+        function detectFingerBones() {
+            if (!avatarModel) return;
+
+            allHandBones = [];
+            
+            avatarModel.traverse((object) => {
+                if (object.isBone) {
+                    const boneName = object.name.toLowerCase();
+                    const isHandBone = handBonePatterns.some(pattern => 
+                        boneName.includes(pattern.toLowerCase())
+                    );
+                    
+                    if (isHandBone) {
+                        allHandBones.push({
+                            name: object.name,
+                            object: object
+                        });
+                    }
+                }
+            });
+
+            log(`Detectados ${allHandBones.length} huesos de manos`, 'success');
+            populateBoneSelector();
+        }
+
+        function populateBoneSelector() {
+            const selector = document.getElementById('boneSelector');
+            selector.innerHTML = '<option value="">-- Selecciona un hueso --</option>';
+
+            // Ordenar huesos alfabéticamente
+            const sortedBones = [...allHandBones].sort((a, b) => a.name.localeCompare(b.name));
+
+            sortedBones.forEach(bone => {
+                const option = document.createElement('option');
+                option.value = bone.name;
+                option.textContent = bone.name;
+                selector.appendChild(option);
+            });
+
+            log('Selector de huesos poblado', 'success');
+        }
+
+        function changeBone() {
+            // Guardar valores del hueso anterior si había uno seleccionado
+            if (currentSelectedBone) {
+                saveCurrentBoneValues();
+            }
+
+            // Obtener nuevo hueso seleccionado
+            const selector = document.getElementById('boneSelector');
+            const newBoneName = selector.value;
+
+            if (!newBoneName) {
+                currentSelectedBone = null;
+                document.getElementById('currentBoneName').textContent = 'Ninguno';
+                resetAxisControls();
+                return;
+            }
+
+            currentSelectedBone = newBoneName;
+            document.getElementById('currentBoneName').textContent = newBoneName;
+
+            // Cargar valores guardados o usar defaults
+            loadBoneValues(newBoneName);
+
+            log(`Hueso seleccionado: ${newBoneName}`, 'info');
+            updateModificationCount();
+        }
+
+        function saveCurrentBoneValues() {
+            if (!currentSelectedBone) return;
+
+            const w = parseFloat(document.getElementById('axisW').value);
+            const x = parseFloat(document.getElementById('axisX').value);
+            const y = parseFloat(document.getElementById('axisY').value);
+            const z = parseFloat(document.getElementById('axisZ').value);
+
+            boneModifications.set(currentSelectedBone, { w, x, y, z });
+            log(`✓ Valores guardados para ${currentSelectedBone}`, 'success');
+        }
+
+        function loadBoneValues(boneName) {
+            if (boneModifications.has(boneName)) {
+                const values = boneModifications.get(boneName);
+                document.getElementById('axisW').value = values.w;
+                document.getElementById('axisX').value = values.x;
+                document.getElementById('axisY').value = values.y;
+                document.getElementById('axisZ').value = values.z;
+                updateAxisValues();
+                log(`Valores cargados para ${boneName}`, 'info');
+            } else {
+                resetAxisControls();
+                log(`Usando valores por defecto para ${boneName}`, 'info');
+            }
+        }
+
+        function resetAxisControls() {
+            document.getElementById('axisW').value = 0;
+            document.getElementById('axisX').value = 0;
+            document.getElementById('axisY').value = 0;
+            document.getElementById('axisZ').value = 1;
+            updateAxisValues();
+        }
+
+        function updateModificationCount() {
+            document.getElementById('selectedCount').textContent = currentSelectedBone ? '1' : '0';
+            document.getElementById('modCount').textContent = boneModifications.size;
+        }
+
+        // ==================== CÁLCULO DE INTERPOLACIÓN ====================
+        function calculateInterpolation() {
+            const frameStart = parseInt(document.getElementById('frameStart').value);
+            const frameEnd = parseInt(document.getElementById('frameEnd').value);
+            const frameRepeat = parseInt(document.getElementById('frameRepeat').value);
+
+            if (isNaN(frameStart) || isNaN(frameEnd) || isNaN(frameRepeat)) {
+                log('Por favor ingresa valores numéricos válidos', 'error');
+                return;
+            }
+
+            if (frameStart >= frameEnd) {
+                log('El frame inicial debe ser menor que el final', 'error');
+                return;
+            }
+
+            if (frameRepeat <= 0) {
+                log('Los frames de repetición deben ser mayor a 0', 'error');
+                return;
+            }
+
+            const totalFrames = frameEnd - frameStart;
+            
+            if (frameRepeat > totalFrames) {
+                log('Los frames de repetición exceden el rango total', 'error');
+                return;
+            }
+
+            // Calcular frames de repetición en el centro
+            const repeatStart = frameStart + Math.floor((totalFrames - frameRepeat) / 2);
+            const repeatEnd = repeatStart + frameRepeat;
+
+            // Transiciones
+            const transitionIn = repeatStart - frameStart; // Frames antes de repetición
+            const transitionOut = frameEnd - repeatEnd; // Frames después de repetición
+
+            interpolationConfig = {
+                frameStart,
+                frameEnd,
+                frameRepeat,
+                repeatStart,
+                repeatEnd,
+                transitionIn,
+                transitionOut,
+                totalFrames
+            };
+
+            // Mostrar información
+            const calcDiv = document.getElementById('interpolationCalc');
+            const calcDetails = document.getElementById('calcDetails');
+            calcDetails.innerHTML = `
+                Rango total: ${frameStart} → ${frameEnd} (${totalFrames} frames)<br>
+                <strong>Repetición:</strong> ${frameRepeat} frames en centro (${repeatStart}-${repeatEnd})<br>
+                <strong>Transición entrada:</strong> ${frameStart} → ${repeatStart} (${transitionIn} frames)<br>
+                <strong>Transición salida:</strong> ${repeatEnd} → ${frameEnd} (${transitionOut} frames)
+            `;
+            calcDiv.style.display = 'block';
+
+            // Cambiar apariencia del botón
+            const calcButton = document.getElementById('calcButton');
+            calcButton.style.background = 'linear-gradient(135deg, #11998e 0%, #38ef7d 100%)';
+            calcButton.innerHTML = '✓ Interpolación Calculada';
+
+            document.getElementById('interpStatus').textContent = '✓ Calculada';
+            log(`✓ Interpolación calculada: ${transitionIn}f entrada + ${frameRepeat}f hold + ${transitionOut}f salida`, 'success');
+        }
+
+        // ==================== CONTROL DE EJES ====================
+        function updateFromSlider(axis) {
+            const value = document.getElementById(`range${axis}`).value;
+            document.getElementById(`axis${axis}`).value = value;
+        }
+
+        function updateAxisValues() {
+            document.getElementById('rangeW').value = document.getElementById('axisW').value;
+            document.getElementById('rangeX').value = document.getElementById('axisX').value;
+            document.getElementById('rangeY').value = document.getElementById('axisY').value;
+            document.getElementById('rangeZ').value = document.getElementById('axisZ').value;
+        }
+
+        function applyToSelectedBones() {
+            if (!currentSelectedBone) {
+                log('No hay hueso seleccionado', 'warning');
+                return;
+            }
+
+            // Guardar valores actuales
+            saveCurrentBoneValues();
+            updateModificationCount();
+
+            log(`✓ Valores aplicados a ${currentSelectedBone}`, 'success');
+        }
+
+        // ==================== APLICACIÓN DE MODIFICACIONES ====================
+        function previewModifications() {
+            if (!interpolationConfig) {
+                log('Primero calcula la interpolación', 'error');
+                return;
+            }
+
+            if (boneModifications.size === 0) {
+                log('No hay modificaciones para previsualizar', 'warning');
+                return;
+            }
+
+            log('Generando preview con interpolación suave...', 'info');
+            applyInterpolatedModifications(true);
+        }
+
+        function applyModifications() {
+            if (!interpolationConfig) {
+                log('Primero calcula la interpolación', 'error');
+                return;
+            }
+
+            if (boneModifications.size === 0) {
+                log('No hay modificaciones para aplicar', 'warning');
+                return;
+            }
+
+            log('Aplicando modificaciones permanentes...', 'info');
+            applyInterpolatedModifications(false);
+            exportModifiedGLB();
+        }
+
+        function applyInterpolatedModifications(isPreview) {
+            if (!currentClip) {
+                log('No hay clip de animación cargado', 'error');
+                return;
+            }
+
+            if (!interpolationConfig) {
+                log('Primero calcula la interpolación', 'error');
+                return;
+            }
+
+            if (!boneModifications || boneModifications.size === 0) {
+                log('No hay modificaciones de huesos. Modifica al menos un hueso antes de aplicar.', 'error');
+                return;
+            }
+
+            const config = interpolationConfig;
+            const fps = 30;
+
+            // Clonar el clip original
+            const newClip = currentClip.clone();
+
+            let modifiedCount = 0;
+
+            // Procesar cada hueso modificado
+            boneModifications.forEach((values, boneName) => {
+                // Validar que values existe y tiene las propiedades necesarias
+                if (!values || typeof values.w === 'undefined' || typeof values.x === 'undefined' || 
+                    typeof values.y === 'undefined' || typeof values.z === 'undefined') {
+                    log(`Valores inválidos para ${boneName}`, 'warning');
+                    return;
+                }
+
+                // Buscar tracks de este hueso
+                const trackName = `${boneName}.quaternion`;
+                const track = newClip.tracks.find(t => t.name === trackName);
+
+                if (!track) {
+                    log(`Track no encontrado: ${trackName}`, 'warning');
+                    return;
+                }
+
+                const times = track.times;
+                const quaternions = track.values;
+
+                if (!times || !quaternions || times.length === 0 || quaternions.length === 0) {
+                    log(`Datos de track inválidos para ${boneName}`, 'warning');
+                    return;
+                }
+
+                // Crear nuevos valores interpolados
+                const newValues = quaternions.slice(); // Copiar valores originales
+
+                // Calcular quaternion objetivo
+                const euler = new THREE.Euler(values.w, values.x, values.y, 'XYZ');
+                const targetQuat = new THREE.Quaternion().setFromEuler(euler);
+
+                // Validar que targetQuat se creó correctamente
+                if (isNaN(targetQuat.x) || isNaN(targetQuat.y) || isNaN(targetQuat.z) || isNaN(targetQuat.w)) {
+                    log(`Quaternion inválido para ${boneName}`, 'warning');
+                    return;
+                }
+
+                modifiedCount++;
+
+                // Frame de repetición (objetivo)
+                for (let frame = config.repeatStart; frame <= config.repeatEnd; frame++) {
+                    const timeIndex = Math.floor((frame / fps) / times[times.length - 1] * (times.length - 1));
+                    if (timeIndex >= 0 && timeIndex < quaternions.length / 4) {
+                        const idx = timeIndex * 4;
+                        newValues[idx] = targetQuat.x;
+                        newValues[idx + 1] = targetQuat.y;
+                        newValues[idx + 2] = targetQuat.z;
+                        newValues[idx + 3] = targetQuat.w;
+                    }
+                }
+
+                // Interpolación de entrada (ease-in-out)
+                for (let frame = config.frameStart; frame < config.repeatStart; frame++) {
+                    const timeIndex = Math.floor((frame / fps) / times[times.length - 1] * (times.length - 1));
+                    if (timeIndex >= 0 && timeIndex < quaternions.length / 4) {
+                        const idx = timeIndex * 4;
+                        const progress = (frame - config.frameStart) / config.transitionIn;
+                        const eased = easeInOutCubic(progress);
+
+                        const startQuat = new THREE.Quaternion(
+                            quaternions[idx],
+                            quaternions[idx + 1],
+                            quaternions[idx + 2],
+                            quaternions[idx + 3]
+                        );
+
+                        // Validar que startQuat tiene valores válidos
+                        if (isNaN(startQuat.x) || isNaN(startQuat.y) || isNaN(startQuat.z) || isNaN(startQuat.w)) {
+                            continue; // Saltar este frame si tiene valores inválidos
+                        }
+
+                        const interpolated = new THREE.Quaternion().slerpQuaternions(
+                            startQuat,
+                            targetQuat,
+                            eased
+                        );
+
+                        // Validar resultado de interpolación
+                        if (!isNaN(interpolated.x) && !isNaN(interpolated.y) && 
+                            !isNaN(interpolated.z) && !isNaN(interpolated.w)) {
+                            newValues[idx] = interpolated.x;
+                            newValues[idx + 1] = interpolated.y;
+                            newValues[idx + 2] = interpolated.z;
+                            newValues[idx + 3] = interpolated.w;
+                        }
+                    }
+                }
+
+                // Interpolación de salida (ease-in-out)
+                for (let frame = config.repeatEnd + 1; frame <= config.frameEnd; frame++) {
+                    const timeIndex = Math.floor((frame / fps) / times[times.length - 1] * (times.length - 1));
+                    if (timeIndex >= 0 && timeIndex < quaternions.length / 4) {
+                        const idx = timeIndex * 4;
+                        const progress = (frame - config.repeatEnd) / config.transitionOut;
+                        const eased = easeInOutCubic(progress);
+
+                        const endIdx = Math.min(Math.floor((config.frameEnd / fps) / times[times.length - 1] * (times.length - 1)) * 4, quaternions.length - 4);
+                        const endQuat = new THREE.Quaternion(
+                            quaternions[endIdx],
+                            quaternions[endIdx + 1],
+                            quaternions[endIdx + 2],
+                            quaternions[endIdx + 3]
+                        );
+
+                        // Validar endQuat
+                        if (isNaN(endQuat.x) || isNaN(endQuat.y) || isNaN(endQuat.z) || isNaN(endQuat.w)) {
+                            continue; // Saltar este frame
+                        }
+
+                        const interpolated = new THREE.Quaternion().slerpQuaternions(
+                            targetQuat,
+                            endQuat,
+                            eased
+                        );
+
+                        // Validar resultado de interpolación
+                        if (!isNaN(interpolated.x) && !isNaN(interpolated.y) && 
+                            !isNaN(interpolated.z) && !isNaN(interpolated.w)) {
+                            newValues[idx] = interpolated.x;
+                            newValues[idx + 1] = interpolated.y;
+                            newValues[idx + 2] = interpolated.z;
+                            newValues[idx + 3] = interpolated.w;
+                        }
+                    }
+                }
+
+                // Actualizar track
+                track.values = newValues;
+            });
+
+            // Aplicar el clip modificado
+            if (mixer && modifiedCount > 0) {
+                mixer.stopAllAction();
+                currentAction = mixer.clipAction(newClip);
+                currentAction.play();
+                modifiedClip = newClip;
+                isPlaying = true;
+            }
+
+            if (modifiedCount > 0) {
+                log(`✓ Interpolación aplicada a ${modifiedCount} huesos con curva ease-in-out cúbica`, 'success');
+                if (isPreview) {
+                    log('Preview activo - Revisa la animación', 'info');
+                }
+            } else {
+                log('No se pudo aplicar ninguna modificación', 'warning');
+            }
+        }
+
+        // Función de easing para interpolación suave
+        function easeInOutCubic(t) {
+            return t < 0.5
+                ? 4 * t * t * t
+                : 1 - Math.pow(-2 * t + 2, 3) / 2;
+        }
+
+        // ==================== EXPORTACIÓN ====================
+        function exportModifiedGLB() {
+            if (!modifiedClip) {
+                log('No hay modificaciones para exportar', 'warning');
+                return;
+            }
+
+            log('Preparando exportación de GLB modificado...', 'info');
+            
+            // Aquí iría la lógica de exportación usando GLTFExporter
+            // Por ahora, guardamos la información de modificaciones
+            const exportData = {
+                interpolationConfig,
+                modifications: Array.from(boneModifications.entries())
+            };
+
+            console.log('Export Data:', exportData);
+            log('✓ Datos de exportación generados (ver consola)', 'success');
+            log('Nota: Implementar GLTFExporter para exportar archivo', 'info');
+        }
+
+        // ==================== UTILIDADES ADICIONALES ====================
+        function removeCurrentBone() {
+            if (!currentSelectedBone) {
+                log('No hay hueso seleccionado', 'warning');
+                return;
+            }
+
+            if (boneModifications.has(currentSelectedBone)) {
+                boneModifications.delete(currentSelectedBone);
+                log(`✓ Modificación eliminada: ${currentSelectedBone}`, 'success');
+                resetAxisControls();
+                updateModificationCount();
+            } else {
+                log('Este hueso no tiene modificaciones', 'info');
+            }
+        }
+
+        function showAllModifications() {
+            if (boneModifications.size === 0) {
+                log('No hay modificaciones guardadas', 'info');
+                return;
+            }
+
+            log('=== MODIFICACIONES GUARDADAS ===', 'info');
+            boneModifications.forEach((values, boneName) => {
+                log(`${boneName}: W=${values.w.toFixed(3)}, X=${values.x.toFixed(3)}, Y=${values.y.toFixed(3)}, Z=${values.z.toFixed(3)}`, 'info');
+            });
+            log(`Total: ${boneModifications.size} huesos modificados`, 'success');
+        }
+
+        // ==================== CONTROLES DE REPRODUCCIÓN ====================
+        function playPause() {
+            if (!mixer) {
+                log('No hay animación cargada', 'warning');
+                return;
+            }
+
+            isPlaying = !isPlaying;
+            
+            if (isPlaying) {
+                currentAction.paused = false;
+                document.getElementById('playIcon').textContent = '⏸️';
+                document.getElementById('playText').textContent = 'Pause';
+                clock.start();
+            } else {
+                currentAction.paused = true;
+                document.getElementById('playIcon').textContent = '▶️';
+                document.getElementById('playText').textContent = 'Play';
+            }
+        }
+
+        function stopAnimation() {
+            if (!mixer) return;
+            
+            isPlaying = false;
+            currentAction.reset();
+            currentAction.play();
+            currentAction.paused = true;
+            document.getElementById('playIcon').textContent = '▶️';
+            document.getElementById('playText').textContent = 'Play';
+        }
+
+        function seekFrame() {
+            if (!currentAction) return;
+            
+            const progress = document.getElementById('timeline').value / 100;
+            const duration = currentAction.getClip().duration;
+            currentAction.time = progress * duration;
+        }
+
+        function changeSpeed() {
+            playbackSpeed = parseFloat(document.getElementById('speedControl').value);
+            log(`Velocidad cambiada a ${playbackSpeed}x`, 'info');
+        }
+
+        // ==================== UTILIDADES ====================
+        function updateStatus(message) {
+            document.getElementById('status').textContent = message;
+        }
+
+        function log(message, type = 'info') {
+            const logDiv = document.getElementById('log');
+            const entry = document.createElement('div');
+            entry.className = `log-entry log-${type}`;
+            
+            const timestamp = new Date().toLocaleTimeString();
+            entry.innerHTML = `<strong>[${timestamp}]</strong> ${message}`;
+            
+            logDiv.insertBefore(entry, logDiv.firstChild);
+            
+            // Limitar a 50 entradas
+            while (logDiv.children.length > 50) {
+                logDiv.removeChild(logDiv.lastChild);
+            }
+        }
+
+        // ==================== INICIO ====================
+        window.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>

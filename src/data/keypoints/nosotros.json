@@ -1,0 +1,698 @@
+{
+  "sign_name": "nosotros",
+  "duration": 2.0,
+  "fps": 12,
+  "category": "pronombre",
+  "keyframes": [
+    {
+      "frame": 0,
+      "time": 0.0,
+      "pose": {
+        "right_hand": {
+          "x": 0.47,
+          "y": 0.7,
+          "z": 0.24,
+          "rotation_x": 0,
+          "rotation_y": 0,
+          "rotation_z": 0
+        },
+        "right_arm": {
+          "elbow_angle": 90.0,
+          "shoulder_angle": 28.7
+        },
+        "head": {
+          "rotation_x": 0,
+          "rotation_y": 0,
+          "rotation_z": 0
+        }
+      }
+    },
+    {
+      "frame": 1,
+      "time": 0.06769604519774011,
+      "pose": {
+        "right_hand": {
+          "x": 0.47,
+          "y": 0.71,
+          "z": 0.24,
+          "rotation_x": 0.1,
+          "rotation_y": -0.0,
+          "rotation_z": -29.4
+        },
+        "right_arm": {
+          "elbow_angle": 90.2,
+          "shoulder_angle": 28.8
+        },
+        "head": {
+          "rotation_x": 0,
+          "rotation_y": 0,
+          "rotation_z": 0
+        }
+      }
+    },
+    {
+      "frame": 2,
+      "time": 0.13539209039548022,
+      "pose": {
+        "right_hand": {
+          "x": 0.47,
+          "y": 0.71,
+          "z": 0.24,
+          "rotation_x": 0.1,
+          "rotation_y": 0.0,
+          "rotation_z": 0.0
+        },
+        "right_arm": {
+          "elbow_angle": 90.2,
+          "shoulder_angle": 28.2
+        },
+        "head": {
+          "rotation_x": 0,
+          "rotation_y": 0,
+          "rotation_z": 0
+        }
+      }
+    },
+    {
+      "frame": 3,
+      "time": 0.20308813559322034,
+      "pose": {
+        "right_hand": {
+          "x": 0.47,
+          "y": 0.72,
+          "z": 0.24,
+          "rotation_x": 0.2,
+          "rotation_y": -0.1,
+          "rotation_z": -20.6
+        },
+        "right_arm": {
+          "elbow_angle": 90.7,
+          "shoulder_angle": 29.4
+        },
+        "head": {
+          "rotation_x": 0,
+          "rotation_y": 0,
+          "rotation_z": 0
+        }
+      }
+    },
+    {
+      "frame": 4,
+      "time": 0.27078418079096045,
+      "pose": {
+        "right_hand": {
+          "x": 0.36,
+          "y": 0.78,
+          "z": 0.26,
+          "rotation_x": 1.8,
+          "rotation_y": -3.4,
+          "rotation_z": -61.8
+        },
+        "right_arm": {
+          "elbow_angle": 105.6,
+          "shoulder_angle": 29.1
+        },
+        "head": {
+          "rotation_x": 0,
+          "rotation_y": 0,
+          "rotation_z": 0
+        }
+      }
+    },
+    {
+      "frame": 5,
+      "time": 0.33848022598870053,
+      "pose": {
+        "right_hand": {
+          "x": 0.3,
+          "y": 0.77,
+          "z": 0.25,
+          "rotation_x": -0.3,
+          "rotation_y": -1.6,
+          "rotation_z": -101.5
+        },
+        "right_arm": {
+          "elbow_angle": 111.7,
+          "shoulder_angle": 29.3
+        },
+        "head": {
+          "rotation_x": 0,
+          "rotation_y": 0,
+          "rotation_z": 0
+        }
+      }
+    },
+    {
+      "frame": 6,
+      "time": 0.4061762711864407,
+      "pose": {
+        "right_hand": {
+          "x": 0.29,
+          "y": 0.79,
+          "z": 0.26,
+          "rotation_x": 0.7,
+          "rotation_y": -0.5,
+          "rotation_z": -35.1
+        },
+        "right_arm": {
+          "elbow_angle": 114.8,
+          "shoulder_angle": 36.8
+        },
+        "head": {
+          "rotation_x": 0,
+          "rotation_y": 0,
+          "rotation_z": 0
+        }
+      }
+    },
+    {
+      "frame": 7,
+      "time": 0.47387231638418076,
+      "pose": {
+        "right_hand": {
+          "x": 0.27,
+          "y": 0.82,
+          "z": 0.26,
+          "rotation_x": 1.0,
+          "rotation_y": -0.4,
+          "rotation_z": -20.6
+        },
+        "right_arm": {
+          "elbow_angle": 118.1,
+          "shoulder_angle": 38.6
+        },
+        "head": {
+          "rotation_x": 0,
+          "rotation_y": 0,
+          "rotation_z": 0
+        }
+      }
+    },
+    {
+      "frame": 8,
+      "time": 0.5415683615819209,
+      "pose": {
+        "right_hand": {
+          "x": 0.27,
+          "y": 0.85,
+          "z": 0.27,
+          "rotation_x": 0.9,
+          "rotation_y": -0.1,
+          "rotation_z": -8.7
+        },
+        "right_arm": {
+          "elbow_angle": 120.9,
+          "shoulder_angle": 38.1
+        },
+        "head": {
+          "rotation_x": 0,
+          "rotation_y": 0,
+          "rotation_z": 0
+        }
+      }
+    },
+    {
+      "frame": 9,
+      "time": 0.609264406779661,
+      "pose": {
+        "right_hand": {
+          "x": 0.27,
+          "y": 0.88,
+          "z": 0.28,
+          "rotation_x": 0.8,
+          "rotation_y": 0.0,
+          "rotation_z": 3.2
+        },
+        "right_arm": {
+          "elbow_angle": 122.5,
+          "shoulder_angle": 39.1
+        },
+        "head": {
+          "rotation_x": 0,
+          "rotation_y": 0,
+          "rotation_z": 0
+        }
+      }
+    },
+    {
+      "frame": 10,
+      "time": 0.6769604519774011,
+      "pose": {
+        "right_hand": {
+          "x": 0.28,
+          "y": 0.9,
+          "z": 0.28,
+          "rotation_x": 0.6,
+          "rotation_y": 0.3,
+          "rotation_z": 25.7
+        },
+        "right_arm": {
+          "elbow_angle": 122.9,
+          "shoulder_angle": 39.2
+        },
+        "head": {
+          "rotation_x": 0,
+          "rotation_y": 0,
+          "rotation_z": 0
+        }
+      }
+    },
+    {
+      "frame": 11,
+      "time": 0.7446564971751413,
+      "pose": {
+        "right_hand": {
+          "x": 0.05,
+          "y": 0.87,
+          "z": 0.27,
+          "rotation_x": -0.9,
+          "rotation_y": -6.9,
+          "rotation_z": -97.6
+        },
+        "right_arm": {
+          "elbow_angle": 158.5,
+          "shoulder_angle": 57.4
+        },
+        "head": {
+          "rotation_x": 0,
+          "rotation_y": 0,
+          "rotation_z": 0
+        }
+      }
+    },
+    {
+      "frame": 12,
+      "time": 0.8123525423728813,
+      "pose": {
+        "right_hand": {
+          "x": 0.05,
+          "y": 0.86,
+          "z": 0.27,
+          "rotation_x": -0.4,
+          "rotation_y": 0.0,
+          "rotation_z": 173.6
+        },
+        "right_arm": {
+          "elbow_angle": 160.0,
+          "shoulder_angle": 58.1
+        },
+        "head": {
+          "rotation_x": 0,
+          "rotation_y": 0,
+          "rotation_z": 0
+        }
+      }
+    },
+    {
+      "frame": 13,
+      "time": 0.8800485875706214,
+      "pose": {
+        "right_hand": {
+          "x": 0.05,
+          "y": 0.85,
+          "z": 0.27,
+          "rotation_x": -0.2,
+          "rotation_y": 0.0,
+          "rotation_z": 169.4
+        },
+        "right_arm": {
+          "elbow_angle": 160.6,
+          "shoulder_angle": 58.1
+        },
+        "head": {
+          "rotation_x": 0,
+          "rotation_y": 0,
+          "rotation_z": 0
+        }
+      }
+    },
+    {
+      "frame": 14,
+      "time": 0.9477446327683615,
+      "pose": {
+        "right_hand": {
+          "x": 0.05,
+          "y": 0.84,
+          "z": 0.27,
+          "rotation_x": -0.1,
+          "rotation_y": 0.0,
+          "rotation_z": 180.0
+        },
+        "right_arm": {
+          "elbow_angle": 160.9,
+          "shoulder_angle": 58.5
+        },
+        "head": {
+          "rotation_x": 0,
+          "rotation_y": 0,
+          "rotation_z": 0
+        }
+      }
+    },
+    {
+      "frame": 15,
+      "time": 1.0154406779661016,
+      "pose": {
+        "right_hand": {
+          "x": 0.58,
+          "y": 0.66,
+          "z": 0.23,
+          "rotation_x": -5.4,
+          "rotation_y": 15.9,
+          "rotation_z": 108.8
+        },
+        "right_arm": {
+          "elbow_angle": 70.2,
+          "shoulder_angle": 80.7
+        },
+        "head": {
+          "rotation_x": 0,
+          "rotation_y": 0,
+          "rotation_z": 0
+        }
+      }
+    },
+    {
+      "frame": 16,
+      "time": 1.0831367231638418,
+      "pose": {
+        "right_hand": {
+          "x": 0.58,
+          "y": 0.66,
+          "z": 0.23,
+          "rotation_x": 0.0,
+          "rotation_y": 0.0,
+          "rotation_z": 0.0
+        },
+        "right_arm": {
+          "elbow_angle": 70.2,
+          "shoulder_angle": 81.8
+        },
+        "head": {
+          "rotation_x": 0,
+          "rotation_y": 0,
+          "rotation_z": 0
+        }
+      }
+    },
+    {
+      "frame": 17,
+      "time": 1.150832768361582,
+      "pose": {
+        "right_hand": {
+          "x": 0.05,
+          "y": 0.72,
+          "z": 0.24,
+          "rotation_x": 1.8,
+          "rotation_y": -16.0,
+          "rotation_z": -83.5
+        },
+        "right_arm": {
+          "elbow_angle": 173.2,
+          "shoulder_angle": 56.5
+        },
+        "head": {
+          "rotation_x": 0,
+          "rotation_y": 0,
+          "rotation_z": 0
+        }
+      }
+    },
+    {
+      "frame": 18,
+      "time": 1.218528813559322,
+      "pose": {
+        "right_hand": {
+          "x": 0.05,
+          "y": 0.73,
+          "z": 0.25,
+          "rotation_x": 0.2,
+          "rotation_y": 0.0,
+          "rotation_z": 10.6
+        },
+        "right_arm": {
+          "elbow_angle": 172.3,
+          "shoulder_angle": 65.0
+        },
+        "head": {
+          "rotation_x": 0,
+          "rotation_y": 0,
+          "rotation_z": 0
+        }
+      }
+    },
+    {
+      "frame": 19,
+      "time": 1.2862248587570622,
+      "pose": {
+        "right_hand": {
+          "x": 0.09,
+          "y": 0.7,
+          "z": 0.24,
+          "rotation_x": -1.0,
+          "rotation_y": 1.2,
+          "rotation_z": 130.5
+        },
+        "right_arm": {
+          "elbow_angle": 175.5,
+          "shoulder_angle": 64.6
+        },
+        "head": {
+          "rotation_x": 0,
+          "rotation_y": 0,
+          "rotation_z": 0
+        }
+      }
+    },
+    {
+      "frame": 20,
+      "time": 1.3539209039548021,
+      "pose": {
+        "right_hand": {
+          "x": 0.09,
+          "y": 0.7,
+          "z": 0.24,
+          "rotation_x": 0.0,
+          "rotation_y": 0.1,
+          "rotation_z": 90.0
+        },
+        "right_arm": {
+          "elbow_angle": 175.8,
+          "shoulder_angle": 64.3
+        },
+        "head": {
+          "rotation_x": 0,
+          "rotation_y": 0,
+          "rotation_z": 0
+        }
+      }
+    },
+    {
+      "frame": 21,
+      "time": 1.4216169491525423,
+      "pose": {
+        "right_hand": {
+          "x": 0.09,
+          "y": 0.7,
+          "z": 0.24,
+          "rotation_x": 0.1,
+          "rotation_y": -0.0,
+          "rotation_z": -29.4
+        },
+        "right_arm": {
+          "elbow_angle": 176.1,
+          "shoulder_angle": 63.4
+        },
+        "head": {
+          "rotation_x": 0,
+          "rotation_y": 0,
+          "rotation_z": 0
+        }
+      }
+    },
+    {
+      "frame": 22,
+      "time": 1.4893129943502825,
+      "pose": {
+        "right_hand": {
+          "x": 0.48,
+          "y": 1.21,
+          "z": 0.34,
+          "rotation_x": 15.1,
+          "rotation_y": 11.6,
+          "rotation_z": 37.5
+        },
+        "right_arm": {
+          "elbow_angle": 101.6,
+          "shoulder_angle": 15.3
+        },
+        "head": {
+          "rotation_x": 0,
+          "rotation_y": 0,
+          "rotation_z": 0
+        }
+      }
+    },
+    {
+      "frame": 23,
+      "time": 1.5570090395480225,
+      "pose": {
+        "right_hand": {
+          "x": 0.48,
+          "y": 1.21,
+          "z": 0.34,
+          "rotation_x": 0.0,
+          "rotation_y": 0.0,
+          "rotation_z": 90.0
+        },
+        "right_arm": {
+          "elbow_angle": 101.6,
+          "shoulder_angle": 16.9
+        },
+        "head": {
+          "rotation_x": 0,
+          "rotation_y": 0,
+          "rotation_z": 0
+        }
+      }
+    },
+    {
+      "frame": 24,
+      "time": 1.6247050847457627,
+      "pose": {
+        "right_hand": {
+          "x": 0.46,
+          "y": 0.73,
+          "z": 0.25,
+          "rotation_x": -14.3,
+          "rotation_y": -0.5,
+          "rotation_z": -178.1
+        },
+        "right_arm": {
+          "elbow_angle": 91.9,
+          "shoulder_angle": 42.6
+        },
+        "head": {
+          "rotation_x": 0,
+          "rotation_y": 0,
+          "rotation_z": 0
+        }
+      }
+    },
+    {
+      "frame": 25,
+      "time": 1.692401129943503,
+      "pose": {
+        "right_hand": {
+          "x": 0.47,
+          "y": 0.71,
+          "z": 0.24,
+          "rotation_x": -0.5,
+          "rotation_y": 0.1,
+          "rotation_z": 164.3
+        },
+        "right_arm": {
+          "elbow_angle": 91.1,
+          "shoulder_angle": 42.2
+        },
+        "head": {
+          "rotation_x": 0,
+          "rotation_y": 0,
+          "rotation_z": 0
+        }
+      }
+    },
+    {
+      "frame": 26,
+      "time": 1.7600971751412429,
+      "pose": {
+        "right_hand": {
+          "x": 0.47,
+          "y": 0.7,
+          "z": 0.24,
+          "rotation_x": -0.3,
+          "rotation_y": 0.1,
+          "rotation_z": 150.6
+        },
+        "right_arm": {
+          "elbow_angle": 90.4,
+          "shoulder_angle": 42.7
+        },
+        "head": {
+          "rotation_x": 0,
+          "rotation_y": 0,
+          "rotation_z": 0
+        }
+      }
+    },
+    {
+      "frame": 27,
+      "time": 1.827793220338983,
+      "pose": {
+        "right_hand": {
+          "x": 0.48,
+          "y": 0.7,
+          "z": 0.24,
+          "rotation_x": -0.2,
+          "rotation_y": 0.1,
+          "rotation_z": 150.6
+        },
+        "right_arm": {
+          "elbow_angle": 90.0,
+          "shoulder_angle": 39.8
+        },
+        "head": {
+          "rotation_x": 0,
+          "rotation_y": 0,
+          "rotation_z": 0
+        }
+      }
+    },
+    {
+      "frame": 28,
+      "time": 1.895489265536723,
+      "pose": {
+        "right_hand": {
+          "x": 0.48,
+          "y": 0.69,
+          "z": 0.24,
+          "rotation_x": -0.2,
+          "rotation_y": 0.0,
+          "rotation_z": 164.3
+        },
+        "right_arm": {
+          "elbow_angle": 89.8,
+          "shoulder_angle": 40.8
+        },
+        "head": {
+          "rotation_x": 0,
+          "rotation_y": 0,
+          "rotation_z": 0
+        }
+      }
+    },
+    {
+      "frame": 29,
+      "time": 1.9631853107344632,
+      "pose": {
+        "right_hand": {
+          "x": 0.48,
+          "y": 0.69,
+          "z": 0.24,
+          "rotation_x": -0.1,
+          "rotation_y": 0.0,
+          "rotation_z": 180.0
+        },
+        "right_arm": {
+          "elbow_angle": 89.7,
+          "shoulder_angle": 40.3
+        },
+        "head": {
+          "rotation_x": 0,
+          "rotation_y": 0,
+          "rotation_z": 0
+        }
+      }
+    }
+  ]
+}

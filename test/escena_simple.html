@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Escena Simple - LSV</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #ffffff;
+            overflow: hidden;
+        }
+
+        #app {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #viewer-container {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            background: #ffffff;
+        }
+
+        #canvas-3d {
+            width: 100%;
+            height: 100%;
+        }
+
+        #loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        #loading.hidden {
+            display: none;
+        }
+
+        .spinner {
+            width: 60px;
+            height: 60px;
+            border: 4px solid rgba(255, 255, 255, 0.2);
+            border-top: 4px solid #8B4789;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            font-size: 18px;
+            color: #8B4789;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <div id="viewer-container">
+            <canvas id="canvas-3d"></canvas>
+        </div>
+    </div>
+
+    <div id="loading">
+        <div class="spinner"></div>
+        <div class="loading-text" id="loading-text">Cargando escena...</div>
+    </div>
+
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+                "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+            }
+        }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+
+        let scene, camera, renderer, clock;
+        let escenaModel, mixer;
+        let ambientLight, directionalLight1, directionalLight2, fillLight;
+        let isAnimating = false;
+        let animacionLuzCargada = null;
+        let accionLuz = null; // Acción de animación pausada en frame 1
+        let avatarActual = 'Carla'; // Avatar por defecto
+
+        async function init() {
+            console.log('\n🚀 INICIANDO ESCENA SIMPLE 🚀\n');
+            
+            // Extraer avatar de URL query parameter
+            const urlParams = new URLSearchParams(window.location.search);
+            const avatarParam = urlParams.get('avatar');
+            if (avatarParam) {
+                avatarActual = avatarParam.charAt(0).toUpperCase() + avatarParam.slice(1).toLowerCase();
+                console.log(`📋 Avatar: ${avatarActual}`);
+            }
+            
+            console.log('⚙️ Configurando escena 3D...');
+            setupScene();
+            
+            console.log(`📦 Cargando escena y animación de ${avatarActual}...`);
+            await cargarEscenaYAnimacion();
+            
+            console.log('🎬 Iniciando renderizado...');
+            animate();
+            
+            document.getElementById('loading').classList.add('hidden');
+            console.log('✅ Escena lista\n');
+        }
+
+        function setupScene() {
+            const container = document.getElementById('viewer-container');
+            const canvas = document.getElementById('canvas-3d');
+            
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0xffffff);
+            
+            // Cámara
+            camera = new THREE.PerspectiveCamera(
+                50,
+                container.clientWidth / container.clientHeight,
+                0.1,
+                1000
+            );
+            camera.position.set(-1, 1.6, 4);
+            camera.lookAt(0, 1.2, 0);
+            
+            // Renderer
+            renderer = new THREE.WebGLRenderer({ 
+                canvas: canvas,
+                antialias: true,
+                alpha: true
+            });
+            renderer.setSize(container.clientWidth, container.clientHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+            renderer.outputColorSpace = THREE.SRGBColorSpace;
+            renderer.toneMapping = THREE.ACESFilmicToneMapping;
+            renderer.toneMappingExposure = 1.2;
+            
+            // Iluminación
+            ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
+            scene.add(ambientLight);
+            
+            directionalLight1 = new THREE.DirectionalLight(0xffffff, 1.2);
+            directionalLight1.position.set(5, 5, 5);
+            scene.add(directionalLight1);
+            
+            directionalLight2 = new THREE.DirectionalLight(0xffffff, 0.6);
+            directionalLight2.position.set(-5, 3, -5);
+            scene.add(directionalLight2);
+            
+            fillLight = new THREE.DirectionalLight(0xffffff, 0.4);
+            fillLight.position.set(0, -2, 5);
+            scene.add(fillLight);
+            
+            clock = new THREE.Clock();
+            
+            // Resize handler
+            window.addEventListener('resize', () => {
+                camera.aspect = container.clientWidth / container.clientHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(container.clientWidth, container.clientHeight);
+            });
+        }
+
+        async function cargarEscenaYAnimacion() {
+            const loader = new GLTFLoader();
+            const loadingText = document.getElementById('loading-text');
+            
+            const baseUrl = window.location.hostname.includes('github.io') 
+                ? 'https://usm-argenis.github.io/STT_LSV/test/'
+                : '';
+            
+            const rutaEscena = `${baseUrl}output/glb/Cultura/escena_${avatarActual}.glb`;
+            const rutaAnimacion = `${baseUrl}output/glb/Cultura/${avatarActual}_luz.glb`;
+            
+            try {
+                // Cargar escena y animación en paralelo
+                loadingText.textContent = `Cargando ${avatarActual}...`;
+                
+                const [gltfEscena, gltfAnimacion] = await Promise.all([
+                    new Promise((resolve, reject) => {
+                        loader.load(
+                            rutaEscena,
+                            (result) => resolve(result),
+                            (progress) => {
+                                const percent = (progress.loaded / progress.total) * 50;
+                                loadingText.textContent = `Cargando ${avatarActual}... ${percent.toFixed(0)}%`;
+                            },
+                            (error) => reject(error)
+                        );
+                    }),
+                    new Promise((resolve, reject) => {
+                        loader.load(
+                            rutaAnimacion,
+                            (result) => resolve(result),
+                            (progress) => {
+                                const percent = 50 + (progress.loaded / progress.total) * 50;
+                                loadingText.textContent = `Cargando ${avatarActual}... ${percent.toFixed(0)}%`;
+                            },
+                            (error) => reject(error)
+                        );
+                    })
+                ]);
+                
+                // Configurar escena
+                escenaModel = gltfEscena.scene;
+                scene.add(escenaModel);
+                
+                // Rotar Armature para orientación correcta y estantes de biblioteca
+                escenaModel.traverse((child) => {
+                    if (child.name === 'Armature' || child.name === 'RootNode') {
+                        child.rotation.y = Math.PI;
+                        console.log(`🔄 Rotando ${child.name} a 180°`);
+                    }
+                    
+                });
+                
+                // Habilitar morph targets si existen
+                const nodeNameMap = {};
+                escenaModel.traverse((child) => {
+                    if (child.isMesh && child.morphTargetInfluences && child.morphTargetInfluences.length > 0) {
+                        if (child.material) {
+                            child.material.morphTargets = true;
+                            child.material.needsUpdate = true;
+                        }
+                        const baseName = child.name.replace(/\d+$/, '');
+                        if (baseName !== child.name) {
+                            nodeNameMap[baseName] = child.name;
+                        }
+                    }
+                });
+                escenaModel.userData.nodeNameMap = nodeNameMap;
+                
+                // Crear mixer y cargar animación
+                mixer = new THREE.AnimationMixer(escenaModel);
+                
+                if (gltfAnimacion.animations && gltfAnimacion.animations.length > 0) {
+                    animacionLuzCargada = gltfAnimacion.animations[0];
+                    
+                    // Corregir nombres de tracks
+                    if (escenaModel.userData.nodeNameMap) {
+                        animacionLuzCargada.tracks = animacionLuzCargada.tracks.map(track => {
+                            const trackNodeName = track.name.split('.')[0];
+                            const mappedName = escenaModel.userData.nodeNameMap[trackNodeName];
+                            if (mappedName) {
+                                track.name = track.name.replace(trackNodeName, mappedName);
+                            }
+                            return track;
+                        });
+                    }
+                    
+                    // Iniciar animación pero pausarla en frame 1
+                    accionLuz = mixer.clipAction(animacionLuzCargada);
+                    accionLuz.setLoop(THREE.LoopOnce);
+                    accionLuz.clampWhenFinished = true;
+                    accionLuz.play();
+                    accionLuz.paused = true; // Pausar en frame 1
+                    mixer.update(0); // Actualizar mixer para que tome el frame 1
+                    
+                    console.log('✅ Escena y animación cargadas (pausada en frame 1)');
+                } else {
+                    console.warn(`⚠️ No se encontró animación en ${avatarActual}_luzT.glb`);
+                }
+                
+            } catch (error) {
+                console.error(`❌ Error cargando:`, error);
+                alert(`Error cargando ${avatarActual}\n${error.message}`);
+            }
+        }
+
+        // Función expuesta para React Native
+        window.ejecutarAccion = async function(opcion) {
+            console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+            console.log(`🎮 Ejecutando opción: ${opcion}`);
+            
+            // Convertir letras A/B/C/D a números 1/2/3/4
+            const mapeoLetras = {'A': 1, 'B': 2, 'C': 3, 'D': 4};
+            if (typeof opcion === 'string' && mapeoLetras[opcion]) {
+                opcion = mapeoLetras[opcion];
+            }
+            
+            if (isAnimating) {
+                console.log('⚠️ Animación en curso, ignorando...');
+                return;
+            }
+            
+            if (!mixer) {
+                console.error('❌ No existe mixer');
+                return;
+            }
+            
+            switch(opcion) {
+                case 2:
+                    console.log('✅ Opción 2: Hacer seña de luz');
+                    await ejecutarAnimacionLuz();
+                    break;
+                    
+                case 3:
+                    console.log('✅ Opción 3: Seña + luz física');
+                    await ejecutarAnimacionLuzConBrillo();
+                    break;
+                    
+                default:
+                    console.log(`ℹ️ Opción ${opcion}: Sin animación`);
+            }
+            
+            console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+        };
+
+        async function ejecutarAnimacionLuz() {
+            if (!accionLuz) {
+                console.error('❌ No hay animación cargada');
+                return;
+            }
+            
+            console.log('▶️ Continuando animación desde frame 1...');
+            isAnimating = true;
+            
+            try {
+                // Reanudar la animación pausada
+                accionLuz.paused = false;
+                
+                const onFinished = (e) => {
+                    if (e.action === accionLuz) {
+                        console.log('✅ Animación completada');
+                        mixer.removeEventListener('finished', onFinished);
+                        isAnimating = false;
+                        
+                        // Resetear para próxima vez
+                        accionLuz.reset();
+                        accionLuz.play();
+                        accionLuz.paused = true;
+                        mixer.update(0);
+                    }
+                };
+                mixer.addEventListener('finished', onFinished);
+            } catch (error) {
+                console.error('❌ Error ejecutando animación:', error);
+                isAnimating = false;
+            }
+        }
+
+        async function ejecutarAnimacionLuzConBrillo() {
+            if (!accionLuz) {
+                console.error('❌ No hay animación cargada');
+                return;
+            }
+            
+            console.log('💡 Continuando animación con brillo desde frame 1...');
+            isAnimating = true;
+            
+            try {
+                // Reanudar la animación pausada
+                accionLuz.paused = false;
+                
+                // Aumentar brillo después de 1 segundo
+                setTimeout(() => {
+                    aumentarBrilloGolpe();
+                }, 1000);
+                
+                const onFinished = (e) => {
+                    if (e.action === accionLuz) {
+                        console.log('✅ Animación con luz completada');
+                        mixer.removeEventListener('finished', onFinished);
+                        isAnimating = false;
+                        
+                        // Resetear para próxima vez
+                        accionLuz.reset();
+                        accionLuz.play();
+                        accionLuz.paused = true;
+                        mixer.update(0);
+                    }
+                };
+                mixer.addEventListener('finished', onFinished);
+            } catch (error) {
+                console.error('❌ Error ejecutando animación:', error);
+                isAnimating = false;
+            }
+        }
+
+        function aumentarBrilloGolpe() {
+            ambientLight.intensity = 1.5;
+            directionalLight1.intensity = 2.0;
+            directionalLight2.intensity = 1.2;
+            fillLight.intensity = 0.8;
+            renderer.toneMappingExposure = 2.0;
+            
+            console.log('💡 ¡Luz encendida!');
+            
+            setTimeout(() => {
+                restaurarIluminacionNormal();
+            }, 3000);
+        }
+
+        function restaurarIluminacionNormal() {
+            const duration = 1000;
+            const startTime = Date.now();
+            
+            const initialValues = {
+                ambient: ambientLight.intensity,
+                dir1: directionalLight1.intensity,
+                dir2: directionalLight2.intensity,
+                fill: fillLight.intensity,
+                exposure: renderer.toneMappingExposure
+            };
+            
+            const targetValues = {
+                ambient: 0.8,
+                dir1: 1.2,
+                dir2: 0.6,
+                fill: 0.4,
+                exposure: 1.2
+            };
+            
+            function animateRestore() {
+                const elapsed = Date.now() - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                const eased = 1 - Math.pow(1 - progress, 3);
+                
+                ambientLight.intensity = initialValues.ambient + (targetValues.ambient - initialValues.ambient) * eased;
+                directionalLight1.intensity = initialValues.dir1 + (targetValues.dir1 - initialValues.dir1) * eased;
+                directionalLight2.intensity = initialValues.dir2 + (targetValues.dir2 - initialValues.dir2) * eased;
+                fillLight.intensity = initialValues.fill + (targetValues.fill - initialValues.fill) * eased;
+                renderer.toneMappingExposure = initialValues.exposure + (targetValues.exposure - initialValues.exposure) * eased;
+                
+                if (progress < 1) {
+                    requestAnimationFrame(animateRestore);
+                }
+            }
+            
+            animateRestore();
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            const delta = clock.getDelta();
+            
+            if (mixer) {
+                mixer.update(delta);
+            }
+            
+            renderer.render(scene, camera);
+        }
+
+        // Iniciar cuando cargue el DOM
+        window.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>

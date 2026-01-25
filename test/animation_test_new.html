@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nancy - Sistema de Animaciones</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            overflow: hidden;
+            color: white;
+        }
+
+        #app {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #header {
+            background: rgba(0, 0, 0, 0.9);
+            padding: 20px 30px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* Controles superiores */
+        .top-controls {
+            position: absolute;
+            top: 15px;
+            right: 30px;
+            display: flex;
+            gap: 10px;
+            z-index: 100;
+        }
+
+        .control-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            color: white;
+            padding: 10px 18px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, opacity 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .control-btn:active {
+            transform: scale(0.95);
+        }
+
+        .control-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .control-btn.pause {
+            background: linear-gradient(135deg, #FFA500 0%, #FF6B35 100%);
+        }
+
+        .control-btn.replay {
+            background: linear-gradient(135deg, #4CAF50 0%, #45B7D1 100%);
+        }
+
+        /* Barra inferior con input */
+        .bottom-input-bar {
+            background: rgba(0, 0, 0, 0.95);
+            padding: 15px 30px;
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.5);
+        }
+
+        .text-input-bottom {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            color: white;
+            padding: 12px 16px;
+            font-size: 16px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        .text-input-bottom:focus {
+            border-color: #667eea;
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .text-input-bottom::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .animate-btn-bottom {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+            white-space: nowrap;
+        }
+
+        .animate-btn-bottom:active {
+            transform: scale(0.95);
+        }
+
+        .animate-btn-bottom:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .header-title {
+            font-size: 28px;
+            font-weight: bold;
+            color: #f093fb;
+        }
+        
+        .avatar-selector {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .avatar-btn {
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 14px;
+        }
+        
+        .avatar-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+        
+        .avatar-btn.active {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            border-color: #f093fb;
+        }
+
+        #viewer-container {
+            flex: 1;
+            position: relative;
+            background: linear-gradient(180deg, #1a1a2e 0%, #2d2d44 100%);
+        }
+
+        #canvas-3d {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Ocultar panel de traducción original */
+        #translation-panel {
+            display: none !important;
+        }
+
+        #translation-panel-hidden {
+            background: rgba(0, 0, 0, 0.95);
+            padding: 25px 40px;
+            box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.7);
+        }
+
+        .input-group {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        #text-input {
+            flex: 1;
+            padding: 15px 20px;
+            font-size: 16px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(240, 147, 251, 0.5);
+            border-radius: 12px;
+            color: white;
+            outline: none;
+        }
+
+        #text-input:focus {
+            border-color: #f093fb;
+            box-shadow: 0 0 0 4px rgba(240, 147, 251, 0.2);
+        }
+
+        #text-input::placeholder {
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        #translate-btn {
+            padding: 15px 40px;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        #translate-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 25px rgba(245, 87, 108, 0.6);
+        }
+
+        .status {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.85);
+            padding: 15px 25px;
+            border-radius: 12px;
+            font-size: 14px;
+            z-index: 50;
+        }
+
+        .sign-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .chip {
+            padding: 8px 15px;
+            background: rgba(240, 147, 251, 0.2);
+            border: 1px solid rgba(240, 147, 251, 0.5);
+            border-radius: 20px;
+            font-size: 14px;
+        }
+
+        .chip.active {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        #loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        #loading.hidden {
+            display: none;
+        }
+
+        .spinner {
+            width: 70px;
+            height: 70px;
+            border: 5px solid rgba(255, 255, 255, 0.2);
+            border-top: 5px solid #f093fb;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 25px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            font-size: 20px;
+            color: #f093fb;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <div id="header">
+            <div class="header-title" id="header-title">👩 Nancy - Sistema de Animaciones LSV</div>
+            <div class="avatar-selector" id="avatar-selector"></div>
+        </div>
+
+        <div id="viewer-container">
+            <canvas id="canvas-3d"></canvas>
+            <div class="status" id="status">Cargando...</div>
+            
+            <!-- Controles superiores (pause/replay) -->
+            <div class="top-controls">
+                <button id="pause-btn" class="control-btn">⏸️ Pausar</button>
+                <button id="replay-btn" class="control-btn">🔄 Repetir</button>
+            </div>
+        </div>
+
+        <!-- Barra inferior con input de texto -->
+        <div class="bottom-input-bar">
+            <input 
+                type="text" 
+                id="text-input-bottom" 
+                class="text-input-bottom" 
+                placeholder="Escribe una frase en español..." 
+                autocomplete="off"
+            />
+            <button id="animate-btn" class="animate-btn">🎬 Animar</button>
+        </div>
+
+        <div id="translation-panel">
+            <div class="sign-chips" id="chips"></div>
+        </div>
+    </div>
+
+    <div id="loading">
+        <div class="spinner"></div>
+        <div class="loading-text" id="loading-text">Cargando Nancy...</div>
+    </div>
+
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+                "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+            }
+        }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+        let scene, camera, renderer, controls, clock;
+        let nancyModel, mixer;
+        let animationCache = new Map();
+        let currentAction = null;
+
+        // Estado del sistema
+        let avatarActual = 'Nancy';
+        
+        // Variables de control
+        let isPaused = false;
+        let ultimoTexto = '';
+        let isAnimating = false;
+        let animacionesActuales = [];
+        
+        // Diccionario de mapeo (válido para todos los avatares)
+        const DICCIONARIO = {
+            // Cortesía
+            'a la orden': { categoria: 'cortesia', archivo: 'a la orden' },
+            'buen provecho': { categoria: 'cortesia', archivo: 'buen provecho' },
+            'cortesia': { categoria: 'cortesia', archivo: 'cortesia' },
+            'gracias': { categoria: 'cortesia', archivo: 'gracias' },
+            'muchas gracias': { categoria: 'cortesia', archivo: 'muchas gracias' },
+            'mucho gusto': { categoria: 'cortesia', archivo: 'mucho gusto' },
+            'permiso': { categoria: 'cortesia', archivo: 'permiso' },
+            
+            // Días de la semana
+            'domingo': { categoria: 'dias_semana', archivo: 'domingo' },
+            'jueves': { categoria: 'dias_semana', archivo: 'jueves' },
+            'lunes': { categoria: 'dias_semana', archivo: 'lunes' },
+            'martes': { categoria: 'dias_semana', archivo: 'martes' },
+            'miercoles': { categoria: 'dias_semana', archivo: 'miercoles' },
+            'sabado': { categoria: 'dias_semana', archivo: 'sabado' },
+            'viernes': { categoria: 'dias_semana', archivo: 'viernes' },
+            
+            // Expresiones
+            'expresiones': { categoria: 'expresiones', archivo: 'expresiones' },
+            'saludas a': { categoria: 'expresiones', archivo: 'saludas a' },
+            
+            // Preguntas
+            'como estas': { categoria: 'preguntas', archivo: 'como estas' },
+            'cual es tu nombre': { categoria: 'preguntas', archivo: 'cual es tu nombre' },
+            'cual es tu sena': { categoria: 'preguntas', archivo: 'cual es tu sena' },
+            'que tal': { categoria: 'preguntas', archivo: 'que tal' },
+            
+            // Pronombres
+            'el': { categoria: 'pronombres', archivo: 'el' },
+            'ella': { categoria: 'pronombres', archivo: 'ella' },
+            'ellas': { categoria: 'pronombres', archivo: 'ellas' },
+            'ellos': { categoria: 'pronombres', archivo: 'ellos' },
+            'nosotros': { categoria: 'pronombres', archivo: 'nosotros' },
+            'ustedes': { categoria: 'pronombres', archivo: 'ustedes' },
+            'yo': { categoria: 'pronombres', archivo: 'yo' },
+            
+            // Saludos
+            'adios': { categoria: 'saludos', archivo: 'adios' },
+            'bienvenido': { categoria: 'saludos', archivo: 'bienvenido' },
+            'buenas noches': { categoria: 'saludos', archivo: 'buenas noches' },
+            'buenas tardes': { categoria: 'saludos', archivo: 'buenas tardes' },
+            'buenos dias': { categoria: 'saludos', archivo: 'buenos dias' },
+            'chao': { categoria: 'saludos', archivo: 'chao' },
+            'hola': { categoria: 'saludos', archivo: 'hola' },
+            
+            // Tiempo
+            'anteayer': { categoria: 'tiempo', archivo: 'anteayer' },
+            'ayer': { categoria: 'tiempo', archivo: 'ayer' },
+            'calendario': { categoria: 'tiempo', archivo: 'calendario' },
+            'fin de semana': { categoria: 'tiempo', archivo: 'fin de semana' },
+            'hoy': { categoria: 'tiempo', archivo: 'hoy' },
+            'manana': { categoria: 'tiempo', archivo: 'manana' },
+            'mañana': { categoria: 'tiempo', archivo: 'manana' },
+            'mes': { categoria: 'tiempo', archivo: 'mes' },
+            'pasado manana': { categoria: 'tiempo', archivo: 'pasado manana' },
+            'semana': { categoria: 'tiempo', archivo: 'semana' }
+        };
+        
+        // Configuración de avatares
+        const AVATARES_CONFIG = {
+            'Nancy': { nombre: '👩 Nancy', color: '#f093fb' },
+            'Duvall': { nombre: '👨 Duvall', color: '#4facfe' },
+            'Luis': { nombre: '👦 Luis', color: '#43e97b' },
+            'Nina': { nombre: '👧 Nina', color: '#ee5a6f' }
+        };
+
+        async function init() {
+            setupScene();
+            crearSelectorAvatares();
+            
+            // Obtener avatar desde URL o usar Duvall por defecto
+            const params = new URLSearchParams(window.location.search);
+            const avatarParam = params.get('avatar') || 'Duvall';
+            
+            await cargarAvatar(avatarParam);
+            setupEventListeners();
+            animate();
+        }
+        
+        function crearSelectorAvatares() {
+            const container = document.getElementById('avatar-selector');
+            Object.keys(AVATARES_CONFIG).forEach(nombre => {
+                const btn = document.createElement('button');
+                btn.className = `avatar-btn ${nombre === avatarActual ? 'active' : ''}`;
+                btn.textContent = AVATARES_CONFIG[nombre].nombre;
+                btn.id = `btn-${nombre}`;
+                btn.onclick = () => cambiarAvatar(nombre);
+                container.appendChild(btn);
+            });
+        }
+        
+        async function cambiarAvatar(nuevoAvatar) {
+            if (nuevoAvatar === avatarActual) return;
+            
+            document.getElementById('status').textContent = `🔄 Cambiando a ${nuevoAvatar}...`;
+            
+            // Actualizar botones
+            document.querySelectorAll('.avatar-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.getElementById(`btn-${nuevoAvatar}`).classList.add('active');
+            
+            await cargarAvatar(nuevoAvatar);
+        }
+
+        function setupScene() {
+            const container = document.getElementById('viewer-container');
+            const canvas = document.getElementById('canvas-3d');
+            
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x1a1a2e);
+            
+            camera = new THREE.PerspectiveCamera(
+                50,
+                container.clientWidth / container.clientHeight,
+                0.1,
+                1000
+            );
+            camera.position.set(0, 1.6, 3);
+            
+            renderer = new THREE.WebGLRenderer({ 
+                canvas: canvas,
+                antialias: true
+            });
+            renderer.setSize(container.clientWidth, container.clientHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+            
+            controls = new OrbitControls(camera, canvas);
+            controls.target.set(0, 1.2, 0);
+            controls.update();
+            
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+            scene.add(ambientLight);
+            
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            directionalLight.position.set(5, 10, 5);
+            scene.add(directionalLight);
+            
+            const backLight = new THREE.DirectionalLight(0xf093fb, 0.4);
+            backLight.position.set(-5, 5, -5);
+            scene.add(backLight);
+            
+            clock = new THREE.Clock();
+            
+            window.addEventListener('resize', () => {
+                camera.aspect = container.clientWidth / container.clientHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(container.clientWidth, container.clientHeight);
+            });
+        }
+
+        async function cargarAvatar(nombreAvatar) {
+            return new Promise((resolve, reject) => {
+                const loader = new GLTFLoader();
+                const loadingText = document.getElementById('loading-text');
+                const loadingDiv = document.getElementById('loading');
+                
+                loadingDiv.classList.remove('hidden');
+                loadingText.textContent = `Cargando ${nombreAvatar}...`;
+                
+                loader.load(
+                    `output/glb/${nombreAvatar}/${nombreAvatar}.glb`,
+                    (gltf) => {
+                        // Remover avatar anterior si existe
+                        if (nancyModel) {
+                            scene.remove(nancyModel);
+                            nancyModel.traverse((child) => {
+                                if (child.geometry) child.geometry.dispose();
+                                if (child.material) child.material.dispose();
+                            });
+                        }
+                        
+                        // Agregar nuevo avatar
+                        nancyModel = gltf.scene;
+                        scene.add(nancyModel);
+                        
+                        // Centrar modelo
+                        const box = new THREE.Box3().setFromObject(nancyModel);
+                        const center = box.getCenter(new THREE.Vector3());
+                        nancyModel.position.sub(center);
+                        nancyModel.position.y = 0;
+                        
+                        // Crear mixer
+                        mixer = new THREE.AnimationMixer(nancyModel);
+                        
+                        // Limpiar caché de animaciones
+                        animationCache.clear();
+                        
+                        // Actualizar estado
+                        avatarActual = nombreAvatar;
+                        
+                        // Actualizar UI
+                        document.getElementById('header-title').textContent = 
+                            `${AVATARES_CONFIG[nombreAvatar].nombre} - Sistema de Animaciones LSV`;
+                        document.getElementById('header-title').style.color = 
+                            AVATARES_CONFIG[nombreAvatar].color;
+                        
+                        loadingDiv.classList.add('hidden');
+                        document.getElementById('status').textContent = 
+                            `✅ ${nombreAvatar} cargado - Listo para animar`;
+                        console.log(`✅ ${nombreAvatar} cargado exitosamente`);
+                        resolve();
+                    },
+                    (progress) => {
+                        const percent = (progress.loaded / progress.total) * 100;
+                        loadingText.textContent = `Cargando ${nombreAvatar}... ${percent.toFixed(0)}%`;
+                    },
+                    (error) => {
+                        console.error(`❌ Error cargando ${nombreAvatar}:`, error);
+                        document.getElementById('status').textContent = `❌ Error al cargar ${nombreAvatar}`;
+                        loadingDiv.classList.add('hidden');
+                        reject(error);
+                    }
+                );
+            });
+        }
+
+        async function traducirYAnimar(texto) {
+            if (isAnimating) return;
+            
+            console.log(`🎭 Traducir: "${texto}"`);
+            isAnimating = true;
+            
+            const palabras = texto.toLowerCase().trim().split(/\s+/);
+            const animacionesValidas = [];
+            
+            // Buscar frases compuestas primero (ej: "buenos dias", "muchas gracias")
+            let i = 0;
+            while (i < palabras.length) {
+                let encontrada = false;
+                
+                // Intentar frases de 3 palabras
+                if (i + 2 < palabras.length) {
+                    const frase3 = palabras.slice(i, i + 3).join(' ');
+                    if (DICCIONARIO[frase3]) {
+                        animacionesValidas.push({ texto: frase3, palabra: frase3 });
+                        i += 3;
+                        encontrada = true;
+                    }
+                }
+                
+                // Intentar frases de 2 palabras
+                if (!encontrada && i + 1 < palabras.length) {
+                    const frase2 = palabras.slice(i, i + 2).join(' ');
+                    if (DICCIONARIO[frase2]) {
+                        animacionesValidas.push({ texto: frase2, palabra: frase2 });
+                        i += 2;
+                        encontrada = true;
+                    }
+                }
+                
+                // Palabra individual
+                if (!encontrada) {
+                    if (DICCIONARIO[palabras[i]]) {
+                        animacionesValidas.push({ texto: palabras[i], palabra: palabras[i] });
+                    } else {
+                        console.warn(`⚠️ Palabra no encontrada: ${palabras[i]}`);
+                    }
+                    i++;
+                }
+            }
+            
+            if (animacionesValidas.length === 0) {
+                document.getElementById('status').textContent = '⚠️ No se encontraron animaciones';
+                isAnimating = false;
+                return;
+            }
+            
+            console.log(`🎬 Secuencia: ${animacionesValidas.map(a => a.texto).join(' → ')}`);
+            
+            // Guardar secuencia actual
+            animacionesActuales = animacionesValidas;
+            
+            // Mostrar chips
+            mostrarChips(animacionesValidas);
+            
+            // Reproducir secuencia
+            for (let idx = 0; idx < animacionesValidas.length; idx++) {
+                const { palabra } = animacionesValidas[idx];
+                activarChip(idx);
+                await cargarYReproducirAnimacion(palabra);
+            }
+            
+            document.getElementById('status').textContent = '✅ Secuencia completada';
+            isAnimating = false;
+        }
+
+        function mostrarChips(animaciones) {
+            const container = document.getElementById('chips');
+            container.innerHTML = '';
+            animaciones.forEach((anim, idx) => {
+                const chip = document.createElement('div');
+                chip.className = 'chip';
+                chip.id = `chip-${idx}`;
+                chip.textContent = anim.texto;
+                container.appendChild(chip);
+            });
+        }
+
+        function activarChip(index) {
+            document.querySelectorAll('.chip').forEach((chip, idx) => {
+                chip.classList.toggle('active', idx === index);
+            });
+        }
+
+        async function cargarYReproducirAnimacion(palabra) {
+            const palabraNormalizada = palabra.toLowerCase().trim();
+            
+            if (!DICCIONARIO[palabraNormalizada]) {
+                return;
+            }
+            
+            const archivoAnimacion = DICCIONARIO[palabraNormalizada];
+            document.getElementById('status').textContent = `▶️ ${palabra}`;
+            
+            // Verificar si ya está en caché
+            if (animationCache.has(palabraNormalizada)) {
+                console.log(`📦 Caché: ${palabra}`);
+                await reproducirAnimacion(animationCache.get(palabraNormalizada), palabra);
+                return;
+            }
+            
+            // Cargar animación desde archivos del avatar actual
+            const loader = new GLTFLoader();
+            const { categoria, archivo } = DICCIONARIO[palabraNormalizada];
+            
+            // Construir ruta - algunos avatares tienen prefijo de categoría, otros no
+            // Nancy: saludos_Nancy_resultado_hola.glb
+            // Duvall/Luis/Nina: Avatar_resultado_hola.glb
+            const nombreConCategoria = `${categoria}_${avatarActual}_resultado_${archivo}.glb`;
+            const nombreSinCategoria = `${avatarActual}_resultado_${archivo}.glb`;
+            const rutaConCategoria = `output/glb/${avatarActual}/${categoria}/${nombreConCategoria}`;
+            const rutaSinCategoria = `output/glb/${avatarActual}/${categoria}/${nombreSinCategoria}`;
+            
+            // Intentar primero con categoría (Nancy), luego sin categoría (otros)
+            const rutaCompleta = avatarActual === 'Nancy' ? rutaConCategoria : rutaSinCategoria;
+            
+            console.log(`🔄 Cargando: ${rutaCompleta}`);
+            
+            return new Promise((resolve, reject) => {
+                // Intentar cargar el archivo
+                const timeoutId = setTimeout(() => {
+                    console.warn(`⚠️ Timeout cargando ${palabra}, continuando...`);
+                    resolve();
+                }, 3000);
+                
+                loader.load(
+                    rutaCompleta,
+                    async (gltf) => {
+                        clearTimeout(timeoutId);
+                        if (gltf.animations && gltf.animations.length > 0) {
+                            const clip = gltf.animations[0];
+                            animationCache.set(palabraNormalizada, clip);
+                            console.log(`✅ Cargada: ${palabra} (${clip.duration.toFixed(2)}s)`);
+                            await reproducirAnimacion(clip, palabra);
+                            resolve();
+                        } else {
+                            console.warn(`⚠️ Sin animaciones: ${palabra}`);
+                            document.getElementById('status').textContent = `⚠️ ${palabra}: sin animación`;
+                            resolve();
+                        }
+                    },
+                    undefined,
+                    (error) => {
+                        clearTimeout(timeoutId);
+                        // Error típico: archivos sin mesh que Three.js no puede parsear
+                        console.warn(`⚠️ No se pudo cargar animación para: ${palabra}`);
+                        document.getElementById('status').textContent = `⚠️ ${palabra}: animación no disponible`;
+                        resolve(); // Continuar con la siguiente palabra
+                    }
+                );
+            });
+        }
+
+        async function reproducirAnimacion(clip, palabra) {
+            return new Promise((resolve) => {
+                // Detener animación actual SIN transición para fluidez
+                if (currentAction) {
+                    currentAction.stop();
+                }
+                
+                // Reproducir nueva animación inmediatamente
+                const action = mixer.clipAction(clip);
+                action.reset();
+                action.setLoop(THREE.LoopOnce);
+                action.clampWhenFinished = true;
+                action.play();
+                
+                currentAction = action;
+                
+                // Listener de finalización
+                const onFinished = (e) => {
+                    if (e.action === action) {
+                        console.log(`✅ Completada: ${palabra}`);
+                        mixer.removeEventListener('finished', onFinished);
+                        resolve();
+                    }
+                };
+                mixer.addEventListener('finished', onFinished);
+            });
+        }
+
+        function setupEventListeners() {
+            const inputBottom = document.getElementById('text-input-bottom');
+            const btnAnimate = document.getElementById('animate-btn');
+            const btnPause = document.getElementById('pause-btn');
+            const btnReplay = document.getElementById('replay-btn');
+            
+            // Botón Animar (barra inferior)
+            btnAnimate.addEventListener('click', () => {
+                const texto = inputBottom.value.trim();
+                if (texto && !isAnimating) {
+                    ultimoTexto = texto;
+                    traducirYAnimar(texto);
+                }
+            });
+            
+            // Enter en input (barra inferior)
+            inputBottom.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    const texto = inputBottom.value.trim();
+                    if (texto && !isAnimating) {
+                        ultimoTexto = texto;
+                        traducirYAnimar(texto);
+                    }
+                }
+            });
+            
+            // Botón Pausar/Reanudar
+            btnPause.addEventListener('click', () => {
+                if (!mixer || !currentAction) return;
+                
+                isPaused = !isPaused;
+                
+                if (isPaused) {
+                    mixer.timeScale = 0;
+                    btnPause.textContent = '▶️ Reanudar';
+                } else {
+                    mixer.timeScale = 1;
+                    btnPause.textContent = '⏸️ Pausar';
+                }
+            });
+            
+            // Botón Repetir
+            btnReplay.addEventListener('click', () => {
+                if (ultimoTexto && !isAnimating) {
+                    traducirYAnimar(ultimoTexto);
+                }
+            });
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            const delta = clock.getDelta();
+            
+            if (mixer) {
+                mixer.update(delta);
+            }
+            
+            controls.update();
+            renderer.render(scene, camera);
+        }
+
+        window.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>

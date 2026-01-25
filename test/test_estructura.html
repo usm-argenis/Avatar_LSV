@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Test Nueva Estructura</title>
+    <style>
+        body { font-family: Arial; padding: 20px; background: #f0f0f0; }
+        .test-result { padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Test de Nueva Estructura de Avatares</h1>
+    
+    <h2>Pruebas Automáticas:</h2>
+    <div id="results"></div>
+    
+    <h2>Prueba Manual:</h2>
+    <select id="avatar">
+        <option value="Remy">Remy</option>
+        <option value="Carlos">Carlos</option>
+    </select>
+    <input id="palabra" placeholder="Ejemplo: hola, b, yo" value="hola">
+    <button onclick="testManual()">Probar</button>
+    
+    <div id="manual-result"></div>
+
+    <script>
+        async function buildModelPath(avatar, sign) {
+            const categorias = [
+                'alfabeto', 'dias_semana', 'tiempo', 'pronombres', 
+                'saludos', 'cortesia', 'preguntas', 'expresiones'
+            ];
+            
+            for (const categoria of categorias) {
+                const path = `output/glb/${avatar}/${categoria}/${avatar}_resultado_${sign}.glb`;
+                try {
+                    const response = await fetch(path, { method: 'HEAD' });
+                    if (response.ok) {
+                        return { path, categoria, found: true };
+                    }
+                } catch (e) {}
+            }
+            
+            return { 
+                path: `output/glb/${avatar}/alfabeto/${avatar}_resultado_${sign}.glb`, 
+                categoria: 'alfabeto', 
+                found: false 
+            };
+        }
+
+        async function runTests() {
+            const results = document.getElementById('results');
+            
+            const tests = [
+                { avatar: 'Remy', sign: 'hola', esperado: 'saludos' },
+                { avatar: 'Remy', sign: 'b', esperado: 'alfabeto' },
+                { avatar: 'Remy', sign: 'yo', esperado: 'pronombres' },
+                { avatar: 'Carlos', sign: 'hola', esperado: 'saludos' },
+                { avatar: 'Carlos', sign: 'b', esperado: 'alfabeto' },
+                { avatar: 'Carlos', sign: 'gracias', esperado: 'cortesia' },
+            ];
+            
+            for (const test of tests) {
+                const result = await buildModelPath(test.avatar, test.sign);
+                const passed = result.found && result.categoria === test.esperado;
+                
+                const div = document.createElement('div');
+                div.className = `test-result ${passed ? 'success' : 'error'}`;
+                div.innerHTML = `
+                    ${passed ? '✅' : '❌'} 
+                    ${test.avatar} - "${test.sign}" 
+                    → ${result.categoria} 
+                    ${result.found ? '(encontrado)' : '(no encontrado)'}
+                    <br><small>${result.path}</small>
+                `;
+                results.appendChild(div);
+            }
+        }
+
+        async function testManual() {
+            const avatar = document.getElementById('avatar').value;
+            const palabra = document.getElementById('palabra').value;
+            const resultDiv = document.getElementById('manual-result');
+            
+            resultDiv.innerHTML = '<p>Buscando...</p>';
+            
+            const result = await buildModelPath(avatar, palabra);
+            
+            resultDiv.innerHTML = `
+                <div class="test-result ${result.found ? 'success' : 'error'}">
+                    <strong>${result.found ? '✅ Encontrado' : '❌ No encontrado'}</strong><br>
+                    Avatar: ${avatar}<br>
+                    Palabra: ${palabra}<br>
+                    Categoría: ${result.categoria}<br>
+                    Ruta: ${result.path}
+                </div>
+            `;
+        }
+
+        // Ejecutar tests al cargar
+        window.onload = runTests;
+    </script>
+</body>
+</html>

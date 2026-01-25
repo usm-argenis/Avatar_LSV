@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verificar GLB - Letra C</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            overflow: hidden;
+        }
+        #container {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+        }
+        #info {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            font-size: 14px;
+            max-width: 350px;
+            z-index: 100;
+        }
+        #info h2 {
+            margin: 0 0 15px 0;
+            font-size: 18px;
+            color: #4CAF50;
+        }
+        #info .status {
+            margin: 8px 0;
+            padding: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+        }
+        #info .error {
+            color: #ff5252;
+        }
+        #info .success {
+            color: #4CAF50;
+        }
+        #info .warning {
+            color: #ffc107;
+        }
+        .controls {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            padding: 15px 25px;
+            border-radius: 10px;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            z-index: 100;
+        }
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            background: #4CAF50;
+            color: white;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        button:hover {
+            background: #45a049;
+            transform: scale(1.05);
+        }
+        button:disabled {
+            background: #666;
+            cursor: not-allowed;
+            transform: scale(1);
+        }
+        #timeline {
+            color: white;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div id="container"></div>
+    
+    <div id="info">
+        <h2>🔍 Verificación GLB - Letra C</h2>
+        <div id="loadStatus" class="status">⏳ Cargando modelo...</div>
+        <div id="animStatus" class="status"></div>
+        <div id="frameInfo" class="status"></div>
+        <div id="debugInfo" class="status"></div>
+    </div>
+    
+    <div class="controls">
+        <button id="playBtn" disabled>▶️ Play</button>
+        <button id="pauseBtn" disabled>⏸️ Pause</button>
+        <button id="resetBtn" disabled>🔄 Reset</button>
+        <div id="timeline">Frame: 0 / 0</div>
+    </div>
+
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://cdn.jsdelivr.net/npm/three@0.161.0/build/three.module.js",
+            "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.161.0/examples/jsm/"
+        }
+    }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+        import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+
+        // Setup
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x2c3e50);
+        
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.set(0, 1.6, 3);
+        
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.shadowMap.enabled = true;
+        document.getElementById('container').appendChild(renderer.domElement);
+        
+        const controls = new OrbitControls(camera, renderer.domElement);
+        controls.target.set(0, 1, 0);
+        controls.update();
+        
+        // Luces
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+        scene.add(ambientLight);
+        
+        const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+        dirLight.position.set(5, 10, 5);
+        dirLight.castShadow = true;
+        scene.add(dirLight);
+        
+        const fillLight = new THREE.DirectionalLight(0x88ccff, 0.4);
+        fillLight.position.set(-5, 5, -5);
+        scene.add(fillLight);
+        
+        // Grid
+        const gridHelper = new THREE.GridHelper(10, 10);
+        scene.add(gridHelper);
+        
+        // Variables globales
+        let mixer = null;
+        let animations = [];
+        let model = null;
+        let currentAction = null;
+        let clock = new THREE.Clock();
+        
+        const playBtn = document.getElementById('playBtn');
+        const pauseBtn = document.getElementById('pauseBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const loadStatus = document.getElementById('loadStatus');
+        const animStatus = document.getElementById('animStatus');
+        const frameInfo = document.getElementById('frameInfo');
+        const debugInfo = document.getElementById('debugInfo');
+        const timeline = document.getElementById('timeline');
+        
+        // Cargar GLB
+        const loader = new GLTFLoader();
+        loader.load(
+            './output/glb/Remy_resultado_c_OPTIMIZADO.glb',
+            function(gltf) {
+                model = gltf.scene;
+                scene.add(model);
+                
+                // Centrar modelo
+                const box = new THREE.Box3().setFromObject(model);
+                const center = box.getCenter(new THREE.Vector3());
+                model.position.sub(center);
+                model.position.y = 0;
+                
+                loadStatus.innerHTML = '<span class="success">✅ Modelo cargado correctamente</span>';
+                
+                // Verificar animaciones
+                animations = gltf.animations;
+                console.log('Animaciones encontradas:', animations);
+                console.log('Número de animaciones:', animations.length);
+                
+                if (animations.length === 0) {
+                    animStatus.innerHTML = '<span class="error">❌ NO SE ENCONTRARON ANIMACIONES</span>';
+                    debugInfo.innerHTML = '<span class="error">El archivo GLB no contiene datos de animación</span>';
+                } else {
+                    const anim = animations[0];
+                    animStatus.innerHTML = `<span class="success">✅ Animación encontrada: ${anim.name}</span>`;
+                    
+                    // Información detallada
+                    const duration = anim.duration.toFixed(2);
+                    const tracks = anim.tracks.length;
+                    
+                    frameInfo.innerHTML = `
+                        <strong>Duración:</strong> ${duration}s<br>
+                        <strong>Tracks:</strong> ${tracks}<br>
+                        <strong>FPS estimado:</strong> 30
+                    `;
+                    
+                    // Analizar tracks
+                    let trackInfo = '<strong>Tracks de animación:</strong><br>';
+                    const trackTypes = {};
+                    anim.tracks.forEach(track => {
+                        const parts = track.name.split('.');
+                        const property = parts[parts.length - 1];
+                        trackTypes[property] = (trackTypes[property] || 0) + 1;
+                    });
+                    
+                    Object.keys(trackTypes).forEach(type => {
+                        trackInfo += `${type}: ${trackTypes[type]}<br>`;
+                    });
+                    debugInfo.innerHTML = trackInfo;
+                    
+                    // Configurar mixer
+                    mixer = new THREE.AnimationMixer(model);
+                    currentAction = mixer.clipAction(animations[0]);
+                    currentAction.loop = THREE.LoopRepeat;
+                    
+                    // Habilitar controles
+                    playBtn.disabled = false;
+                    pauseBtn.disabled = false;
+                    resetBtn.disabled = false;
+                    
+                    // Auto-play
+                    currentAction.play();
+                    
+                    console.log('Animación iniciada automáticamente');
+                }
+            },
+            function(xhr) {
+                const percent = (xhr.loaded / xhr.total * 100).toFixed(0);
+                loadStatus.innerHTML = `⏳ Cargando... ${percent}%`;
+            },
+            function(error) {
+                console.error('Error cargando GLB:', error);
+                loadStatus.innerHTML = `<span class="error">❌ Error: ${error.message}</span>`;
+            }
+        );
+        
+        // Controles
+        playBtn.addEventListener('click', () => {
+            if (currentAction) {
+                currentAction.play();
+                console.log('Play');
+            }
+        });
+        
+        pauseBtn.addEventListener('click', () => {
+            if (currentAction) {
+                currentAction.paused = !currentAction.paused;
+                pauseBtn.textContent = currentAction.paused ? '▶️ Resume' : '⏸️ Pause';
+                console.log('Pause/Resume');
+            }
+        });
+        
+        resetBtn.addEventListener('click', () => {
+            if (currentAction) {
+                currentAction.stop();
+                currentAction.play();
+                console.log('Reset');
+            }
+        });
+        
+        // Render loop
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            const delta = clock.getDelta();
+            
+            if (mixer) {
+                mixer.update(delta);
+                
+                if (currentAction) {
+                    const time = currentAction.time;
+                    const duration = animations[0].duration;
+                    const currentFrame = Math.floor(time * 30);
+                    const totalFrames = Math.floor(duration * 30);
+                    timeline.textContent = `Frame: ${currentFrame} / ${totalFrames} | Time: ${time.toFixed(2)}s`;
+                }
+            }
+            
+            controls.update();
+            renderer.render(scene, camera);
+        }
+        
+        animate();
+        
+        // Resize
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+    </script>
+</body>
+</html>

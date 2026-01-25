@@ -1,0 +1,999 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Traductor LSV - Sistema Completo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            overflow: hidden;
+            color: white;
+        }
+
+        /* Contenedor principal */
+        #app {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Header con selector de avatar */
+        #header {
+            background: rgba(0, 0, 0, 0.9);
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+            z-index: 100;
+        }
+
+        .header-title {
+            font-size: 24px;
+            font-weight: bold;
+            color: #4fc3f7;
+        }
+
+        .avatar-selector {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .avatar-btn {
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(79, 195, 247, 0.5);
+            border-radius: 10px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .avatar-btn:hover {
+            background: rgba(79, 195, 247, 0.2);
+            border-color: #4fc3f7;
+            transform: translateY(-2px);
+        }
+
+        .avatar-btn.active {
+            background: linear-gradient(135deg, #4fc3f7 0%, #81d4fa 100%);
+            border-color: #4fc3f7;
+            box-shadow: 0 4px 15px rgba(79, 195, 247, 0.5);
+        }
+
+        /* Visor 3D */
+        #viewer-container {
+            flex: 1;
+            position: relative;
+            background: linear-gradient(180deg, #1a1a2e 0%, #2d2d44 100%);
+        }
+
+        #canvas-3d {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Panel de traducción */
+        #translation-panel {
+            background: rgba(0, 0, 0, 0.95);
+            padding: 25px 40px;
+            box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(15px);
+        }
+
+        .translation-input-group {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        #text-input {
+            flex: 1;
+            padding: 15px 20px;
+            font-size: 16px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(79, 195, 247, 0.5);
+            border-radius: 12px;
+            color: white;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        #text-input:focus {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: #4fc3f7;
+            box-shadow: 0 0 0 4px rgba(79, 195, 247, 0.2);
+        }
+
+        #text-input::placeholder {
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        #translate-btn {
+            padding: 15px 40px;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 20px rgba(245, 87, 108, 0.4);
+        }
+
+        #translate-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 25px rgba(245, 87, 108, 0.6);
+        }
+
+        #translate-btn:active {
+            transform: translateY(0);
+        }
+
+        #translate-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Resultado de traducción */
+        .translation-result {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 15px 20px;
+            border-radius: 12px;
+            border: 2px solid rgba(79, 195, 247, 0.3);
+            display: none;
+        }
+
+        .translation-result.visible {
+            display: block;
+        }
+
+        .result-label {
+            font-size: 12px;
+            color: #4fc3f7;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        .result-content {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .sign-chip {
+            padding: 8px 15px;
+            background: rgba(79, 195, 247, 0.2);
+            border: 1px solid rgba(79, 195, 247, 0.5);
+            border-radius: 20px;
+            font-size: 14px;
+            color: white;
+            font-weight: 500;
+        }
+
+        .sign-chip.current {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            border-color: #f5576c;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        /* Controles de reproducción */
+        .playback-controls {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            align-items: center;
+            margin-top: 20px;
+        }
+
+        .control-btn {
+            width: 45px;
+            height: 45px;
+            background: rgba(79, 195, 247, 0.2);
+            border: 2px solid rgba(79, 195, 247, 0.5);
+            border-radius: 50%;
+            color: white;
+            font-size: 18px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .control-btn:hover {
+            background: rgba(79, 195, 247, 0.3);
+            border-color: #4fc3f7;
+            transform: scale(1.1);
+        }
+
+        .control-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .speed-control {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 0 15px;
+        }
+
+        .speed-label {
+            font-size: 14px;
+            color: #aaa;
+        }
+
+        #speed-slider {
+            width: 100px;
+            height: 5px;
+            -webkit-appearance: none;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 3px;
+            outline: none;
+        }
+
+        #speed-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #4fc3f7;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(79, 195, 247, 0.5);
+        }
+
+        #speed-value {
+            font-size: 14px;
+            color: #4fc3f7;
+            font-weight: bold;
+            min-width: 40px;
+        }
+
+        /* Loading overlay */
+        #loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        #loading-overlay.hidden {
+            display: none;
+        }
+
+        .spinner {
+            width: 70px;
+            height: 70px;
+            border: 5px solid rgba(255, 255, 255, 0.2);
+            border-top: 5px solid #4fc3f7;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 25px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            font-size: 20px;
+            color: #4fc3f7;
+            font-weight: 600;
+        }
+
+        .loading-progress {
+            font-size: 14px;
+            color: #aaa;
+            margin-top: 10px;
+        }
+
+        /* Status indicator */
+        #status-indicator {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.85);
+            padding: 12px 20px;
+            border-radius: 12px;
+            border: 2px solid rgba(79, 195, 247, 0.3);
+            backdrop-filter: blur(10px);
+            z-index: 50;
+        }
+
+        .status-row {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            font-size: 14px;
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #4caf50;
+            box-shadow: 0 0 10px #4caf50;
+        }
+
+        .status-dot.loading {
+            background: #ff9800;
+            animation: pulse 1s infinite;
+        }
+
+        .status-dot.error {
+            background: #f44336;
+        }
+
+        /* Console log */
+        #console-log {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            width: 350px;
+            max-height: 300px;
+            background: rgba(0, 0, 0, 0.9);
+            border: 2px solid rgba(79, 195, 247, 0.3);
+            border-radius: 12px;
+            padding: 15px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            z-index: 50;
+            display: none;
+        }
+
+        #console-log.visible {
+            display: block;
+        }
+
+        .console-entry {
+            margin: 5px 0;
+            padding: 5px;
+            border-left: 3px solid #4fc3f7;
+            padding-left: 10px;
+        }
+
+        .console-entry.error {
+            border-color: #f44336;
+            color: #ff6b6b;
+        }
+
+        .console-entry.warning {
+            border-color: #ff9800;
+            color: #ffb74d;
+        }
+
+        .console-toggle {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            width: 40px;
+            height: 40px;
+            background: rgba(0, 0, 0, 0.85);
+            border: 2px solid rgba(79, 195, 247, 0.5);
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #4fc3f7;
+            font-size: 18px;
+            z-index: 51;
+        }
+
+        .console-toggle:hover {
+            background: rgba(79, 195, 247, 0.2);
+            border-color: #4fc3f7;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <!-- Header -->
+        <div id="header">
+            <div class="header-title">🤟 Traductor LSV</div>
+            <div class="avatar-selector">
+                <button class="avatar-btn" data-avatar="Nancy">👩 Nancy</button>
+                <button class="avatar-btn" data-avatar="Duvall">👨 Duvall</button>
+                <button class="avatar-btn active" data-avatar="Luis">👦 Luis</button>
+                <button class="avatar-btn" data-avatar="Carlos">👨‍🦱 Carlos</button>
+                <button class="avatar-btn" data-avatar="Nina">👧 Nina</button>
+                <button class="avatar-btn" data-avatar="Remy">🤖 Remy</button>
+            </div>
+        </div>
+
+        <!-- Visor 3D -->
+        <div id="viewer-container">
+            <canvas id="canvas-3d"></canvas>
+            
+            <!-- Status indicator -->
+            <div id="status-indicator">
+                <div class="status-row">
+                    <div class="status-dot loading"></div>
+                    <span id="status-text">Cargando...</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Panel de traducción -->
+        <div id="translation-panel">
+            <!-- Input de texto -->
+            <div class="translation-input-group">
+                <input 
+                    type="text" 
+                    id="text-input" 
+                    placeholder="Escribe aquí tu mensaje en español..."
+                    autocomplete="off"
+                />
+                <button id="translate-btn">Traducir a LSV</button>
+            </div>
+
+            <!-- Resultado -->
+            <div id="translation-result" class="translation-result">
+                <div class="result-label">Secuencia de Señas:</div>
+                <div id="result-content" class="result-content"></div>
+            </div>
+
+            <!-- Controles de reproducción -->
+            <div class="playback-controls">
+                <button class="control-btn" id="play-btn" title="Reproducir" disabled>▶</button>
+                <button class="control-btn" id="pause-btn" title="Pausar" disabled>⏸</button>
+                <button class="control-btn" id="stop-btn" title="Detener" disabled>⏹</button>
+                
+                <div class="speed-control">
+                    <span class="speed-label">Velocidad:</span>
+                    <input type="range" id="speed-slider" min="0.5" max="2" step="0.1" value="1">
+                    <span id="speed-value">1.0x</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Console toggle -->
+        <div class="console-toggle" id="console-toggle" title="Toggle Console">⚙</div>
+        
+        <!-- Console log -->
+        <div id="console-log"></div>
+    </div>
+
+    <!-- Loading overlay -->
+    <div id="loading-overlay">
+        <div class="spinner"></div>
+        <div class="loading-text" id="loading-text">Cargando avatar y animaciones...</div>
+        <div class="loading-progress" id="loading-progress">0%</div>
+        <div class="loading-subtext" id="loading-subtext" style="font-size: 14px; color: #aaa; margin-top: 15px; max-width: 500px; text-align: center;"></div>
+    </div>
+
+    <!-- Error modal -->
+    <div id="error-modal" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(220, 53, 69, 0.95); color: white; padding: 30px; border-radius: 15px; z-index: 2000; max-width: 600px; text-align: center;">
+        <h3 style="margin-bottom: 20px;">⚠️ Error al Cargar</h3>
+        <p id="error-message" style="margin-bottom: 20px;"></p>
+        <div style="background: rgba(0,0,0,0.3); padding: 15px; border-radius: 10px; margin-bottom: 20px; text-align: left;">
+            <strong>💡 Solución:</strong><br>
+            Debes abrir este archivo con un servidor local:<br><br>
+            <code style="background: rgba(0,0,0,0.5); padding: 10px; display: block; border-radius: 5px; margin-top: 10px;">
+                cd C:\Users\andre\OneDrive\Documentos\tesis\test<br>
+                python -m http.server 8000
+            </code><br>
+            Luego abre: <strong>http://localhost:8000/traductor_lsv.html</strong>
+        </div>
+        <button onclick="location.reload()" style="background: white; color: #dc3545; border: none; padding: 10px 30px; border-radius: 8px; cursor: pointer; font-weight: bold;">Reintentar</button>
+    </div>
+
+    <!-- Three.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r160/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/examples/js/loaders/GLTFLoader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/examples/js/controls/OrbitControls.js"></script>
+
+    <!-- Módulos del sistema -->
+    <script src="modules/loader.js"></script>
+    <script src="modules/animator.js"></script>
+    <script src="modules/translator.js"></script>
+
+    <!-- Script principal -->
+    <script>
+        // ============= CONFIGURACIÓN =============
+        const DEFAULT_AVATAR = 'Luis'; // Avatar por defecto
+        
+        // ============= VARIABLES GLOBALES =============
+        let scene, camera, renderer, controls;
+        let loader, animator, translator;
+        let currentAvatar = null;
+        let currentAvatarName = DEFAULT_AVATAR;
+        let clock = new THREE.Clock();
+        let animationSequence = [];
+
+        // ============= INICIALIZACIÓN =============
+        async function init() {
+            console.log('🚀 Iniciando aplicación...');
+            
+            try {
+                // Verificar si se está usando servidor local
+                const isLocalServer = window.location.protocol === 'http:' && 
+                                    (window.location.hostname === 'localhost' || 
+                                     window.location.hostname === '127.0.0.1');
+                
+                if (!isLocalServer) {
+                    document.getElementById('loading-subtext').innerHTML = 
+                        '⚠️ Se detectó que no estás usando un servidor local.<br>Esto puede causar errores de CORS...';
+                }
+                
+                // Crear escena 3D
+                setupScene();
+                
+                // Inicializar módulos
+                loader = new AvatarLoader(THREE, THREE.GLTFLoader);
+                translator = new LSVTranslator();
+                
+                // Cargar avatar por defecto
+                await loadCurrentAvatar();
+                
+                // Setup UI
+                setupEventListeners();
+                setupConsole();
+                
+                // Iniciar loop de animación
+                animate();
+                
+                // Ocultar loading
+                document.getElementById('loading-overlay').classList.add('hidden');
+                updateStatus('ready', `Avatar ${currentAvatarName} listo`);
+                
+                logConsole(`✅ Sistema inicializado. Vocabulario: ${translator.getStats().totalWords} palabras`);
+            } catch (error) {
+                console.error('❌ Error fatal en init():', error);
+                showError('Error al inicializar la aplicación', error.message);
+            }
+        }
+
+        // ============= CONFIGURACIÓN DE ESCENA 3D =============
+        function setupScene() {
+            const container = document.getElementById('viewer-container');
+            const canvas = document.getElementById('canvas-3d');
+            
+            // Scene
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x1a1a2e);
+            
+            // Camera
+            camera = new THREE.PerspectiveCamera(
+                50,
+                container.clientWidth / container.clientHeight,
+                0.1,
+                1000
+            );
+            camera.position.set(0, 1.6, 3);
+            
+            // Renderer
+            renderer = new THREE.WebGLRenderer({ 
+                canvas: canvas,
+                antialias: true,
+                alpha: true
+            });
+            renderer.setSize(container.clientWidth, container.clientHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            renderer.outputEncoding = THREE.sRGBEncoding;
+            
+            // Controls
+            controls = new THREE.OrbitControls(camera, canvas);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.05;
+            controls.minDistance = 1;
+            controls.maxDistance = 10;
+            controls.target.set(0, 1.2, 0);
+            controls.update();
+            
+            // Lights
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+            scene.add(ambientLight);
+            
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            directionalLight.position.set(5, 10, 5);
+            directionalLight.castShadow = true;
+            directionalLight.shadow.mapSize.width = 2048;
+            directionalLight.shadow.mapSize.height = 2048;
+            scene.add(directionalLight);
+            
+            const backLight = new THREE.DirectionalLight(0x4fc3f7, 0.4);
+            backLight.position.set(-5, 5, -5);
+            scene.add(backLight);
+            
+            // Ground (opcional)
+            const groundGeometry = new THREE.PlaneGeometry(10, 10);
+            const groundMaterial = new THREE.MeshStandardMaterial({ 
+                color: 0x2d2d44,
+                roughness: 0.8,
+                metalness: 0.2
+            });
+            const ground = new THREE.Mesh(groundGeometry, groundMaterial);
+            ground.rotation.x = -Math.PI / 2;
+            ground.receiveShadow = true;
+            scene.add(ground);
+            
+            // Grid helper
+            const gridHelper = new THREE.GridHelper(10, 10, 0x4fc3f7, 0x2d2d44);
+            gridHelper.material.opacity = 0.3;
+            gridHelper.material.transparent = true;
+            scene.add(gridHelper);
+            
+            // Responsive
+            window.addEventListener('resize', onWindowResize);
+            
+            logConsole('✅ Escena 3D creada');
+        }
+
+        function onWindowResize() {
+            const container = document.getElementById('viewer-container');
+            camera.aspect = container.clientWidth / container.clientHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(container.clientWidth, container.clientHeight);
+        }
+
+        // ============= CARGA DE AVATARES =============
+        async function loadCurrentAvatar() {
+            try {
+                updateStatus('loading', `Cargando ${currentAvatarName}...`);
+                logConsole(`🔄 Cargando avatar: ${currentAvatarName}`);
+                document.getElementById('loading-text').textContent = `Cargando ${currentAvatarName}...`;
+                
+                // Cargar avatar base
+                const avatarData = await loader.loadAvatar(
+                    currentAvatarName,
+                    (progress) => {
+                        document.getElementById('loading-progress').textContent = 
+                            `${progress.toFixed(0)}%`;
+                    }
+                );
+                
+                // Agregar a escena
+                if (currentAvatar) {
+                    scene.remove(currentAvatar.model);
+                }
+                
+                currentAvatar = avatarData;
+                scene.add(avatarData.model);
+                
+                // Centrar modelo
+                const box = new THREE.Box3().setFromObject(avatarData.model);
+                const center = box.getCenter(new THREE.Vector3());
+                avatarData.model.position.sub(center);
+                avatarData.model.position.y = 0;
+                
+                // Crear animator
+                animator = new SignAnimator(avatarData, THREE);
+                
+                // Configurar callbacks
+                animator.on('AnimationStart', (name) => {
+                    logConsole(`▶️ Reproduciendo: ${name}`);
+                    highlightCurrentSign(name);
+                });
+                
+                animator.on('AnimationEnd', (name) => {
+                    logConsole(`✅ Completado: ${name}`);
+                });
+                
+                animator.on('QueueComplete', () => {
+                    logConsole('🏁 Secuencia completada');
+                    updateStatus('ready', 'Secuencia completada');
+                    enableControls(false);
+                });
+                
+                // Cargar animaciones disponibles
+                await loadAnimations();
+                
+                logConsole(`✅ Avatar ${currentAvatarName} cargado exitosamente`);
+                
+            } catch (error) {
+                console.error('❌ Error cargando avatar:', error);
+                logConsole(`❌ Error: ${error.message}`, 'error');
+                updateStatus('error', 'Error al cargar avatar');
+                showError(
+                    `No se pudo cargar el avatar ${currentAvatarName}`,
+                    error.message + '\n\nVerifica que estés usando un servidor local (python -m http.server 8000)'
+            try {
+                // Lista de animaciones comunes para cargar inicialmente
+                const commonAnimations = [
+                    'hola', 'adios', 'gracias', 'buenos_dias', 'buenas_tardes',
+                    'como_estas', 'mi', 'nombre', 'yo', 'tu', 'el', 'ella',
+                    'hoy', 'ayer', 'manana', 'lunes', 'martes', 'miercoles',
+                    // Alfabeto
+                    ...Array.from('abcdefghijklmnopqrstuvwxyz').map(l => `alfabeto_${l}`)
+                ];
+                
+                updateStatus('loading', 'Cargando animaciones...');
+                document.getElementById('loading-text').textContent = 'Cargando animaciones...';
+                
+                await loader.loadAnimations(
+                    currentAvatarName,
+                    commonAnimations,
+                    (progress, animName) => {
+                        document.getElementById('loading-progress').textContent = 
+                            `Animaciones: ${progress.toFixed(0)}%`;
+                        document.getElementById('loading-subtext').textContent = 
+                            `Cargando: ${animName}...`;
+                    }
+                );
+                
+                logConsole(`✅ ${currentAvatar.animations.size} animaciones cargadas`);
+            } catch (error) {
+                console.error('❌ Error cargando animaciones:', error);
+                logConsole(`⚠️ Algunas animaciones no se pudieron cargar`, 'warning');
+                // No lanzar error, continuar con las animaciones que sí cargaron
+            }
+                    document.getElementById('loading-progress').textContent = 
+                        `Animaciones: ${progress.toFixed(0)}%`;
+                }
+            );
+            
+            logConsole(`✅ ${currentAvatar.animations.size} animaciones cargadas`);
+        }
+
+        // ============= TRADUCCIÓN Y REPRODUCCIÓN =============
+        function translateAndPlay() {
+            const text = document.getElementById('text-input').value.trim();
+            
+            if (!text) {
+                logConsole('⚠️ Ingresa un texto para traducir', 'warning');
+                return;
+            }
+            
+            logConsole(`📝 Traduciendo: "${text}"`);
+            
+            // Traducir texto
+            animationSequence = translator.translate(text, {
+                spellUnknownWords: true,
+                includeIdle: false,
+                maxSpellingLength: 10
+            });
+            
+            if (animationSequence.length === 0) {
+                logConsole('⚠️ No se pudo traducir el texto', 'warning');
+                return;
+            }
+            
+            // Mostrar resultado
+            displayTranslationResult(animationSequence);
+            
+            // Verificar que todas las animaciones estén cargadas
+            const missingAnims = animationSequence.filter(
+                anim => !currentAvatar.animations.has(anim)
+            );
+            
+            if (missingAnims.length > 0) {
+                logConsole(`⚠️ Faltan ${missingAnims.length} animaciones: ${missingAnims.slice(0, 3).join(', ')}...`, 'warning');
+                // Aquí podrías cargar las animaciones faltantes dinámicamente
+            }
+            
+            // Reproducir secuencia
+            playSequence();
+        }
+
+        function playSequence() {
+            if (!animator || animationSequence.length === 0) return;
+            
+            updateStatus('playing', 'Reproduciendo...');
+            enableControls(true);
+            
+            animator.playSequence(animationSequence, {
+                pauseBetween: 0.3,
+                speed: parseFloat(document.getElementById('speed-slider').value)
+            });
+        }
+
+        function displayTranslationResult(animations) {
+            const resultContainer = document.getElementById('result-content');
+            const resultPanel = document.getElementById('translation-result');
+            
+            resultContainer.innerHTML = '';
+            
+            animations.forEach(anim => {
+                const chip = document.createElement('div');
+                chip.className = 'sign-chip';
+                chip.textContent = anim.replace(/_/g, ' ');
+                chip.dataset.anim = anim;
+                resultContainer.appendChild(chip);
+            });
+            
+            resultPanel.classList.add('visible');
+        }
+
+        function highlightCurrentSign(animName) {
+            document.querySelectorAll('.sign-chip').forEach(chip => {
+                chip.classList.remove('current');
+                if (chip.dataset.anim === animName) {
+                    chip.classList.add('current');
+                    chip.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }
+            });
+        }
+
+        // ============= EVENT LISTENERS =============
+        function setupEventListeners() {
+            // Botón traducir
+            document.getElementById('translate-btn').addEventListener('click', translateAndPlay);
+            
+            // Enter en input
+            document.getElementById('text-input').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') translateAndPlay();
+            });
+            
+            // Controles de reproducción
+            document.getElementById('play-btn').addEventListener('click', () => {
+                if (animator) animator.resume();
+            });
+            
+            document.getElementById('pause-btn').addEventListener('click', () => {
+                if (animator) animator.pause();
+            });
+            
+            document.getElementById('stop-btn').addEventListener('click', () => {
+                if (animator) {
+                    animator.stop();
+                    enableControls(false);
+                    updateStatus('ready', 'Detenido');
+                    document.querySelectorAll('.sign-chip').forEach(chip => {
+                        chip.classList.remove('current');
+                    });
+                }
+            });
+            
+            // Speed slider
+            document.getElementById('speed-slider').addEventListener('input', (e) => {
+                const speed = parseFloat(e.target.value);
+                document.getElementById('speed-value').textContent = `${speed.toFixed(1)}x`;
+                if (animator) animator.setSpeed(speed);
+            });
+            
+            // Selector de avatar
+            document.querySelectorAll('.avatar-btn').forEach(btn => {
+                btn.addEventListener('click', async () => {
+                    const avatarName = btn.dataset.avatar;
+                    if (avatarName === currentAvatarName) return;
+                    
+                    // Actualizar botones
+                    document.querySelectorAll('.avatar-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    
+                    // Cambiar avatar
+                    currentAvatarName = avatarName;
+                    document.getElementById('loading-overlay').classList.remove('hidden');
+                    await loadCurrentAvatar();
+                    document.getElementById('loading-overlay').classList.add('hidden');
+                });
+            });
+            
+            // Console toggle
+            document.getElementById('console-toggle').addEventListener('click', () => {
+                document.getElementById('console-log').classList.toggle('visible');
+            });
+        }
+
+        function enableControls(enabled) {
+            document.getElementById('play-btn').disabled = !enabled;
+            document.getElementById('pause-btn').disabled = !enabled;
+            document.getElementById('stop-btn').disabled = !enabled;
+        }
+
+        function updateStatus(state, text) {
+            const statusDot = document.querySelector('.status-dot');
+            const statusText = document.getElementById('status-text');
+            
+            statusDot.className = 'status-dot';
+            
+            switch(state) {
+                case 'loading':
+                    statusDot.classList.add('loading');
+                    break;
+                case 'error':
+                    statusDot.classList.add('error');
+                    break;
+                case 'playing':
+                case 'ready':
+                default:
+                    // Verde por defecto
+                    break;
+            }
+            
+            statusText.textContent = text;
+        }
+
+        // ============= CONSOLE LOG =============
+        function setupConsole() {
+            // Interceptar console.log
+            const originalLog = console.log;
+            console.log = function(...args) {
+                originalLog.apply(console, args);
+                logConsole(args.join(' '));
+            };
+        }
+
+        function logConsole(message, type = 'info') {
+            const consoleLog = document.getElementById('console-log');
+            const entry = document.createElement('div');
+            entry.className = `console-entry ${type}`;
+            entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            consoleLog.appendChild(entry);
+            consoleLog.scrollTop = consoleLog.scrollHeight;
+            
+            // Limitar a 50 entradas
+            while (consoleLog.children.length > 50) {
+                consoleLog.removeChild(consoleLog.firstChild);
+            }
+        }
+
+        // ============= LOOP DE ANIMACIÓN =============
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            const delta = clock.getDelta();
+            
+            // Actualizar animator
+            if (animator) {
+                animator.update(delta);
+            }ERROR HANDLING =============
+        function showError(title, message) {
+            const errorModal = document.getElementById('error-modal');
+            const errorMessage = document.getElementById('error-message');
+            
+            errorMessage.innerHTML = `<strong>${title}</strong><br><br>${message}`;
+            errorModal.style.display = 'block';
+            
+            // Ocultar loading
+            document.getElementById('loading-overlay').classList.add('hidden');
+        }
+
+        // ============= INICIAR APLICACIÓN =============
+        window.addEventListener('DOMContentLoaded', init);
+        
+        // Manejo global de errores
+        window.addEventListener('error', (e) => {
+            console.error('Error global capturado:', e.error);
+            logConsole(`❌ Error: ${e.message}`, 'error');
+        });
+        
+        window.addEventListener('unhandledrejection', (e) => {
+            console.error('Promise rechazada:', e.reason);
+            logConsole(`❌ Promise rechazada: ${e.reason}`, 'error');
+        }
+            // Actualizar controls
+            controls.update();
+            
+            // Renderizar
+            renderer.render(scene, camera);
+        }
+
+        // ============= INICIAR APLICACIÓN =============
+        window.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>

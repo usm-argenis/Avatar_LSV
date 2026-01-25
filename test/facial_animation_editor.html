@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Editor de Expresiones Faciales - Luis</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #1a1a2e;
+            color: white;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            height: 100vh;
+        }
+        
+        #left-panel {
+            width: 400px;
+            background: #16213e;
+            padding: 20px;
+            overflow-y: auto;
+            border-right: 2px solid #667eea;
+        }
+        
+        #right-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        #canvas-container {
+            flex: 1;
+            position: relative;
+        }
+        
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+        
+        h2 {
+            color: #667eea;
+            margin-top: 0;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+        
+        h3 {
+            color: #48cae4;
+            margin-top: 20px;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+        
+        .slider-group {
+            margin-bottom: 15px;
+        }
+        
+        .slider-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+            font-size: 12px;
+        }
+        
+        .slider-name {
+            color: #90e0ef;
+        }
+        
+        .slider-value {
+            color: #ffd60a;
+            font-weight: bold;
+        }
+        
+        input[type="range"] {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: #2d2d44;
+            outline: none;
+            -webkit-appearance: none;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #667eea;
+            cursor: pointer;
+        }
+        
+        input[type="range"]::-moz-range-thumb {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #667eea;
+            cursor: pointer;
+            border: none;
+        }
+        
+        .preset-btn {
+            padding: 8px 12px;
+            margin: 5px;
+            background: #06ffa5;
+            color: #000;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        .preset-btn:hover {
+            background: #04d98b;
+        }
+        
+        .action-btn {
+            padding: 12px 20px;
+            margin: 10px 5px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        
+        .action-btn:hover {
+            background: #5568d3;
+        }
+        
+        #timeline {
+            height: 150px;
+            background: #16213e;
+            border-top: 2px solid #667eea;
+            padding: 10px;
+            overflow-x: auto;
+            white-space: nowrap;
+        }
+        
+        #keyframe-container {
+            display: inline-flex;
+            height: 100%;
+            min-width: 100%;
+        }
+        
+        .keyframe {
+            width: 60px;
+            height: 100px;
+            background: #2d2d44;
+            margin: 0 5px;
+            border-radius: 8px;
+            cursor: pointer;
+            border: 2px solid transparent;
+            position: relative;
+            display: inline-block;
+        }
+        
+        .keyframe.active {
+            border-color: #06ffa5;
+            box-shadow: 0 0 10px #06ffa5;
+        }
+        
+        .keyframe-time {
+            text-align: center;
+            font-size: 10px;
+            color: #888;
+            margin-top: 5px;
+        }
+        
+        .keyframe-preview {
+            width: 100%;
+            height: 80px;
+            background: #1a1a2e;
+            border-radius: 6px;
+        }
+        
+        #controls {
+            background: #16213e;
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .play-btn {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: #06ffa5;
+            color: #000;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        
+        .time-display {
+            font-size: 18px;
+            font-family: 'Courier New';
+            color: #ffd60a;
+        }
+    </style>
+</head>
+<body>
+    <div id="left-panel">
+        <h2>🎭 Editor de Expresiones Faciales</h2>
+        
+        <div>
+            <strong>Presets:</strong><br>
+            <button class="preset-btn" onclick="loadPreset('neutral')">😐 Neutral</button>
+            <button class="preset-btn" onclick="loadPreset('happy')">😊 Feliz</button>
+            <button class="preset-btn" onclick="loadPreset('angry')">😠 Enojado</button>
+            <button class="preset-btn" onclick="loadPreset('sad')">😢 Triste</button>
+            <button class="preset-btn" onclick="loadPreset('surprised')">😲 Sorprendido</button>
+        </div>
+        
+        <div id="sliders"></div>
+        
+        <div style="text-align: center; margin-top: 20px;">
+            <button class="action-btn" onclick="addKeyframe()">➕ Agregar Keyframe</button>
+            <button class="action-btn" onclick="exportAnimation()">💾 Exportar JSON</button>
+            <button class="action-btn" onclick="resetAll()">🔄 Reset</button>
+        </div>
+    </div>
+    
+    <div id="right-panel">
+        <div id="canvas-container">
+            <canvas id="c"></canvas>
+        </div>
+        
+        <div id="controls">
+            <button class="play-btn" id="playBtn" onclick="togglePlay()">▶</button>
+            <div class="time-display" id="timeDisplay">00:00.00</div>
+            <div>
+                <label>Duración: <input type="number" id="duration" value="3" min="1" max="10" step="0.5" style="width: 60px;"> seg</label>
+            </div>
+        </div>
+        
+        <div id="timeline">
+            <div id="keyframe-container"></div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    
+    <script>
+        // Configuración de shape keys
+        const SHAPE_KEYS = {
+            "OJOS": [
+                "eyeBlinkLeft", "eyeBlinkRight", "eyeSquintLeft", "eyeSquintRight",
+                "eyeWideLeft", "eyeWideRight"
+            ],
+            "CEJAS": [
+                "browInnerUp", "browDownLeft", "browDownRight",
+                "browOuterUpLeft", "browOuterUpRight"
+            ],
+            "BOCA": [
+                "mouthSmileLeft", "mouthSmileRight", "mouthFrownLeft", "mouthFrownRight",
+                "mouthOpen", "jawOpen", "mouthFunnel", "mouthPucker",
+                "mouthUpperUpLeft", "mouthUpperUpRight", "mouthLowerDownLeft", "mouthLowerDownRight"
+            ],
+            "MEJILLAS": [
+                "cheekSquintLeft", "cheekSquintRight", "cheekPuff"
+            ],
+            "NARIZ": [
+                "noseSneerLeft", "noseSneerRight"
+            ]
+        };
+        
+        const PRESETS = {
+            neutral: {},
+            happy: {
+                mouthSmileLeft: 0.9, mouthSmileRight: 0.9,
+                cheekSquintLeft: 0.6, cheekSquintRight: 0.6,
+                eyeSquintLeft: 0.3, eyeSquintRight: 0.3
+            },
+            angry: {
+                browDownLeft: 0.8, browDownRight: 0.8,
+                eyeSquintLeft: 0.6, eyeSquintRight: 0.6,
+                mouthFrownLeft: 0.7, mouthFrownRight: 0.7,
+                noseSneerLeft: 0.4, noseSneerRight: 0.4
+            },
+            sad: {
+                browInnerUp: 0.7,
+                mouthFrownLeft: 0.5, mouthFrownRight: 0.5,
+                eyeSquintLeft: 0.3, eyeSquintRight: 0.3
+            },
+            surprised: {
+                eyeWideLeft: 1.0, eyeWideRight: 1.0,
+                browInnerUp: 0.8, browOuterUpLeft: 0.8, browOuterUpRight: 0.8,
+                jawOpen: 0.7, mouthOpen: 0.6
+            }
+        };
+        
+        let model, meshesWithTargets = [];
+        let currentShapeKeys = {};
+        let keyframes = [];
+        let isPlaying = false;
+        let startTime = 0;
+        let animationId = null;
+        
+        // Crear sliders
+        const slidersContainer = document.getElementById('sliders');
+        for (const [category, keys] of Object.entries(SHAPE_KEYS)) {
+            const categoryDiv = document.createElement('div');
+            categoryDiv.innerHTML = `<h3>${category}</h3>`;
+            
+            keys.forEach(key => {
+                currentShapeKeys[key] = 0;
+                
+                const sliderGroup = document.createElement('div');
+                sliderGroup.className = 'slider-group';
+                sliderGroup.innerHTML = `
+                    <div class="slider-label">
+                        <span class="slider-name">${key}</span>
+                        <span class="slider-value" id="value-${key}">0.00</span>
+                    </div>
+                    <input type="range" id="slider-${key}" min="0" max="100" value="0" 
+                           oninput="updateShapeKey('${key}', this.value)">
+                `;
+                categoryDiv.appendChild(sliderGroup);
+            });
+            
+            slidersContainer.appendChild(categoryDiv);
+        }
+        
+        // Three.js setup
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x2d2d44);
+        
+        const canvas = document.getElementById('c');
+        const camera = new THREE.PerspectiveCamera(50, canvas.clientWidth / canvas.clientHeight, 0.1, 1000);
+        camera.position.set(0, 1.6, 2);
+        
+        const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+        renderer.setSize(canvas.clientWidth, canvas.clientHeight);
+        
+        const controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.target.set(0, 1.4, 0);
+        controls.update();
+        
+        // Luces
+        scene.add(new THREE.AmbientLight(0xffffff, 0.7));
+        const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+        dirLight.position.set(5, 10, 5);
+        scene.add(dirLight);
+        
+        // Cargar modelo
+        const loader = new THREE.GLTFLoader();
+        loader.load('output/glb/Luis/Luis.glb', (gltf) => {
+            model = gltf.scene;
+            scene.add(model);
+            
+            const box = new THREE.Box3().setFromObject(model);
+            const center = box.getCenter(new THREE.Vector3());
+            model.position.sub(center);
+            model.position.y = 0;
+            
+            model.traverse(child => {
+                if (child.isMesh && child.morphTargetInfluences) {
+                    meshesWithTargets.push(child);
+                }
+            });
+            
+            console.log(`✅ Modelo cargado: ${meshesWithTargets.length} meshes`);
+        });
+        
+        // Funciones
+        function updateShapeKey(name, value) {
+            const normalizedValue = value / 100;
+            currentShapeKeys[name] = normalizedValue;
+            document.getElementById(`value-${name}`).textContent = normalizedValue.toFixed(2);
+            applyShapeKeys(currentShapeKeys);
+        }
+        
+        function applyShapeKeys(shapeKeys) {
+            meshesWithTargets.forEach(mesh => {
+                if (mesh.morphTargetDictionary) {
+                    for (const [name, value] of Object.entries(shapeKeys)) {
+                        const idx = mesh.morphTargetDictionary[name];
+                        if (idx !== undefined) {
+                            mesh.morphTargetInfluences[idx] = value;
+                        }
+                    }
+                }
+            });
+        }
+        
+        function loadPreset(presetName) {
+            const preset = PRESETS[presetName];
+            
+            // Reset todo
+            Object.keys(currentShapeKeys).forEach(key => {
+                currentShapeKeys[key] = 0;
+                document.getElementById(`slider-${key}`).value = 0;
+                document.getElementById(`value-${key}`).textContent = '0.00';
+            });
+            
+            // Aplicar preset
+            for (const [key, value] of Object.entries(preset)) {
+                currentShapeKeys[key] = value;
+                document.getElementById(`slider-${key}`).value = value * 100;
+                document.getElementById(`value-${key}`).textContent = value.toFixed(2);
+            }
+            
+            applyShapeKeys(currentShapeKeys);
+        }
+        
+        function addKeyframe() {
+            const time = keyframes.length * 0.5; // 0.5 segundos entre keyframes
+            keyframes.push({
+                time: time,
+                shapeKeys: {...currentShapeKeys}
+            });
+            
+            updateKeyframeUI();
+            console.log(`Keyframe agregado en ${time.toFixed(2)}s`);
+        }
+        
+        function updateKeyframeUI() {
+            const container = document.getElementById('keyframe-container');
+            container.innerHTML = '';
+            
+            keyframes.forEach((kf, idx) => {
+                const div = document.createElement('div');
+                div.className = 'keyframe';
+                div.innerHTML = `
+                    <div class="keyframe-preview" style="background: linear-gradient(135deg, #667eea 0%, #06ffa5 100%);"></div>
+                    <div class="keyframe-time">${kf.time.toFixed(2)}s</div>
+                `;
+                div.onclick = () => loadKeyframe(idx);
+                container.appendChild(div);
+            });
+        }
+        
+        function loadKeyframe(idx) {
+            const kf = keyframes[idx];
+            currentShapeKeys = {...kf.shapeKeys};
+            
+            Object.keys(currentShapeKeys).forEach(key => {
+                const value = currentShapeKeys[key];
+                document.getElementById(`slider-${key}`).value = value * 100;
+                document.getElementById(`value-${key}`).textContent = value.toFixed(2);
+            });
+            
+            applyShapeKeys(currentShapeKeys);
+            
+            document.querySelectorAll('.keyframe').forEach((el, i) => {
+                el.classList.toggle('active', i === idx);
+            });
+        }
+        
+        function togglePlay() {
+            if (isPlaying) {
+                stopAnimation();
+            } else {
+                playAnimation();
+            }
+        }
+        
+        function playAnimation() {
+            if (keyframes.length < 2) {
+                alert('Necesitas al menos 2 keyframes para reproducir');
+                return;
+            }
+            
+            isPlaying = true;
+            startTime = Date.now();
+            document.getElementById('playBtn').textContent = '⏸';
+            animateKeyframes();
+        }
+        
+        function stopAnimation() {
+            isPlaying = false;
+            document.getElementById('playBtn').textContent = '▶';
+            if (animationId) {
+                cancelAnimationFrame(animationId);
+            }
+        }
+        
+        function animateKeyframes() {
+            if (!isPlaying) return;
+            
+            const duration = parseFloat(document.getElementById('duration').value);
+            const elapsed = (Date.now() - startTime) / 1000;
+            const t = (elapsed % duration) / duration;
+            
+            // Interpolar entre keyframes
+            const totalKf = keyframes.length - 1;
+            const kfProgress = t * totalKf;
+            const kfIndex = Math.floor(kfProgress);
+            const kfBlend = kfProgress - kfIndex;
+            
+            if (kfIndex < totalKf) {
+                const kf1 = keyframes[kfIndex];
+                const kf2 = keyframes[kfIndex + 1];
+                
+                const blended = {};
+                Object.keys(kf1.shapeKeys).forEach(key => {
+                    blended[key] = kf1.shapeKeys[key] * (1 - kfBlend) + kf2.shapeKeys[key] * kfBlend;
+                });
+                
+                applyShapeKeys(blended);
+            }
+            
+            // Actualizar tiempo
+            const mins = Math.floor(elapsed / 60);
+            const secs = elapsed % 60;
+            document.getElementById('timeDisplay').textContent = 
+                `${mins.toString().padStart(2, '0')}:${secs.toFixed(2).padStart(5, '0')}`;
+            
+            animationId = requestAnimationFrame(animateKeyframes);
+        }
+        
+        function exportAnimation() {
+            if (keyframes.length === 0) {
+                alert('No hay keyframes para exportar');
+                return;
+            }
+            
+            const data = {
+                name: "amar_facial_animation",
+                fps: 30,
+                duration: parseFloat(document.getElementById('duration').value),
+                keyframes: keyframes
+            };
+            
+            const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'amar_facial_animation.json';
+            a.click();
+            
+            console.log('✅ Animación exportada');
+        }
+        
+        function resetAll() {
+            Object.keys(currentShapeKeys).forEach(key => {
+                currentShapeKeys[key] = 0;
+                document.getElementById(`slider-${key}`).value = 0;
+                document.getElementById(`value-${key}`).textContent = '0.00';
+            });
+            applyShapeKeys(currentShapeKeys);
+        }
+        
+        // Render loop
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update();
+            renderer.render(scene, camera);
+        }
+        animate();
+        
+        // Handle resize
+        window.addEventListener('resize', () => {
+            const width = canvas.clientWidth;
+            const height = canvas.clientHeight;
+            camera.aspect = width / height;
+            camera.updateProjectionMatrix();
+            renderer.setSize(width, height);
+        });
+        
+        console.log('🎭 Editor de expresiones faciales listo');
+    </script>
+</body>
+</html>

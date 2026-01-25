@@ -1,0 +1,1277 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editor de Animaciones 3D - LSV</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #1a1a1a;
+            color: white;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        header h1 {
+            font-size: 1.5em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .header-controls {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid white;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            border: none;
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #eb3349 0%, #f45c43 100%);
+            border: none;
+        }
+
+        .main-container {
+            display: grid;
+            grid-template-columns: 300px 1fr 350px;
+            gap: 0;
+            height: calc(100vh - 70px);
+        }
+
+        .panel {
+            background: #2a2a2a;
+            padding: 20px;
+            overflow-y: auto;
+            border-right: 1px solid #444;
+        }
+
+        .panel h2 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        #viewer-container {
+            position: relative;
+            background: linear-gradient(180deg, #1a1a2e 0%, #2d2d44 100%);
+        }
+
+        #canvas-3d {
+            width: 100%;
+            height: 100%;
+        }
+
+        .control-group {
+            background: #333;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+
+        .control-group h3 {
+            color: #764ba2;
+            margin-bottom: 10px;
+            font-size: 1em;
+        }
+
+        .control-item {
+            margin: 10px 0;
+        }
+
+        .control-item label {
+            display: block;
+            color: #aaa;
+            margin-bottom: 5px;
+            font-size: 0.9em;
+        }
+
+        .control-item input[type="range"] {
+            width: 100%;
+            height: 8px;
+            border-radius: 5px;
+            background: #444;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        .control-item input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #667eea;
+            cursor: pointer;
+            box-shadow: 0 0 5px rgba(102, 126, 234, 0.5);
+        }
+
+        .control-item input[type="range"]::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #667eea;
+            cursor: pointer;
+        }
+
+        .control-item input[type="number"] {
+            width: 100%;
+            padding: 8px;
+            background: #444;
+            border: 1px solid #555;
+            color: white;
+            border-radius: 5px;
+        }
+
+        select {
+            width: 100%;
+            padding: 8px;
+            background: #444;
+            border: 1px solid #555;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .bone-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .bone-item {
+            background: #3a3a3a;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .bone-item:hover {
+            background: #4a4a4a;
+            transform: translateX(5px);
+        }
+
+        .bone-item.selected {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-left: 4px solid #38ef7d;
+        }
+
+        .bone-item .bone-name {
+            font-weight: bold;
+        }
+
+        .bone-item .bone-type {
+            font-size: 0.8em;
+            color: #aaa;
+        }
+
+        .timeline-container {
+            background: #222;
+            padding: 15px;
+            border-top: 1px solid #444;
+        }
+
+        .timeline {
+            background: #333;
+            height: 80px;
+            border-radius: 5px;
+            position: relative;
+            overflow-x: auto;
+            margin: 10px 0;
+        }
+
+        .timeline-track {
+            height: 100%;
+            position: relative;
+            min-width: 100%;
+        }
+
+        .timeline-marker {
+            position: absolute;
+            top: 0;
+            width: 2px;
+            height: 100%;
+            background: #667eea;
+            cursor: pointer;
+        }
+
+        .keyframe {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            background: #38ef7d;
+            border-radius: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(56, 239, 125, 0.5);
+        }
+
+        .keyframe.modified {
+            background: #f093fb;
+            box-shadow: 0 0 10px rgba(240, 147, 251, 0.5);
+        }
+
+        .playback-controls {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+            margin-top: 10px;
+        }
+
+        .play-btn {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            color: white;
+            font-size: 1.5em;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+        }
+
+        .play-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.5);
+        }
+
+        .time-display {
+            background: #444;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-family: monospace;
+            font-size: 1.1em;
+        }
+
+        .upload-area {
+            border: 3px dashed #667eea;
+            border-radius: 10px;
+            padding: 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: #333;
+        }
+
+        .upload-area:hover {
+            background: #3a3a3a;
+            border-color: #764ba2;
+        }
+
+        .upload-area.dragging {
+            background: #4a4a4a;
+            border-color: #38ef7d;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin: 15px 0;
+        }
+
+        .stat-box {
+            background: #444;
+            padding: 10px;
+            border-radius: 5px;
+            text-align: center;
+        }
+
+        .stat-box .value {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .stat-box .label {
+            font-size: 0.8em;
+            color: #aaa;
+            margin-top: 5px;
+        }
+
+        .rotation-controls {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+
+        .axis-control {
+            background: #444;
+            padding: 10px;
+            border-radius: 5px;
+        }
+
+        .axis-control .axis-label {
+            font-weight: bold;
+            margin-bottom: 5px;
+            text-align: center;
+        }
+
+        .axis-control.x .axis-label { color: #ff6b6b; }
+        .axis-control.y .axis-label { color: #4ecdc4; }
+        .axis-control.z .axis-label { color: #ffe66d; }
+
+        .log-panel {
+            background: #1e1e1e;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 0.85em;
+            max-height: 150px;
+            overflow-y: auto;
+            margin-top: 15px;
+        }
+
+        .log-entry {
+            margin: 3px 0;
+            padding: 3px 5px;
+        }
+
+        .log-entry.success { color: #38ef7d; }
+        .log-entry.warning { color: #ffaa00; }
+        .log-entry.error { color: #ff6b6b; }
+        .log-entry.info { color: #667eea; }
+
+        .info-badge {
+            display: inline-block;
+            background: #667eea;
+            padding: 3px 8px;
+            border-radius: 10px;
+            font-size: 0.8em;
+            margin-left: 5px;
+        }
+
+        .keyframe-settings {
+            background: #2a2a2a;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+        }
+
+        .toggle-switch {
+            position: relative;
+            width: 50px;
+            height: 24px;
+            background: #444;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .toggle-switch.active {
+            background: #38ef7d;
+        }
+
+        .toggle-switch::after {
+            content: '';
+            position: absolute;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: white;
+            top: 3px;
+            left: 3px;
+            transition: all 0.3s;
+        }
+
+        .toggle-switch.active::after {
+            left: 29px;
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #2a2a2a;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #667eea;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #764ba2;
+        }
+
+        .helper-text {
+            background: #3a3a3a;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 0.85em;
+            color: #aaa;
+            margin-top: 10px;
+            border-left: 3px solid #667eea;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>🎨 Editor de Animaciones 3D</h1>
+        <div class="header-controls">
+            <button class="btn" id="loadBtn">📁 Cargar GLB</button>
+            <button class="btn btn-primary" id="applyBtn" disabled>✨ Aplicar Cambios</button>
+            <button class="btn btn-primary" id="exportBtn" disabled>💾 Exportar GLB</button>
+            <button class="btn btn-danger" id="resetBtn">🔄 Reiniciar</button>
+        </div>
+    </header>
+
+    <div class="main-container">
+        <!-- Panel izquierdo: Carga y selección -->
+        <div class="panel">
+            <h2>📂 Archivo</h2>
+            
+            <div class="control-group">
+                <h3>🔗 Cargar desde URL</h3>
+                <input type="text" id="urlInput" placeholder="output/glb/Luis/alfabeto/Luis_resultado_o.glb" 
+                    style="width: 100%; padding: 10px; background: #444; border: 1px solid #555; color: white; border-radius: 5px; margin-bottom: 10px;">
+                <button class="btn btn-primary" id="loadUrlBtn" style="width: 100%;">
+                    🌐 Cargar desde URL
+                </button>
+            </div>
+
+            <div style="text-align: center; margin: 15px 0; color: #666;">
+                ──────── o ────────
+            </div>
+            
+            <div class="upload-area" id="uploadArea">
+                <div style="font-size: 3em; margin-bottom: 10px;">📦</div>
+                <h3>Arrastra tu GLB aquí</h3>
+                <p style="color: #aaa; font-size: 0.9em;">o haz clic para seleccionar</p>
+                <input type="file" id="fileInput" accept=".glb,.gltf">
+            </div>
+
+            <div id="fileInfoPanel" style="display: none;">
+                <div class="stats-grid">
+                    <div class="stat-box">
+                        <div class="value" id="boneCount">0</div>
+                        <div class="label">Bones</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="value" id="animCount">0</div>
+                        <div class="label">Animaciones</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="control-group">
+                <h3>🎬 Seleccionar Animación</h3>
+                <select id="animationSelect" disabled>
+                    <option>Carga un archivo GLB primero</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <h3>🦴 Lista de Bones</h3>
+                <div class="helper-text">
+                    💡 Selecciona un bone para modificar su rotación
+                </div>
+                <div class="bone-list" id="boneList">
+                    <p style="color: #666; text-align: center; padding: 20px;">
+                        No hay bones disponibles
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Panel central: Visor 3D -->
+        <div id="viewer-container">
+            <canvas id="canvas-3d"></canvas>
+            
+            <!-- Timeline -->
+            <div class="timeline-container">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                    <h3 style="color: #667eea;">⏱️ Timeline</h3>
+                    <div class="time-display" id="timeDisplay">0.00s / 0.00s</div>
+                </div>
+                
+                <div class="timeline" id="timeline">
+                    <div class="timeline-track" id="timelineTrack">
+                        <div class="timeline-marker" id="playhead" style="left: 0;"></div>
+                    </div>
+                </div>
+                
+                <div class="playback-controls">
+                    <button class="btn" id="prevFrameBtn" disabled>⏮️</button>
+                    <button class="play-btn" id="playBtn" disabled>▶️</button>
+                    <button class="btn" id="nextFrameBtn" disabled>⏭️</button>
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <label style="color: #aaa;">Velocidad:</label>
+                        <select id="speedSelect">
+                            <option value="0.25">0.25x</option>
+                            <option value="0.5">0.5x</option>
+                            <option value="1" selected>1x</option>
+                            <option value="2">2x</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Panel derecho: Controles de edición -->
+        <div class="panel">
+            <h2>✏️ Editor Directo de Quaternions</h2>
+            
+            <div class="control-group">
+                <h3>🎯 Bone Seleccionado</h3>
+                <div id="selectedBoneInfo">
+                    <input type="text" id="boneNameInput" placeholder="Nombre del bone" 
+                        style="width: 100%; padding: 10px; background: #444; border: 1px solid #555; color: white; border-radius: 5px;">
+                </div>
+            </div>
+
+            <div class="control-group">
+                <h3>📐 Valores del Quaternion</h3>
+                
+                <div class="control-item">
+                    <label>W:</label>
+                    <input type="number" id="quatW" step="0.001" value="1" 
+                        style="width: 100%; padding: 10px; background: #444; border: 1px solid #555; color: white; border-radius: 5px;">
+                </div>
+
+                <div class="control-item">
+                    <label>X:</label>
+                    <input type="number" id="quatX" step="0.001" value="0" 
+                        style="width: 100%; padding: 10px; background: #444; border: 1px solid #555; color: white; border-radius: 5px;">
+                </div>
+
+                <div class="control-item">
+                    <label>Y:</label>
+                    <input type="number" id="quatY" step="0.001" value="0" 
+                        style="width: 100%; padding: 10px; background: #444; border: 1px solid #555; color: white; border-radius: 5px;">
+                </div>
+
+                <div class="control-item">
+                    <label>Z:</label>
+                    <input type="number" id="quatZ" step="0.001" value="0" 
+                        style="width: 100%; padding: 10px; background: #444; border: 1px solid #555; color: white; border-radius: 5px;">
+                </div>
+
+                <div class="helper-text">
+                    💡 Escribe directamente los valores W, X, Y, Z del quaternion
+                </div>
+            </div>
+
+            <div class="control-group">
+                <h3>🎬 Frame de Modificación</h3>
+                
+                <div class="control-item">
+                    <label>Frame número:</label>
+                    <input type="number" id="targetFrame" value="0" min="0" step="1" 
+                        style="width: 100%; padding: 10px; background: #444; border: 1px solid #555; color: white; border-radius: 5px;">
+                </div>
+
+                <div class="control-item">
+                    <label>Frames de retención:</label>
+                    <input type="number" id="holdFrames" value="5" min="0" max="20" step="1" 
+                        style="width: 100%; padding: 10px; background: #444; border: 1px solid #555; color: white; border-radius: 5px;">
+                </div>
+            </div>
+
+            <button class="btn btn-primary" id="applyQuaternionBtn" style="width: 100%; margin-bottom: 15px; font-size: 1.1em;">
+                ✅ APLICAR ESTE CAMBIO
+            </button>
+
+            <button class="btn" id="playTestBtn" disabled style="width: 100%; margin-bottom: 15px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); font-size: 1.1em;">
+                ▶️ REPRODUCIR ANIMACIÓN
+            </button>
+
+            <div style="background: #3a3a3a; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+                <h4 style="color: #f093fb; margin-bottom: 10px;">✨ Cambios Aplicados: <span id="modifiedCount">0</span></h4>
+                <div id="modifiedList" style="max-height: 150px; overflow-y: auto; font-size: 0.85em; color: #aaa;">
+                    <p style="text-align: center; padding: 10px;">Ninguno</p>
+                </div>
+            </div>
+
+            <div class="helper-text">
+                💡 <strong>Flujo simple:</strong><br>
+                1️⃣ Escribe el nombre del bone<br>
+                2️⃣ Escribe los valores W, X, Y, Z<br>
+                3️⃣ Especifica el frame<br>
+                4️⃣ Click "APLICAR ESTE CAMBIO"<br>
+                5️⃣ Click "REPRODUCIR" para verificar<br>
+                6️⃣ Repite para otros bones<br>
+                7️⃣ Exporta tu GLB
+            </div>
+
+            <div class="log-panel" id="logPanel">
+                <div class="log-entry info">🟢 Sistema listo</div>
+            </div>
+        </div>
+    </div>
+
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+                "three/examples/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+            }
+        }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { GLTFLoader } from 'three/examples/loaders/GLTFLoader.js';
+        import { GLTFExporter } from 'three/examples/exporters/GLTFExporter.js';
+        import { OrbitControls } from 'three/examples/controls/OrbitControls.js';
+
+        // Variables globales
+        let scene, camera, renderer, controls, clock;
+        let model, skeleton, mixer, currentAction;
+        let animations = [];
+        let bones = [];
+        let selectedBone = null;
+        let isPlaying = false;
+        let originalAnimationData = null;
+        let modifiedKeyframes = {};
+        let currentTime = 0;
+        let animationDuration = 0;
+
+        // Inicializar escena
+        function initScene() {
+            const container = document.getElementById('viewer-container');
+            const canvas = document.getElementById('canvas-3d');
+
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x1a1a2e);
+
+            camera = new THREE.PerspectiveCamera(
+                50,
+                container.clientWidth / container.clientHeight,
+                0.1,
+                1000
+            );
+            camera.position.set(0, 1.6, 2);
+
+            renderer = new THREE.WebGLRenderer({ 
+                canvas: canvas,
+                antialias: true 
+            });
+            renderer.setSize(container.clientWidth, container.clientHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+
+            controls = new OrbitControls(camera, canvas);
+            controls.target.set(0, 1, 0);
+            controls.update();
+
+            // Luces
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+            scene.add(ambientLight);
+
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            directionalLight.position.set(5, 10, 5);
+            scene.add(directionalLight);
+
+            const backLight = new THREE.DirectionalLight(0x667eea, 0.4);
+            backLight.position.set(-5, 5, -5);
+            scene.add(backLight);
+
+            // Grid
+            const gridHelper = new THREE.GridHelper(10, 10, 0x444444, 0x222222);
+            scene.add(gridHelper);
+
+            clock = new THREE.Clock();
+
+            window.addEventListener('resize', onWindowResize);
+            animate();
+
+            addLog('success', '✅ Escena 3D inicializada');
+        }
+
+        function onWindowResize() {
+            const container = document.getElementById('viewer-container');
+            camera.aspect = container.clientWidth / container.clientHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(container.clientWidth, container.clientHeight);
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+
+            const delta = clock.getDelta();
+
+            if (mixer && isPlaying) {
+                mixer.update(delta);
+                currentTime = currentAction.time;
+                updateTimeDisplay();
+                updatePlayhead();
+            }
+
+            controls.update();
+            renderer.render(scene, camera);
+        }
+
+        // Carga de archivo
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+
+        uploadArea.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            fileInput.click();
+        });
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragging');
+        });
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragging');
+        });
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragging');
+            if (e.dataTransfer.files.length > 0) {
+                loadGLBFile(e.dataTransfer.files[0]);
+            }
+        });
+        fileInput.addEventListener('change', (e) => {
+            e.preventDefault();
+            if (e.target.files.length > 0) {
+                loadGLBFile(e.target.files[0]);
+                e.target.value = '';
+            }
+        });
+
+        function loadGLBFile(file) {
+            if (!file) {
+                addLog('error', '❌ No se seleccionó archivo');
+                return;
+            }
+
+            addLog('info', `📂 Cargando: ${file.name}...`);
+
+            const reader = new FileReader();
+            
+            reader.onerror = function() {
+                addLog('error', '❌ Error al leer el archivo');
+            };
+            
+            reader.onload = function(e) {
+                const arrayBuffer = e.target.result;
+                const loader = new GLTFLoader();
+                
+                loader.parse(arrayBuffer, '', (gltf) => {
+                    if (model) {
+                        scene.remove(model);
+                    }
+
+                    model = gltf.scene;
+                    scene.add(model);
+
+                    // Centrar modelo
+                    const box = new THREE.Box3().setFromObject(model);
+                    const center = box.getCenter(new THREE.Vector3());
+                    model.position.sub(center);
+                    model.position.y = 0;
+
+                    // Obtener animaciones
+                    animations = gltf.animations;
+                    
+                    // Obtener bones
+                    bones = [];
+                    model.traverse((child) => {
+                        if (child.isBone) {
+                            bones.push(child);
+                        }
+                    });
+
+                    // Crear mixer
+                    mixer = new THREE.AnimationMixer(model);
+
+                    setupAnimations();
+                    displayBones();
+                    updateStats();
+
+                    addLog('success', `✅ Modelo cargado: ${bones.length} bones, ${animations.length} animaciones`);
+
+                    document.getElementById('fileInfoPanel').style.display = 'block';
+                    document.getElementById('animationSelect').disabled = false;
+                    document.getElementById('playBtn').disabled = false;
+                    document.getElementById('nextFrameBtn').disabled = false;
+                    document.getElementById('prevFrameBtn').disabled = false;
+                    document.getElementById('applyBtn').disabled = false;
+                    document.getElementById('exportBtn').disabled = false;
+
+                }, (error) => {
+                    console.error('Error GLTF:', error);
+                    addLog('error', `❌ Error al parsear GLB`);
+                    addLog('warning', '⚠️ Verifica que sea GLB válido');
+                });
+            };
+            
+            try {
+                reader.readAsArrayBuffer(file);
+            } catch (error) {
+                addLog('error', `❌ Error: ${error.message}`);
+            }
+        }
+
+        function setupAnimations() {
+            const select = document.getElementById('animationSelect');
+            select.innerHTML = '';
+
+            animations.forEach((anim, index) => {
+                const option = document.createElement('option');
+                option.value = index;
+                option.textContent = anim.name || `Animación ${index + 1}`;
+                select.appendChild(option);
+            });
+
+            if (animations.length > 0) {
+                playAnimation(0);
+            }
+        }
+
+        function playAnimation(index) {
+            if (currentAction) {
+                currentAction.stop();
+            }
+
+            const clip = animations[index];
+            originalAnimationData = clip.clone();
+            animationDuration = clip.duration;
+
+            currentAction = mixer.clipAction(clip);
+            currentAction.play();
+            isPlaying = false;
+            currentAction.paused = true;
+            currentAction.time = 0;
+
+            updateTimeDisplay();
+            addLog('info', `🎬 Animación cargada: ${clip.name || 'Sin nombre'} (${clip.duration.toFixed(2)}s)`);
+        }
+
+        function displayBones() {
+            const boneList = document.getElementById('boneList');
+            boneList.innerHTML = '';
+
+            bones.forEach((bone, index) => {
+                const item = document.createElement('div');
+                item.className = 'bone-item';
+                item.innerHTML = `
+                    <div>
+                        <div class="bone-name">${bone.name}</div>
+                        <div class="bone-type">Bone #${index}</div>
+                    </div>
+                `;
+                item.onclick = () => selectBone(bone, item);
+                boneList.appendChild(item);
+            });
+        }
+
+        function selectBone(bone, element) {
+            selectedBone = bone;
+
+            // Actualizar UI
+            document.querySelectorAll('.bone-item').forEach(el => el.classList.remove('selected'));
+            element.classList.add('selected');
+
+            // Llenar nombre del bone
+            document.getElementById('boneNameInput').value = bone.name;
+
+            // Obtener quaternion actual
+            const quat = bone.quaternion;
+            document.getElementById('quatW').value = quat.w.toFixed(3);
+            document.getElementById('quatX').value = quat.x.toFixed(3);
+            document.getElementById('quatY').value = quat.y.toFixed(3);
+            document.getElementById('quatZ').value = quat.z.toFixed(3);
+
+            addLog('info', `🎯 Bone seleccionado: ${bone.name}`);
+            addLog('info', `📐 Quaternion actual: W=${quat.w.toFixed(3)} X=${quat.x.toFixed(3)} Y=${quat.y.toFixed(3)} Z=${quat.z.toFixed(3)}`);
+        }
+
+        function updateStats() {
+            document.getElementById('boneCount').textContent = bones.length;
+            document.getElementById('animCount').textContent = animations.length;
+        }
+
+        // Controles de playback
+        document.getElementById('playBtn').addEventListener('click', () => {
+            isPlaying = !isPlaying;
+            currentAction.paused = !isPlaying;
+            document.getElementById('playBtn').textContent = isPlaying ? '⏸️' : '▶️';
+        });
+
+        document.getElementById('nextFrameBtn').addEventListener('click', () => {
+            if (currentAction) {
+                currentAction.time = Math.min(currentAction.time + 1/30, animationDuration);
+                updateTimeDisplay();
+                updatePlayhead();
+            }
+        });
+
+        document.getElementById('prevFrameBtn').addEventListener('click', () => {
+            if (currentAction) {
+                currentAction.time = Math.max(currentAction.time - 1/30, 0);
+                updateTimeDisplay();
+                updatePlayhead();
+            }
+        });
+
+        document.getElementById('speedSelect').addEventListener('change', (e) => {
+            if (currentAction) {
+                currentAction.timeScale = parseFloat(e.target.value);
+            }
+        });
+
+        document.getElementById('animationSelect').addEventListener('change', (e) => {
+            playAnimation(parseInt(e.target.value));
+        });
+
+        // Timeline
+        const timeline = document.getElementById('timeline');
+        timeline.addEventListener('click', (e) => {
+            const rect = timeline.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const percentage = x / rect.width;
+            if (currentAction) {
+                currentAction.time = percentage * animationDuration;
+                updateTimeDisplay();
+                updatePlayhead();
+            }
+        });
+
+        function updateTimeDisplay() {
+            document.getElementById('timeDisplay').textContent = 
+                `${currentTime.toFixed(2)}s / ${animationDuration.toFixed(2)}s`;
+        }
+
+        function updatePlayhead() {
+            const percentage = (currentTime / animationDuration) * 100;
+            document.getElementById('playhead').style.left = `${percentage}%`;
+        }
+
+        // Aplicar quaternion directamente
+        document.getElementById('applyQuaternionBtn').addEventListener('click', () => {
+            const boneName = document.getElementById('boneNameInput').value.trim();
+            const targetFrame = parseInt(document.getElementById('targetFrame').value);
+            const holdFrames = parseInt(document.getElementById('holdFrames').value);
+            
+            const w = parseFloat(document.getElementById('quatW').value);
+            const x = parseFloat(document.getElementById('quatX').value);
+            const y = parseFloat(document.getElementById('quatY').value);
+            const z = parseFloat(document.getElementById('quatZ').value);
+
+            if (!boneName) {
+                addLog('error', '❌ Escribe el nombre del bone');
+                return;
+            }
+
+            if (!currentAction) {
+                addLog('error', '❌ Carga una animación primero');
+                return;
+            }
+
+            if (isNaN(w) || isNaN(x) || isNaN(y) || isNaN(z)) {
+                addLog('error', '❌ Valores de quaternion inválidos');
+                return;
+            }
+
+            // Crear quaternion
+            const targetQuaternion = new THREE.Quaternion(x, y, z, w);
+
+            // Aplicar directamente
+            const clip = animations[parseInt(document.getElementById('animationSelect').value)];
+            const trackName = `${boneName}.quaternion`;
+            let track = clip.tracks.find(t => t.name === trackName);
+
+            if (!track) {
+                addLog('error', `❌ No se encontró track para: ${boneName}`);
+                return;
+            }
+
+            modifyTrack(track, targetFrame, holdFrames, targetQuaternion);
+
+            // Guardar en registro
+            if (!modifiedKeyframes[boneName]) {
+                modifiedKeyframes[boneName] = [];
+            }
+            modifiedKeyframes[boneName].push({
+                frame: targetFrame,
+                quaternion: { w, x, y, z },
+                holdFrames: holdFrames
+            });
+
+            updateModifiedList();
+            document.getElementById('playTestBtn').disabled = false;
+
+            // Recargar animación
+            playAnimation(parseInt(document.getElementById('animationSelect').value));
+
+            addLog('success', `✅ Cambio aplicado: ${boneName} en frame ${targetFrame}`);
+            addLog('info', `📐 Quaternion: W=${w} X=${x} Y=${y} Z=${z}`);
+        });
+
+        function updateModifiedList() {
+            let totalChanges = 0;
+            Object.keys(modifiedKeyframes).forEach(boneName => {
+                totalChanges += modifiedKeyframes[boneName].length;
+            });
+            
+            document.getElementById('modifiedCount').textContent = totalChanges;
+            
+            const listDiv = document.getElementById('modifiedList');
+            if (totalChanges === 0) {
+                listDiv.innerHTML = '<p style="text-align: center; padding: 10px;">Ninguno</p>';
+            } else {
+                listDiv.innerHTML = '';
+                Object.keys(modifiedKeyframes).forEach(boneName => {
+                    modifiedKeyframes[boneName].forEach(change => {
+                        const item = document.createElement('div');
+                        item.style.cssText = 'background: #444; padding: 8px; margin: 5px 0; border-radius: 5px; font-size: 0.85em;';
+                        item.innerHTML = `
+                            <div style="color: #667eea; font-weight: bold;">🦴 ${boneName}</div>
+                            <div style="color: #38ef7d; margin-top: 3px;">Frame ${change.frame}</div>
+                            <div style="color: #aaa; font-size: 0.8em; margin-top: 3px;">
+                                W=${change.quaternion.w.toFixed(3)} X=${change.quaternion.x.toFixed(3)} Y=${change.quaternion.y.toFixed(3)} Z=${change.quaternion.z.toFixed(3)}
+                            </div>
+                        `;
+                        listDiv.appendChild(item);
+                    });
+                });
+            }
+        }
+
+        // Reproducir animación para verificar
+        document.getElementById('playTestBtn').addEventListener('click', () => {
+            if (!currentAction) {
+                addLog('error', '❌ No hay animación cargada');
+                return;
+            }
+
+            isPlaying = true;
+            currentAction.paused = false;
+            currentAction.time = 0;
+            document.getElementById('playBtn').textContent = '⏸️';
+            
+            addLog('info', '▶️ Reproduciendo animación...');
+        });
+
+        function modifyTrack(track, targetFrame, holdFrames, targetQuat) {
+            const fps = 30; // Asumiendo 30 FPS
+            const targetTime = targetFrame / fps;
+            const times = Array.from(track.times);
+            const values = Array.from(track.values);
+
+            // Insertar keyframe en targetTime
+            const insertIndex = times.findIndex(t => t >= targetTime);
+            
+            if (insertIndex === -1 || times[insertIndex] !== targetTime) {
+                times.splice(insertIndex, 0, targetTime);
+                values.splice(insertIndex * 4, 0, targetQuat.x, targetQuat.y, targetQuat.z, targetQuat.w);
+            } else {
+                // Reemplazar valores existentes
+                const valueIndex = insertIndex * 4;
+                values[valueIndex] = targetQuat.x;
+                values[valueIndex + 1] = targetQuat.y;
+                values[valueIndex + 2] = targetQuat.z;
+                values[valueIndex + 3] = targetQuat.w;
+            }
+
+            // Agregar frames de retención
+            if (holdFrames > 0) {
+                const holdTime = (targetFrame + holdFrames) / fps;
+                const holdIndex = times.findIndex(t => t >= holdTime);
+                
+                if (holdIndex === -1 || times[holdIndex] !== holdTime) {
+                    times.splice(holdIndex, 0, holdTime);
+                    values.splice(holdIndex * 4, 0, targetQuat.x, targetQuat.y, targetQuat.z, targetQuat.w);
+                }
+            }
+
+            track.times = new Float32Array(times);
+            track.values = new Float32Array(values);
+        }
+
+        // Exportar GLB
+        document.getElementById('exportBtn').addEventListener('click', () => {
+            addLog('info', '💾 Exportando GLB...');
+
+            const exporter = new GLTFExporter();
+            
+            exporter.parse(
+                model,
+                (result) => {
+                    const blob = new Blob([result], { type: 'application/octet-stream' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'animacion_modificada.glb';
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+
+                    addLog('success', '✅ GLB exportado correctamente');
+                },
+                { binary: true, animations: animations }
+            );
+        });
+
+        // Reiniciar
+        document.getElementById('resetBtn').addEventListener('click', () => {
+            location.reload();
+        });
+
+        // Log
+        function addLog(type, message) {
+            const logPanel = document.getElementById('logPanel');
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${type}`;
+            entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            logPanel.appendChild(entry);
+            logPanel.scrollTop = logPanel.scrollHeight;
+        }
+
+        // Cargar desde URL
+        document.getElementById('loadUrlBtn').addEventListener('click', () => {
+            const url = document.getElementById('urlInput').value.trim();
+            if (!url) {
+                addLog('error', '❌ Ingresa una URL válida');
+                return;
+            }
+            loadGLBFromURL(url);
+        });
+
+        // Permitir Enter en el input de URL
+        document.getElementById('urlInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                document.getElementById('loadUrlBtn').click();
+            }
+        });
+
+        function loadGLBFromURL(url) {
+            addLog('info', `🌐 Cargando desde URL...`);
+            addLog('info', `📍 ${url}`);
+
+            const loader = new GLTFLoader();
+            
+            loader.load(
+                url,
+                (gltf) => {
+                    if (model) {
+                        scene.remove(model);
+                    }
+
+                    model = gltf.scene;
+                    scene.add(model);
+
+                    // Centrar modelo
+                    const box = new THREE.Box3().setFromObject(model);
+                    const center = box.getCenter(new THREE.Vector3());
+                    model.position.sub(center);
+                    model.position.y = 0;
+
+                    // Obtener animaciones
+                    animations = gltf.animations;
+                    
+                    // Obtener bones
+                    bones = [];
+                    model.traverse((child) => {
+                        if (child.isBone) {
+                            bones.push(child);
+                        }
+                    });
+
+                    // Crear mixer
+                    mixer = new THREE.AnimationMixer(model);
+
+                    setupAnimations();
+                    displayBones();
+                    updateStats();
+
+                    addLog('success', `✅ Modelo cargado: ${bones.length} bones, ${animations.length} animaciones`);
+
+                    document.getElementById('fileInfoPanel').style.display = 'block';
+                    document.getElementById('animationSelect').disabled = false;
+                    document.getElementById('playBtn').disabled = false;
+                    document.getElementById('nextFrameBtn').disabled = false;
+                    document.getElementById('prevFrameBtn').disabled = false;
+                    document.getElementById('applyBtn').disabled = false;
+                    document.getElementById('exportBtn').disabled = false;
+                },
+                (xhr) => {
+                    const percent = (xhr.loaded / xhr.total * 100).toFixed(0);
+                    addLog('info', `⏳ Descargando: ${percent}%`);
+                },
+                (error) => {
+                    console.error('Error:', error);
+                    addLog('error', `❌ Error al cargar desde URL`);
+                    addLog('warning', '⚠️ Verifica que la URL sea correcta y el servidor esté activo');
+                }
+            );
+        }
+
+        // Cargar botón
+        document.getElementById('loadBtn').addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            fileInput.click();
+        });
+
+        // Iniciar
+        initScene();
+    </script>
+</body>
+</html>

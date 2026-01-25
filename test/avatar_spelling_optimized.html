@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Avatar Spelling - LSV</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #1a1a2e;
+            overflow: hidden;
+            color: white;
+        }
+
+        #app {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #viewer-container {
+            flex: 1;
+            position: relative;
+            background: linear-gradient(180deg, #1a1a2e 0%, #2d2d44 100%);
+        }
+
+        #canvas-3d {
+            width: 100%;
+            height: 100%;
+        }
+
+        .status {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.85);
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-size: 18px;
+            font-weight: bold;
+            z-index: 50;
+            color: #f093fb;
+        }
+
+        #loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        #loading.hidden {
+            display: none;
+        }
+
+        .spinner {
+            width: 70px;
+            height: 70px;
+            border: 5px solid rgba(255, 255, 255, 0.2);
+            border-top: 5px solid #f093fb;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 25px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            font-size: 20px;
+            color: #f093fb;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <div id="viewer-container">
+            <canvas id="canvas-3d"><div id="loading">
+        <div class="spinner"></div>
+        <div class="loading-text" id="loading-text">Cargando avatar...</div>
+    </canvas></div>
+        </div>
+    </div>
+
+    
+
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.module.js",
+                "three/examples/": "https://cdn.jsdelivr.net/npm/three@0.128.0/examples/"
+            }
+        }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+        import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+
+        let scene, camera, renderer, controls, clock;
+        let avatarModel, mixer;
+        let currentAction = null;
+        let animationClipsCache = {}; // Cache SOLO para clips de animación (NO modelos)
+
+        // Estado del sistema
+        let avatarActual = 'Nancy';
+        let palabraActual = '';
+        let autoplay = false;
+        
+        async function init() {
+            // Obtener parámetros desde URL
+            const params = new URLSearchParams(window.location.search);
+            avatarActual = params.get('avatar') || 'Nancy';
+            palabraActual = params.get('word') || params.get('text') || 'hola';
+            autoplay = params.get('autoplay') === 'true';
+
+            setupScene();
+            await cargarAvatar(avatarActual);
+            
+            if (autoplay && palabraActual) {
+                // NO precargar, usar lazy loading
+                setTimeout(() => {
+                    deletrearPalabra(palabraActual);
+                }, 500);
+            }
+            
+            animate();
+        }
+
+        function setupScene() {
+            const container = document.getElementById('viewer-container');
+            const canvas = document.getElementById('canvas-3d');
+            
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x1a1a2e);
+            
+            camera = new THREE.PerspectiveCamera(
+                50,
+                container.clientWidth / container.clientHeight,
+                0.1,
+                1000
+            );
+            // Cámara más cerca para mejor visualización
+            camera.position.set(0, 1.4, 1.5);
+            
+            renderer = new THREE.WebGLRenderer({ 
+                canvas: canvas,
+                antialias: true
+            });
+            renderer.setSize(container.clientWidth, container.clientHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+            
+            controls = new OrbitControls(camera, canvas);
+            controls.target.set(0, 1.2, 0);
+            // Deshabilitar controles de usuario
+            controls.enabled = false;
+            controls.update();
+             // Luces
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
+            scene.add(ambientLight);
+
+            const directionalLight1 = new THREE.DirectionalLight(0xffffff, 1.2);
+            directionalLight1.position.set(5, 5, 5);
+            scene.add(directionalLight1);
+
+            const directionalLight2 = new THREE.DirectionalLight(0xffffff, 0.6);
+            directionalLight2.position.set(-5, 3, -5);
+            scene.add(directionalLight2);
+
+            const fillLight = new THREE.DirectionalLight(0xffffff, 0.4);
+            fillLight.position.set(0, -2, 5);
+            scene.add(fillLight);
+            
+            clock = new THREE.Clock();
+            
+            window.addEventListener('resize', () => {
+                camera.aspect = container.clientWidth / container.clientHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(container.clientWidth, container.clientHeight);
+            });
+        }
+
+        async function cargarAvatar(nombreAvatar) {
+            return new Promise(async (resolve, reject) => {
+                const loader = new GLTFLoader();
+                const loadingText = document.getElementById('loading-text');
+                const loadingDiv = document.getElementById('loading');
+                
+                loadingDiv.classList.remove('hidden');
+                loadingText.textContent = `Cargando ${nombreAvatar}...`;
+                
+                // Determinar género según el avatar
+                const genero = (nombreAvatar === 'Nancy' || nombreAvatar === 'Nina' || nombreAvatar === 'Carla') ? 'Mujer' : 'Hombre';
+                const nombreCapitalizado = nombreAvatar.charAt(0).toUpperCase() + nombreAvatar.slice(1);
+                
+                // Rutas a intentar
+                const rutasIntento = [
+                    `../output/glb/${nombreCapitalizado}/${nombreCapitalizado}.glb`,
+                    `../output/glb/${nombreAvatar}/${nombreAvatar}.glb`,
+                    `../output/glb/${genero}/${nombreCapitalizado}.glb`,
+                    `../output/glb/${genero}/${nombreAvatar}.glb`,
+                    `output/glb/${nombreCapitalizado}/${nombreCapitalizado}.glb`,
+                    `output/glb/${nombreAvatar}/${nombreAvatar}.glb`,
+                    `output/glb/${genero}/${nombreCapitalizado}.glb`,
+                    `output/glb/${genero}/${nombreAvatar}.glb`
+                ];
+                
+                let cargado = false;
+                
+                for (const ruta of rutasIntento) {
+                    if (cargado) break;
+                    
+                    try {
+                        const gltf = await new Promise((res, rej) => {
+                            loader.load(
+                                ruta,
+                                (result) => res(result),
+                                (progress) => {
+                                    const percent = (progress.loaded / progress.total) * 100;
+                                    loadingText.textContent = `Cargando ${nombreAvatar}... ${percent.toFixed(0)}%`;
+                                },
+                                (error) => rej(error)
+                            );
+                        });
+                        
+                        console.log(`✅ Avatar cargado desde: ${ruta}`);
+                        
+                        // Remover avatar anterior si existe
+                        if (avatarModel) {
+                            scene.remove(avatarModel);
+                        }
+                        
+                        // Agregar nuevo avatar
+                        avatarModel = gltf.scene;
+                        scene.add(avatarModel);
+                        
+                        // Centrar modelo
+                        const box = new THREE.Box3().setFromObject(avatarModel);
+                        const center = box.getCenter(new THREE.Vector3());
+                        avatarModel.position.sub(center);
+                        avatarModel.position.y = 0;
+                        
+                        // Habilitar morph targets y crear mapeo de nombres
+                        const nodeNameMap = {};
+                        avatarModel.traverse((child) => {
+                            if (child.isMesh && child.morphTargetInfluences && child.morphTargetInfluences.length > 0) {
+                                if (child.material) {
+                                    child.material.morphTargets = true;
+                                    child.material.needsUpdate = true;
+                                }
+                                const baseName = child.name.replace(/\d+$/, '');
+                                if (baseName !== child.name) {
+                                    nodeNameMap[baseName] = child.name;
+                                }
+                            }
+                        });
+                        avatarModel.userData.nodeNameMap = nodeNameMap;
+                        
+                        // Crear mixer
+                        mixer = new THREE.AnimationMixer(avatarModel);
+                        
+                        loadingDiv.classList.add('hidden');
+                        //document.getElementById('status').textContent = `✅ ${nombreAvatar} listo`;
+                        
+                        cargado = true;
+                        resolve();
+                        
+                    } catch (error) {
+                        console.log(`⚠️ No se pudo cargar desde: ${ruta}`);
+                    }
+                }
+                
+                if (!cargado) {
+                    console.error(`❌ Error cargando ${nombreAvatar}`);
+                    document.getElementById('status').textContent = `❌ Error al cargar ${nombreAvatar}`;
+                    loadingDiv.classList.add('hidden');
+                    reject(new Error(`No se pudo cargar ${nombreAvatar}`));
+                }
+            });
+        }
+
+        async function precargarLetras(palabra) {
+            // OPTIMIZACIÓN: No precargar nada, usar lazy loading
+            // Esta función ahora solo retorna inmediatamente
+            return Promise.resolve();
+        }
+
+        async function precargarLetrasOriginal(palabra) {
+            // Función original mantenida por si se necesita en el futuro
+            const letras = palabra.toLowerCase().split('');
+            const letrasUnicas = [...new Set(letras)]; // Eliminar duplicados
+            const loader = new GLTFLoader();
+            
+            console.log(`📥 Precargando ${letrasUnicas.length} letras únicas...`);
+            
+            const promesasCarga = letrasUnicas.map(async (letra) => {
+                const letraNormalizada = letra.toLowerCase().trim();
+                
+                console.log(`🔍 Procesando letra: "${letra}" -> normalizada: "${letraNormalizada}"`);
+                
+                if (animationClipsCache[letraNormalizada]) {
+                    console.log(`✅ Ya en caché: ${letraNormalizada}`);
+                    return; // Ya está en cache
+                }
+                
+                const avatarCapitalizado = avatarActual.charAt(0).toUpperCase() + avatarActual.slice(1);
+                
+                const patronesNombre = [
+                    `${avatarCapitalizado}_resultado_${letraNormalizada}`,
+                    `${avatarActual}_resultado_${letraNormalizada}`,
+                    `alfabeto_${avatarCapitalizado}_resultado_${letraNormalizada}`,
+                    `alfabeto_${avatarActual}_resultado_${letraNormalizada}`,
+                ];
+                
+                console.log(`📋 Patrones para "${letraNormalizada}":`, patronesNombre);
+                
+                let cargadaExitosamente = false;
+                
+                for (const patron of patronesNombre) {
+                    if (cargadaExitosamente) break;
+                    
+                    const rutasCompletas = [
+                        `../output/glb/${avatarCapitalizado}/alfabeto/${patron}.glb`,
+                        `../output/glb/${avatarActual}/alfabeto/${patron}.glb`
+                    ];
+                    
+                    for (const rutaCompleta of rutasCompletas) {
+                        if (cargadaExitosamente) break;
+                        
+                        try {
+                            const gltf = await new Promise((resolve, reject) => {
+                                const timeout = setTimeout(() => reject(new Error('Timeout')), 15000);
+                                loader.load(
+                                    rutaCompleta,
+                                    (result) => {
+                                        clearTimeout(timeout);
+                                        resolve(result);
+                                    },
+                                    (progress) => {
+                                        // Mostrar progreso de carga
+                                        if (progress.total > 0) {
+                                            const percent = Math.round((progress.loaded / progress.total) * 100);
+                                            console.log(`📥 Cargando ${letraNormalizada}: ${percent}%`);
+                                        }
+                                    },
+                                    (error) => {
+                                        clearTimeout(timeout);
+                                        reject(error);
+                                    }
+                                );
+                            });
+                            
+                            // CLAVE: Guardar SOLO el clip de animación, NO el modelo completo
+                            if (gltf.animations && gltf.animations.length > 0) {
+                                const clip = gltf.animations[0];
+                                // Corregir nombres de tracks
+                                if (avatarModel.userData.nodeNameMap) {
+                                    clip.tracks = clip.tracks.map(track => {
+                                        const trackNodeName = track.name.split('.')[0];
+                                        const mappedName = avatarModel.userData.nodeNameMap[trackNodeName];
+                                        if (mappedName) {
+                                            track.name = track.name.replace(trackNodeName, mappedName);
+                                        }
+                                        return track;
+                                    });
+                                }
+                                animationClipsCache[letraNormalizada] = clip;
+                                console.log(`✅ Precargada animación: ${letraNormalizada} (${clip.duration.toFixed(2)}s)`);
+                                cargadaExitosamente = true;
+                            } else {
+                                console.warn(`⚠️ No hay animación en: ${rutaCompleta}`);
+                            }
+                        } catch (error) {
+                            // Continuar con siguiente ruta
+                        }
+                    }
+                }
+            });
+            
+            await Promise.all(promesasCarga);
+            const cargadasExitosas = Object.keys(animationClipsCache).length;
+            console.log(`✅ ${cargadasExitosas}/${letrasUnicas.length} animaciones precargadas`);
+            //document.getElementById('status').textContent = `✅ ${cargadasExitosas} animaciones listas`;
+        }
+
+        async function deletrearPalabra(palabra) {
+            const letras = palabra.toLowerCase().split('');
+            
+            console.log(`🔡 Deletreando: "${palabra}" (${letras.length} letras)`);
+            
+            for (let i = 0; i < letras.length; i++) {
+                const letra = letras[i];
+                
+                //document.getElementById('status').textContent = `📝 Letra ${i + 1}/${letras.length}: ${letra.toUpperCase()}`;
+                
+                // Enviar mensaje a React Native
+                if (window.ReactNativeWebView) {
+                    window.ReactNativeWebView.postMessage(JSON.stringify({
+                        type: 'letterComplete',
+                        letterIndex: i,
+                        letter: letra
+                    }));
+                }
+                
+                await cargarYReproducirLetra(letra);
+                
+                console.log(`✅ Letra ${i + 1}/${letras.length} completada: ${letra}`);
+            }
+            
+            //document.getElementById('status').textContent = `✅ Palabra completada: ${palabra.toUpperCase()}`;
+            
+            // Notificar que terminó
+            if (window.ReactNativeWebView) {
+                window.ReactNativeWebView.postMessage(JSON.stringify({
+                    type: 'allComplete',
+                    word: palabra
+                }));
+            }
+        }
+
+        async function cargarYReproducirLetra(letra) {
+            const letraNormalizada = letra.toLowerCase().trim();
+            
+            // OPTIMIZACIÓN: Usar clip de animación del cache
+            if (animationClipsCache[letraNormalizada]) {
+                const clip = animationClipsCache[letraNormalizada];
+                console.log(`🎬 Reproduciendo letra ${letraNormalizada} desde caché`);
+                await reproducirAnimacion(clip, 2.0);
+                return Promise.resolve();
+            }
+            
+            // LAZY LOADING: Cargar bajo demanda si no está en caché
+            console.log(`📥 Cargando bajo demanda: ${letraNormalizada}`);
+            const loader = new GLTFLoader();
+            
+            const patronesNombre = [
+                `${avatarActual}_resultado_${letraNormalizada}`,
+                `alfabeto_${avatarActual}_resultado_${letraNormalizada}`,
+            ];
+            
+            const avatarCapitalizado = avatarActual.charAt(0).toUpperCase() + avatarActual.slice(1);
+            
+            for (const patron of patronesNombre) {
+                const rutasCompletas = [
+                    `../output/glb/${avatarCapitalizado}/alfabeto/${patron}.glb`,
+                    `../output/glb/${avatarActual}/alfabeto/${patron}.glb`
+                ];
+                
+                for (const rutaCompleta of rutasCompletas) {
+                    try {
+                        const gltf = await new Promise((resolve, reject) => {
+                            const timeout = setTimeout(() => reject(new Error('Timeout')), 15000);
+                            loader.load(
+                                rutaCompleta,
+                                (result) => {
+                                    clearTimeout(timeout);
+                                    resolve(result);
+                                },
+                                (progress) => {
+                                    if (progress.total > 0) {
+                                        const percent = Math.round((progress.loaded / progress.total) * 100);
+                                        console.log(`⏳ ${letraNormalizada.toUpperCase()}: ${percent}%`);
+                                    }
+                                },
+                                (error) => {
+                                    clearTimeout(timeout);
+                                    reject(error);
+                                }
+                            );
+                        });
+                        
+                        if (gltf.animations && gltf.animations.length > 0) {
+                            const clip = gltf.animations[0];
+                            // Corregir nombres de tracks
+                            if (avatarModel.userData.nodeNameMap) {
+                                clip.tracks = clip.tracks.map(track => {
+                                    const trackNodeName = track.name.split('.')[0];
+                                    const mappedName = avatarModel.userData.nodeNameMap[trackNodeName];
+                                    if (mappedName) {
+                                        track.name = track.name.replace(trackNodeName, mappedName);
+                                    }
+                                    return track;
+                                });
+                            }
+                            animationClipsCache[letraNormalizada] = clip;
+                            console.log(`✅ Cargada y en caché: ${letraNormalizada} (${clip.duration.toFixed(2)}s)`);
+                            await reproducirAnimacion(clip, 2.0);
+                            return Promise.resolve();
+                        }
+                    } catch (error) {
+                        // Continuar con siguiente ruta
+                    }
+                }
+            }
+            
+            // Si llegamos aquí, no se encontró la animación
+            console.error(`❌ No se pudo cargar animación: ${letraNormalizada}`);
+            return Promise.resolve();
+        }
+
+        async function reproducirAnimacion(clip, duracion) {
+            return new Promise((resolve) => {
+                // Detener animación actual
+                if (currentAction) {
+                    currentAction.stop();
+                }
+                
+                // Reproducir nueva animación
+                const action = mixer.clipAction(clip);
+                action.reset();
+                action.setLoop(THREE.LoopOnce);
+                action.clampWhenFinished = true;
+                
+                // Ajustar velocidad según duración deseada
+                if (duracion && duracion > 0) {
+                    const duracionOriginal = clip.duration;
+                    const timeScale = duracionOriginal / duracion;
+                    action.timeScale = timeScale;
+                }
+                
+                action.play();
+                currentAction = action;
+                
+                // Esperar a que termine
+                const checkFinished = () => {
+                    if (action.time >= clip.duration - 0.05 || !action.isRunning()) {
+                        resolve();
+                    } else {
+                        setTimeout(checkFinished, 50);
+                    }
+                };
+                
+                checkFinished();
+            });
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            const delta = clock.getDelta();
+            
+            if (mixer) {
+                mixer.update(delta);
+            }
+            
+            controls.update();
+            renderer.render(scene, camera);
+        }
+
+        // Escuchar mensajes desde React Native
+        window.addEventListener('message', async (event) => {
+            try {
+                const data = JSON.parse(event.data);
+                console.log('📩 Mensaje recibido desde React Native:', data);
+                
+                if (data.type === 'startNewWord' && data.word) {
+                    // Nueva palabra sin recargar avatar
+                    palabraActual = data.word;
+                    await precargarLetras(palabraActual);
+                    await deletrearPalabra(palabraActual);
+                } else if (data.type === 'replayWord' && data.word) {
+                    // Repetir palabra actual
+                    await deletrearPalabra(data.word);
+                }
+            } catch (e) {
+                console.error('❌ Error procesando mensaje:', e);
+            }
+        });
+
+        // Para React Native WebView
+        document.addEventListener('message', async (event) => {
+            try {
+                const data = JSON.parse(event.data);
+                console.log('📩 Mensaje recibido (document) desde React Native:', data);
+                
+                if (data.type === 'startNewWord' && data.word) {
+                    palabraActual = data.word;
+                    await precargarLetras(palabraActual);
+                    await deletrearPalabra(palabraActual);
+                } else if (data.type === 'replayWord' && data.word) {
+                    await deletrearPalabra(data.word);
+                }
+            } catch (e) {
+                console.error('❌ Error procesando mensaje:', e);
+            }
+        });
+
+        window.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>

@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visualizador Nancy con Animación REAL</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            overflow: hidden;
+        }
+        #container {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        #header {
+            background: rgba(0, 0, 0, 0.5);
+            padding: 20px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+        }
+        #header h1 {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+        #info {
+            font-size: 0.9em;
+            opacity: 0.8;
+        }
+        #canvas {
+            flex: 1;
+            display: block;
+        }
+        #controls {
+            background: rgba(0, 0, 0, 0.7);
+            padding: 20px;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+            backdrop-filter: blur(10px);
+        }
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+        button:active {
+            transform: translateY(0);
+        }
+        button.active {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+        #debug {
+            position: absolute;
+            top: 100px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 15px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            max-width: 300px;
+            backdrop-filter: blur(10px);
+        }
+        .stat {
+            margin: 5px 0;
+            display: flex;
+            justify-content: space-between;
+        }
+        .stat-label {
+            color: #4fc3f7;
+        }
+        .stat-value {
+            color: #fff;
+            font-weight: bold;
+        }
+        #loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        .spinner {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top: 4px solid #fff;
+            width: 60px;
+            height: 60px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        #loading-text {
+            margin-top: 20px;
+            font-size: 18px;
+        }
+        .error {
+            background: #f44336;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div id="loading">
+        <div class="spinner"></div>
+        <div id="loading-text">Cargando Nancy animada...</div>
+    </div>
+
+    <div id="container">
+        <div id="header">
+            <h1>🎭 Nancy V12 - Rotaciones Directas Funcionales</h1>
+            <div id="info">Brazos + Piernas + Dedos con curl | Amplificación 1.2x | yo.mp4</div>
+        </div>
+        
+        <canvas id="canvas"></canvas>
+        
+        <div id="controls">
+            <button id="play-btn">▶️ Play</button>
+            <button id="pause-btn">⏸️ Pause</button>
+            <button id="reset-btn">🔄 Reset</button>
+            <button id="slow-btn">🐌 Slow (0.5x)</button>
+            <button id="normal-btn" class="active">⚡ Normal (1x)</button>
+            <button id="fast-btn">🚀 Fast (2x)</button>
+            <button id="debug-btn">🔍 Debug Info</button>
+        </div>
+        
+        <div id="debug" style="display: none;">
+            <div style="font-weight: bold; margin-bottom: 10px; color: #4fc3f7;">DEBUG INFO</div>
+            <div class="stat">
+                <span class="stat-label">Animación:</span>
+                <span class="stat-value" id="anim-name">-</span>
+            </div>
+            <div class="stat">
+                <span class="stat-label">Tiempo:</span>
+                <span class="stat-value" id="anim-time">0.00s</span>
+            </div>
+            <div class="stat">
+                <span class="stat-label">Duración:</span>
+                <span class="stat-value" id="anim-duration">0.00s</span>
+            </div>
+            <div class="stat">
+                <span class="stat-label">Progreso:</span>
+                <span class="stat-value" id="anim-progress">0%</span>
+            </div>
+            <div class="stat">
+                <span class="stat-label">FPS:</span>
+                <span class="stat-value" id="fps">0</span>
+            </div>
+            <div class="stat">
+                <span class="stat-label">Tracks:</span>
+                <span class="stat-value" id="tracks">0</span>
+            </div>
+            <div class="stat">
+                <span class="stat-label">Huesos:</span>
+                <span class="stat-value" id="bones">0</span>
+            </div>
+            <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #444;">
+                <div class="stat-label">Huesos animados:</div>
+                <div id="bone-list" style="font-size: 10px; margin-top: 5px; max-height: 150px; overflow-y: auto;"></div>
+            </div>
+        </div>
+    </div>
+
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+            "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+        }
+    }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+        const loading = document.getElementById('loading');
+        const loadingText = document.getElementById('loading-text');
+        const canvas = document.getElementById('canvas');
+        const debugPanel = document.getElementById('debug');
+        
+        // Three.js setup
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x1e3c72);
+        scene.fog = new THREE.Fog(0x1e3c72, 5, 15);
+        
+        const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.set(0, 1.6, 3);
+        
+        const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        
+        // Luces mejoradas
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+        scene.add(ambientLight);
+        
+        const mainLight = new THREE.DirectionalLight(0xffffff, 1.0);
+        mainLight.position.set(5, 10, 7.5);
+        mainLight.castShadow = true;
+        mainLight.shadow.camera.near = 0.1;
+        mainLight.shadow.camera.far = 50;
+        mainLight.shadow.mapSize.width = 2048;
+        mainLight.shadow.mapSize.height = 2048;
+        scene.add(mainLight);
+        
+        const fillLight = new THREE.DirectionalLight(0x4fc3f7, 0.4);
+        fillLight.position.set(-5, 5, -5);
+        scene.add(fillLight);
+        
+        const backLight = new THREE.DirectionalLight(0xf5576c, 0.3);
+        backLight.position.set(0, 5, -5);
+        scene.add(backLight);
+        
+        // Controles
+        const controls = new OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+        controls.target.set(0, 1.6, 0);
+        controls.minDistance = 1;
+        controls.maxDistance = 10;
+        
+        // Suelo
+        const floorGeometry = new THREE.PlaneGeometry(20, 20);
+        const floorMaterial = new THREE.MeshStandardMaterial({ 
+            color: 0x2a5298,
+            roughness: 0.8,
+            metalness: 0.2
+        });
+        const floor = new THREE.Mesh(floorGeometry, floorMaterial);
+        floor.rotation.x = -Math.PI / 2;
+        floor.receiveShadow = true;
+        scene.add(floor);
+        
+        // Grid
+        const gridHelper = new THREE.GridHelper(20, 20, 0x4fc3f7, 0x334466);
+        gridHelper.material.opacity = 0.3;
+        gridHelper.material.transparent = true;
+        scene.add(gridHelper);
+
+        // Variables globales
+        let model = null;
+        let mixer = null;
+        let currentAction = null;
+        let animations = [];
+        let animationSpeed = 1.0;
+        const clock = new THREE.Clock();
+        let fps = 0;
+        let frameCount = 0;
+        let lastTime = performance.now();
+
+        // Cargar modelo
+        const loader = new GLTFLoader();
+        
+        loader.load(
+            'nancy_yo_v12_simple.glb',
+            (gltf) => {
+                model = gltf.scene;
+                animations = gltf.animations;
+                
+                console.log('✅ Modelo cargado');
+                console.log('Animaciones encontradas:', animations.length);
+                animations.forEach((anim, idx) => {
+                    console.log(`  ${idx + 1}. ${anim.name} - ${anim.duration.toFixed(2)}s - ${anim.tracks.length} tracks`);
+                });
+                
+                // Configurar modelo
+                model.traverse((child) => {
+                    if (child.isMesh) {
+                        child.castShadow = true;
+                        child.receiveShadow = true;
+                    }
+                });
+                
+                // Centrar modelo
+                const box = new THREE.Box3().setFromObject(model);
+                const center = box.getCenter(new THREE.Vector3());
+                const size = box.getSize(new THREE.Vector3());
+                
+                model.position.sub(center);
+                model.position.y += size.y / 2;
+                
+                scene.add(model);
+                
+                // Configurar animación
+                if (animations.length > 0) {
+                    mixer = new THREE.AnimationMixer(model);
+                    
+                    // Usar la animación (NancyYoMotionV9)
+                    const targetAnim = animations[0];
+                    currentAction = mixer.clipAction(targetAnim);
+                    currentAction.play();
+                    
+                    // Actualizar debug info
+                    document.getElementById('anim-name').textContent = targetAnim.name;
+                    document.getElementById('anim-duration').textContent = targetAnim.duration.toFixed(2) + 's';
+                    document.getElementById('tracks').textContent = targetAnim.tracks.length;
+                    
+                    // Contar huesos únicos
+                    const bones = new Set();
+                    const boneList = [];
+                    targetAnim.tracks.forEach(track => {
+                        const boneName = track.name.split('.')[0];
+                        bones.add(boneName);
+                        if (!boneList.includes(boneName)) {
+                            boneList.push(boneName);
+                        }
+                    });
+                    
+                    document.getElementById('bones').textContent = bones.size;
+                    
+                    const boneListEl = document.getElementById('bone-list');
+                    boneList.sort().forEach(bone => {
+                        const div = document.createElement('div');
+                        div.textContent = '• ' + bone;
+                        div.style.color = '#4fc3f7';
+                        boneListEl.appendChild(div);
+                    });
+                    
+                    console.log(`✅ Animación activa: ${targetAnim.name}`);
+                    console.log(`   Duración: ${targetAnim.duration.toFixed(2)}s`);
+                    console.log(`   Tracks: ${targetAnim.tracks.length}`);
+                    console.log(`   Huesos únicos: ${bones.size}`);
+                } else {
+                    console.error('❌ No se encontraron animaciones');
+                }
+                
+                loading.style.display = 'none';
+            },
+            (progress) => {
+                const percent = (progress.loaded / progress.total * 100).toFixed(0);
+                loadingText.textContent = `Cargando... ${percent}%`;
+            },
+            (error) => {
+                console.error('❌ Error al cargar:', error);
+                loading.innerHTML = `<div class="error">❌ Error al cargar el modelo: ${error.message}</div>`;
+            }
+        );
+
+        // Controles
+        document.getElementById('play-btn').addEventListener('click', () => {
+            if (currentAction) {
+                currentAction.paused = false;
+                currentAction.play();
+            }
+        });
+
+        document.getElementById('pause-btn').addEventListener('click', () => {
+            if (currentAction) {
+                currentAction.paused = true;
+            }
+        });
+
+        document.getElementById('reset-btn').addEventListener('click', () => {
+            if (currentAction) {
+                currentAction.reset();
+                currentAction.play();
+            }
+        });
+
+        document.getElementById('slow-btn').addEventListener('click', function() {
+            animationSpeed = 0.5;
+            updateSpeedButtons(this);
+        });
+
+        document.getElementById('normal-btn').addEventListener('click', function() {
+            animationSpeed = 1.0;
+            updateSpeedButtons(this);
+        });
+
+        document.getElementById('fast-btn').addEventListener('click', function() {
+            animationSpeed = 2.0;
+            updateSpeedButtons(this);
+        });
+
+        document.getElementById('debug-btn').addEventListener('click', () => {
+            debugPanel.style.display = debugPanel.style.display === 'none' ? 'block' : 'none';
+        });
+
+        function updateSpeedButtons(activeBtn) {
+            document.querySelectorAll('#controls button').forEach(btn => {
+                if (btn.id.includes('btn') && btn.id.includes('-btn')) {
+                    btn.classList.remove('active');
+                }
+            });
+            activeBtn.classList.add('active');
+        }
+
+        // Loop de animación
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            const delta = clock.getDelta();
+            
+            if (mixer) {
+                mixer.update(delta * animationSpeed);
+                
+                // Actualizar debug info
+                if (currentAction && debugPanel.style.display !== 'none') {
+                    const time = currentAction.time;
+                    const duration = currentAction.getClip().duration;
+                    const progress = (time / duration * 100).toFixed(1);
+                    
+                    document.getElementById('anim-time').textContent = time.toFixed(2) + 's';
+                    document.getElementById('anim-progress').textContent = progress + '%';
+                }
+            }
+            
+            // Calcular FPS
+            frameCount++;
+            const currentTime = performance.now();
+            if (currentTime >= lastTime + 1000) {
+                fps = Math.round(frameCount * 1000 / (currentTime - lastTime));
+                document.getElementById('fps').textContent = fps;
+                frameCount = 0;
+                lastTime = currentTime;
+            }
+            
+            controls.update();
+            renderer.render(scene, camera);
+        }
+        
+        animate();
+
+        // Resize handler
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+    </script>
+</body>
+</html>

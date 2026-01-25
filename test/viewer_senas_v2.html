@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visualizador de Señas V2 - LSV</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            overflow: hidden;
+        }
+
+        #container {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+        }
+
+        /* Panel de información */
+        #info-panel {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.85);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            min-width: 300px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            z-index: 100;
+        }
+
+        #info-panel h2 {
+            margin: 0 0 15px 0;
+            color: #4fc3f7;
+            font-size: 20px;
+            border-bottom: 2px solid #4fc3f7;
+            padding-bottom: 10px;
+        }
+
+        .info-item {
+            margin: 10px 0;
+            padding: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .info-label {
+            color: #aaa;
+            font-size: 13px;
+        }
+
+        .info-value {
+            color: #4fc3f7;
+            font-weight: bold;
+            font-size: 15px;
+        }
+
+        /* Controles de reproducción */
+        #controls {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.85);
+            padding: 20px 30px;
+            border-radius: 50px;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            z-index: 100;
+        }
+
+        .control-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            color: white;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 20px;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .control-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+
+        .control-btn:active {
+            transform: scale(0.95);
+        }
+
+        #play-pause-btn {
+            width: 60px;
+            height: 60px;
+            font-size: 24px;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            box-shadow: 0 4px 15px rgba(245, 87, 108, 0.4);
+        }
+
+        /* Timeline */
+        #timeline-container {
+            position: absolute;
+            bottom: 120px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80%;
+            max-width: 800px;
+            background: rgba(0, 0, 0, 0.85);
+            padding: 15px 20px;
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            z-index: 100;
+        }
+
+        #timeline {
+            width: 100%;
+            height: 6px;
+            -webkit-appearance: none;
+            appearance: none;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 3px;
+            outline: none;
+            cursor: pointer;
+        }
+
+        #timeline::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            cursor: pointer;
+            box-shadow: 0 2px 10px rgba(245, 87, 108, 0.5);
+        }
+
+        #timeline::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 2px 10px rgba(245, 87, 108, 0.5);
+        }
+
+        .time-display {
+            display: flex;
+            justify-content: space-between;
+            color: white;
+            font-size: 12px;
+            margin-top: 8px;
+        }
+
+        /* Selector de avatar y seña */
+        #file-selector {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.85);
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            z-index: 100;
+            min-width: 250px;
+        }
+
+        #file-selector select {
+            width: 100%;
+            transition: all 0.3s ease;
+        }
+
+        #file-selector select:hover {
+            transform: scale(1.02);
+            box-shadow: 0 4px 15px rgba(79, 195, 247, 0.4);
+        }
+
+        #file-selector select:focus {
+            transform: scale(1.02);
+            box-shadow: 0 4px 20px rgba(79, 195, 247, 0.6);
+        }
+
+        #avatar-select {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: 2px solid #4fc3f7;
+            padding: 10px 15px;
+            border-radius: 10px;
+            font-size: 14px;
+            cursor: pointer;
+            outline: none;
+        }
+
+        #sign-select {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: 2px solid #f093fb;
+            padding: 10px 15px;
+            border-radius: 10px;
+            font-size: 14px;
+            cursor: pointer;
+            outline: none;
+        }
+
+        #file-selector select option {
+            background: #1a1a2e;
+            color: white;
+            padding: 10px;
+        }
+
+        /* Control de velocidad */
+        #speed-control {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: white;
+        }
+
+        #speed-slider {
+            width: 100px;
+            height: 4px;
+            -webkit-appearance: none;
+            appearance: none;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 2px;
+            outline: none;
+        }
+
+        #speed-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: #4fc3f7;
+            cursor: pointer;
+        }
+
+        #speed-slider::-moz-range-thumb {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: #4fc3f7;
+            cursor: pointer;
+            border: none;
+        }
+
+        #speed-value {
+            min-width: 40px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        /* Loading */
+        #loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            color: white;
+            z-index: 200;
+        }
+
+        .spinner {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top: 4px solid white;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            font-size: 18px;
+            font-weight: 500;
+        }
+
+        /* Status indicator */
+        .status-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .status-playing {
+            background: #4caf50;
+            box-shadow: 0 0 10px #4caf50;
+            animation: pulse 1s infinite;
+        }
+
+        .status-paused {
+            background: #ff9800;
+        }
+
+        .status-stopped {
+            background: #f44336;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+    </style>
+</head>
+<body>
+    <div id="container"></div>
+
+    <!-- Loading -->
+    <div id="loading">
+        <div class="spinner"></div>
+        <div class="loading-text">Cargando modelo 3D...</div>
+    </div>
+
+    <!-- Panel de información -->
+    <div id="info-panel">
+        <h2>🤟 Visualizador LSV</h2>
+        <div class="info-item">
+            <span class="info-label">Estado:</span>
+            <span class="info-value">
+                <span class="status-indicator status-stopped" id="status-indicator"></span>
+                <span id="status-text">Detenido</span>
+            </span>
+        </div>
+        <div class="info-item">
+            <span class="info-label">Seña:</span>
+            <span class="info-value" id="sign-name">-</span>
+        </div>
+        <div class="info-item">
+            <span class="info-label">Frame actual:</span>
+            <span class="info-value">
+                <span id="current-frame">0</span> / <span id="total-frames">0</span>
+            </span>
+        </div>
+        <div class="info-item">
+            <span class="info-label">Duración:</span>
+            <span class="info-value" id="duration">0.0s</span>
+        </div>
+        <div class="info-item">
+            <span class="info-label">Huesos:</span>
+            <span class="info-value" id="bone-count">0</span>
+        </div>
+    </div>
+
+    <!-- Selector de avatar y seña -->
+    <div id="file-selector">
+        <div style="margin-bottom: 10px;">
+            <label style="color: white; display: block; margin-bottom: 5px; font-size: 13px; font-weight: bold;">👤 Avatar:</label>
+            <select id="avatar-select" style="background: rgba(255, 255, 255, 0.1); color: white; border: 2px solid #4fc3f7; padding: 10px 15px; border-radius: 10px; font-size: 14px; cursor: pointer; outline: none; min-width: 200px;">
+                <option value="Remy">Remy</option>
+                <option value="JH">JH</option>
+            </select>
+        </div>
+        <div>
+            <label style="color: white; display: block; margin-bottom: 5px; font-size: 13px; font-weight: bold;">🤟 Seña:</label>
+            <select id="sign-select" style="background: rgba(255, 255, 255, 0.1); color: white; border: 2px solid #f093fb; padding: 10px 15px; border-radius: 10px; font-size: 14px; cursor: pointer; outline: none; min-width: 200px;">
+                <option value="b_deepmotion">Letra B</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Timeline -->
+    <div id="timeline-container">
+        <input type="range" id="timeline" min="0" max="100" value="0" step="0.1">
+        <div class="time-display">
+            <span id="current-time">0:00</span>
+            <span id="total-time">0:00</span>
+        </div>
+    </div>
+
+    <!-- Controles -->
+    <div id="controls">
+        <button class="control-btn" id="restart-btn" title="Reiniciar">⏮</button>
+        <button class="control-btn" id="play-pause-btn" title="Reproducir/Pausar">▶️</button>
+        <button class="control-btn" id="stop-btn" title="Detener">⏹</button>
+        <button class="control-btn" id="loop-btn" title="Loop">🔄</button>
+        <div id="speed-control">
+            <span>⚡</span>
+            <input type="range" id="speed-slider" min="0.25" max="2" value="1" step="0.25">
+            <span id="speed-value">1.0x</span>
+        </div>
+    </div>
+
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+            "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+        }
+    }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+        import { FBXLoader } from 'three/addons/loaders/FBXLoader.js';
+
+        let scene, camera, renderer, controls;
+        let mixer, currentAction, clock;
+        let currentModel = null;
+        let isPlaying = false;
+        let isLooping = true;
+        let animationSpeed = 1.0;
+
+        const loadingEl = document.getElementById('loading');
+        const statusIndicator = document.getElementById('status-indicator');
+        const statusText = document.getElementById('status-text');
+        const signName = document.getElementById('sign-name');
+        const currentFrameEl = document.getElementById('current-frame');
+        const totalFramesEl = document.getElementById('total-frames');
+        const durationEl = document.getElementById('duration');
+        const boneCountEl = document.getElementById('bone-count');
+        const currentTimeEl = document.getElementById('current-time');
+        const totalTimeEl = document.getElementById('total-time');
+        const timeline = document.getElementById('timeline');
+        const playPauseBtn = document.getElementById('play-pause-btn');
+        const stopBtn = document.getElementById('stop-btn');
+        const restartBtn = document.getElementById('restart-btn');
+        const loopBtn = document.getElementById('loop-btn');
+        const speedSlider = document.getElementById('speed-slider');
+        const speedValue = document.getElementById('speed-value');
+        const avatarSelect = document.getElementById('avatar-select');
+        const signSelect = document.getElementById('sign-select');
+
+        // Función para construir la ruta del FBX
+        function buildFBXPath() {
+            const avatar = avatarSelect.value;
+            const sign = signSelect.value;
+            return `output/${avatar}_${sign}.fbx`;
+        }
+
+        function init() {
+            // Escena
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0xffffff); // Fondo blanco
+            // scene.fog = new THREE.Fog(0xffffff, 15, 50); // Sin niebla para fondo blanco
+
+            // Cámara
+            camera = new THREE.PerspectiveCamera(
+                50,
+                window.innerWidth / window.innerHeight,
+                0.1,
+                1000
+            );
+            camera.position.set(0, 1, 3.5);
+
+            // Renderer
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            document.getElementById('container').appendChild(renderer.domElement);
+
+            // Controles
+            controls = new OrbitControls(camera, renderer.domElement);
+            controls.target.set(0, 1, 0);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.05;
+            controls.minDistance = 1.5;
+            controls.maxDistance = 10;
+
+            // Luces optimizadas para mejor contraste
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.4); // Reducida para más contraste
+            scene.add(ambientLight);
+
+            // Luz principal frontal más intensa
+            const mainLight = new THREE.DirectionalLight(0xffffff, 2.0);
+            mainLight.position.set(2, 5, 3);
+            mainLight.castShadow = true;
+            mainLight.shadow.mapSize.width = 2048;
+            mainLight.shadow.mapSize.height = 2048;
+            mainLight.shadow.camera.near = 0.5;
+            mainLight.shadow.camera.far = 50;
+            scene.add(mainLight);
+
+            // Luz de relleno desde atrás más suave
+            const backLight = new THREE.DirectionalLight(0x6699ff, 0.6);
+            backLight.position.set(0, 3, -5);
+            scene.add(backLight);
+
+            // Luz de relleno lateral izquierda (azul)
+            const leftLight = new THREE.DirectionalLight(0x4488ff, 0.7);
+            leftLight.position.set(-5, 2, 2);
+            scene.add(leftLight);
+
+            // Luz de relleno lateral derecha (cálida)
+            const rightLight = new THREE.DirectionalLight(0xffaa66, 0.8);
+            rightLight.position.set(5, 2, 2);
+            scene.add(rightLight);
+
+            // Grid (ajustado para fondo blanco)
+            const gridHelper = new THREE.GridHelper(10, 10, 0xcccccc, 0xeeeeee);
+            scene.add(gridHelper);
+
+            // Ejes
+            const axesHelper = new THREE.AxesHelper(2);
+            scene.add(axesHelper);
+
+            // Clock para animación
+            clock = new THREE.Clock();
+
+            // Event listeners
+            window.addEventListener('resize', onWindowResize);
+            playPauseBtn.addEventListener('click', togglePlayPause);
+            stopBtn.addEventListener('click', stopAnimation);
+            restartBtn.addEventListener('click', restartAnimation);
+            loopBtn.addEventListener('click', toggleLoop);
+            timeline.addEventListener('input', onTimelineChange);
+            speedSlider.addEventListener('input', onSpeedChange);
+            avatarSelect.addEventListener('change', () => loadFBX(buildFBXPath()));
+            signSelect.addEventListener('change', () => loadFBX(buildFBXPath()));
+
+            // Cargar FBX inicial
+            loadFBX(buildFBXPath());
+
+            animate();
+        }
+
+        function loadFBX(path) {
+            console.log('Cargando FBX:', path);
+            loadingEl.style.display = 'block';
+            updateStatus('stopped');
+
+            // Limpiar modelo anterior
+            if (currentModel) {
+                scene.remove(currentModel);
+                currentModel = null;
+            }
+
+            if (mixer) {
+                mixer.stopAllAction();
+                mixer = null;
+            }
+
+            currentAction = null;
+            isPlaying = false;
+            playPauseBtn.textContent = '▶️';
+
+            const loader = new FBXLoader();
+            
+            loader.load(
+                path,
+                (fbx) => {
+                    console.log('FBX cargado exitosamente');
+                    loadingEl.style.display = 'none';
+                    currentModel = fbx;
+                    
+                    // Ajustar escala del modelo
+                    fbx.scale.set(0.01, 0.01, 0.01);
+                    
+                    // Calcular bounding box y centrar
+                    fbx.updateMatrixWorld(true);
+                    const box = new THREE.Box3().setFromObject(fbx);
+                    const center = box.getCenter(new THREE.Vector3());
+                    const size = box.getSize(new THREE.Vector3());
+                    
+                    // Centrar el modelo
+                    fbx.position.x = -center.x;
+                    fbx.position.z = -center.z;
+                    fbx.position.y = -box.min.y;
+                    
+                    // Recalcular después de mover
+                    fbx.updateMatrixWorld(true);
+                    const newBox = new THREE.Box3().setFromObject(fbx);
+                    const newCenter = newBox.getCenter(new THREE.Vector3());
+                    const newSize = newBox.getSize(new THREE.Vector3());
+                    
+                    console.log('Tamaño del modelo:', newSize);
+                    console.log('Centro del modelo:', newCenter);
+                    
+                    // Ajustar cámara automáticamente
+                    const maxDim = Math.max(newSize.x, newSize.y, newSize.z);
+                    const fov = camera.fov * (Math.PI / 180);
+                    let cameraDistance = maxDim / (2 * Math.tan(fov / 2));
+                    cameraDistance *= 1.5;
+                    
+                    camera.position.set(0, newCenter.y, cameraDistance);
+                    camera.lookAt(newCenter);
+                    controls.target.copy(newCenter);
+                    controls.update();
+                    
+                    console.log('Distancia de cámara:', cameraDistance);
+                    
+                    // Configurar materiales y sombras con colores más intensos
+                    fbx.traverse((child) => {
+                        if (child.isMesh) {
+                            child.castShadow = true;
+                            child.receiveShadow = true;
+                            
+                            // Crear material con colores más vibrantes y definidos
+                            if (!child.material) {
+                                child.material = new THREE.MeshStandardMaterial({
+                                    color: 0x8b6f47,  // Color marrón más oscuro y saturado
+                                    roughness: 0.5,   // Menos rugosidad para más brillo
+                                    metalness: 0.2,   // Un poco más metálico
+                                    emissive: 0x2a1810, // Color emisivo sutil para mayor definición
+                                    emissiveIntensity: 0.3
+                                });
+                            } else {
+                                // Si tiene material, mejorar el contraste
+                                if (child.material.map === null) {
+                                    child.material.color = new THREE.Color(0x8b6f47);
+                                }
+                                child.material.roughness = 0.5;
+                                child.material.metalness = 0.2;
+                                child.material.emissive = new THREE.Color(0x2a1810);
+                                child.material.emissiveIntensity = 0.3;
+                                child.material.needsUpdate = true;
+                            }
+                        }
+                    });
+
+                    scene.add(fbx);
+
+                    // Contar huesos
+                    let boneCount = 0;
+                    fbx.traverse((child) => {
+                        if (child.isBone) boneCount++;
+                    });
+                    boneCountEl.textContent = boneCount;
+                    console.log('Huesos encontrados:', boneCount);
+
+                    // Nombre de la seña - Mostrar avatar y seña
+                    const avatar = avatarSelect.options[avatarSelect.selectedIndex].text;
+                    const sign = signSelect.options[signSelect.selectedIndex].text;
+                    signName.textContent = `${avatar} - ${sign}`;
+
+                    // Detectar animaciones
+                    const animations = fbx.animations;
+                    console.log('Animaciones encontradas:', animations.length);
+                    
+                    if (animations.length > 0) {
+                        mixer = new THREE.AnimationMixer(fbx);
+                        const clip = animations[0];
+                        currentAction = mixer.clipAction(clip);
+                        currentAction.timeScale = animationSpeed;
+                        
+                        currentAction.setLoop(isLooping ? THREE.LoopRepeat : THREE.LoopOnce);
+                        currentAction.clampWhenFinished = true;
+                        
+                        const fps = 30;
+                        const totalFrames = Math.round(clip.duration * fps);
+                        totalFramesEl.textContent = totalFrames;
+                        
+                        const minutes = Math.floor(clip.duration / 60);
+                        const seconds = (clip.duration % 60).toFixed(1);
+                        durationEl.textContent = `${minutes}:${seconds.padStart(4, '0')}s`;
+                        totalTimeEl.textContent = `${minutes}:${seconds.padStart(4, '0')}`;
+                        
+                        timeline.max = clip.duration;
+                        
+                        console.log('Animación configurada - Duración:', clip.duration, 'Frames:', totalFrames);
+                    } else {
+                        console.warn('No se encontraron animaciones en el FBX');
+                        totalFramesEl.textContent = '0';
+                        durationEl.textContent = '0.0s';
+                    }
+                },
+                (xhr) => {
+                    const percent = (xhr.loaded / xhr.total) * 100;
+                    console.log(`Cargando: ${percent.toFixed(2)}%`);
+                },
+                (error) => {
+                    console.error('Error cargando FBX:', error);
+                    loadingEl.style.display = 'none';
+                    
+                    // Mostrar mensaje de error detallado
+                    const errorMsg = document.createElement('div');
+                    errorMsg.style.position = 'fixed';
+                    errorMsg.style.top = '50%';
+                    errorMsg.style.left = '50%';
+                    errorMsg.style.transform = 'translate(-50%, -50%)';
+                    errorMsg.style.background = 'rgba(220, 53, 69, 0.95)';
+                    errorMsg.style.color = 'white';
+                    errorMsg.style.padding = '30px';
+                    errorMsg.style.borderRadius = '15px';
+                    errorMsg.style.boxShadow = '0 8px 32px rgba(0, 0, 0, 0.5)';
+                    errorMsg.style.zIndex = '1000';
+                    errorMsg.style.maxWidth = '500px';
+                    errorMsg.style.textAlign = 'center';
+                    
+                    errorMsg.innerHTML = `
+                        <h3 style="margin-bottom: 15px; font-size: 24px;">❌ Error de Carga</h3>
+                        <p style="margin-bottom: 10px; font-size: 16px;">No se pudo cargar el archivo FBX:</p>
+                        <p style="font-weight: bold; color: #ffeb3b; margin-bottom: 20px;">${path.split('/').pop()}</p>
+                        <p style="font-size: 14px; margin-bottom: 15px;">Posibles causas:</p>
+                        <ul style="text-align: left; margin-bottom: 20px; font-size: 13px;">
+                            <li>El archivo no existe en la ruta especificada</li>
+                            <li>El servidor web no está corriendo (ejecuta: python -m http.server 8000)</li>
+                            <li>El archivo FBX está corrupto o mal formado</li>
+                            <li>Problemas de permisos de acceso al archivo</li>
+                        </ul>
+                        <button onclick="this.parentElement.remove()" 
+                                style="background: white; color: #dc3545; border: none; padding: 10px 30px; 
+                                       border-radius: 25px; cursor: pointer; font-weight: bold; font-size: 14px;">
+                            Cerrar
+                        </button>
+                    `;
+                    
+                    document.body.appendChild(errorMsg);
+                    
+                    // Auto-cerrar después de 10 segundos
+                    setTimeout(() => {
+                        if (errorMsg.parentElement) {
+                            errorMsg.remove();
+                        }
+                    }, 10000);
+                }
+            );
+        }
+
+        function togglePlayPause() {
+            if (!currentAction) return;
+
+            if (isPlaying) {
+                currentAction.paused = true;
+                isPlaying = false;
+                playPauseBtn.textContent = '▶️';
+                updateStatus('paused');
+            } else {
+                currentAction.paused = false;
+                currentAction.play();
+                isPlaying = true;
+                playPauseBtn.textContent = '⏸';
+                updateStatus('playing');
+            }
+        }
+
+        function stopAnimation() {
+            if (!currentAction) return;
+
+            currentAction.stop();
+            isPlaying = false;
+            playPauseBtn.textContent = '▶️';
+            updateStatus('stopped');
+            timeline.value = 0;
+            currentTimeEl.textContent = '0:00';
+            currentFrameEl.textContent = '0';
+        }
+
+        function restartAnimation() {
+            if (!currentAction) return;
+
+            currentAction.reset();
+            currentAction.play();
+            isPlaying = true;
+            playPauseBtn.textContent = '⏸';
+            updateStatus('playing');
+        }
+
+        function toggleLoop() {
+            isLooping = !isLooping;
+            if (currentAction) {
+                currentAction.setLoop(isLooping ? THREE.LoopRepeat : THREE.LoopOnce);
+            }
+            loopBtn.style.opacity = isLooping ? '1' : '0.5';
+        }
+
+        function onTimelineChange(event) {
+            if (!currentAction) return;
+
+            const time = parseFloat(event.target.value);
+            currentAction.time = time;
+            mixer.update(0);
+        }
+
+        function onSpeedChange(event) {
+            animationSpeed = parseFloat(event.target.value);
+            speedValue.textContent = `${animationSpeed.toFixed(2)}x`;
+            
+            if (currentAction) {
+                currentAction.timeScale = animationSpeed;
+            }
+        }
+
+        function updateStatus(status) {
+            statusIndicator.className = 'status-indicator status-' + status;
+            const statusTexts = {
+                'playing': 'Reproduciendo',
+                'paused': 'Pausado',
+                'stopped': 'Detenido'
+            };
+            statusText.textContent = statusTexts[status] || 'Detenido';
+        }
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+
+            const delta = clock.getDelta();
+
+            if (mixer && isPlaying) {
+                mixer.update(delta);
+
+                if (currentAction) {
+                    const time = currentAction.time;
+                    const duration = currentAction.getClip().duration;
+                    
+                    timeline.value = time;
+                    
+                    const minutes = Math.floor(time / 60);
+                    const seconds = (time % 60).toFixed(1);
+                    currentTimeEl.textContent = `${minutes}:${seconds.padStart(4, '0')}`;
+                    
+                    const fps = 30;
+                    const currentFrame = Math.round(time * fps);
+                    currentFrameEl.textContent = currentFrame;
+                }
+            }
+
+            controls.update();
+            renderer.render(scene, camera);
+        }
+
+        init();
+    </script>
+</body>
+</html>

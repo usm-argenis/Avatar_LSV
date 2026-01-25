@@ -1,0 +1,54 @@
+{
+  "C:/Users/andre/OneDrive/Documentos/tesis/test/output/glb/Duvall/alfabeto/Duvall_resultado_r.glb": {
+    "alcance": {
+      "min": 24,
+      "max": 42,
+      "retencion": 13
+    },
+    
+    
+    
+    
+    
+    
+    
+    "RightHandIndex1": {
+      "w": 0.962,
+      "x": 0.213,
+      "y": 0.046,
+      "z": 0.166
+    },"RightHandIndex2": {
+      "w": 0.977,
+      "x": -0.184,
+      "y": 0.082,
+      "z": 0.066
+    },"RightHandIndex3": {
+      "w": 0.994,
+      "x": -0.088,
+      "y": 0.038,
+      "z": -0.055
+    },
+    
+    
+    "RightHandMiddle1": {
+      "w": 0.997,
+      "x": 0.052,
+      "y": -0.024,
+      "z": -0.058
+    },
+    "RightHandMiddle2": {
+      "w": 0.995,
+      "x": -0.080,
+      "y": 0.000804,
+      "z": 0.062
+    },
+    "RightHandMiddle3": {
+      "w": 0.985,
+      "x": -0.171,
+      "y": 0.001,
+      "z": -0.036
+    }
+    
+
+  }
+}

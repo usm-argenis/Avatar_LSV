@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diagnóstico de Avatares</title>
+    <style>
+        body {
+            font-family: 'Courier New', monospace;
+            background: #1a1a2e;
+            color: #00ff00;
+            padding: 20px;
+        }
+        .test-section {
+            background: #2d2d44;
+            padding: 20px;
+            margin: 20px 0;
+            border: 2px solid #667eea;
+            border-radius: 10px;
+        }
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 5px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background: #764ba2;
+        }
+        .result {
+            margin-top: 10px;
+            padding: 10px;
+            background: #000;
+            border-left: 4px solid #00ff00;
+        }
+        .error {
+            border-left-color: #ff0000;
+            color: #ff6b6b;
+        }
+        .success {
+            border-left-color: #00ff00;
+            color: #51cf66;
+        }
+        h2 {
+            color: #f093fb;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 Diagnóstico Sistema de Avatares LSV</h1>
+    
+    <div class="test-section">
+        <h2>1. Verificación de Estructura de Archivos</h2>
+        <button onclick="verificarEstructura()">Verificar Estructura</button>
+        <div id="estructura-result" class="result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>2. Prueba de Carga de Avatares</h2>
+        <button onclick="probarAvatar('Nancy')">Probar Nancy</button>
+        <button onclick="probarAvatar('Duvall')">Probar Duvall</button>
+        <button onclick="probarAvatar('Luis')">Probar Luis</button>
+        <button onclick="probarAvatar('Nina')">Probar Nina</button>
+        <div id="avatar-result" class="result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>3. Prueba de Animaciones</h2>
+        <button onclick="probarAnimacion('hola', 'Mujer')">Hola (Mujer)</button>
+        <button onclick="probarAnimacion('hola', 'Hombre')">Hola (Hombre)</button>
+        <button onclick="probarAnimacion('yo', 'Mujer')">Yo (Mujer)</button>
+        <button onclick="probarAnimacion('yo', 'Hombre')">Yo (Hombre)</button>
+        <div id="animacion-result" class="result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>4. Prueba de Cambio de Avatar</h2>
+        <p>Secuencia: Nancy → Hola → Duvall → Hola</p>
+        <button onclick="pruebaCompleta()">Ejecutar Prueba Completa</button>
+        <div id="completa-result" class="result"></div>
+    </div>
+
+    <script>
+        const log = (elementId, message, type = 'success') => {
+            const el = document.getElementById(elementId);
+            const className = type === 'error' ? 'error' : 'success';
+            el.innerHTML += `<div class="${className}">${new Date().toLocaleTimeString()} - ${message}</div>`;
+        };
+
+        async function verificarEstructura() {
+            const result = document.getElementById('estructura-result');
+            result.innerHTML = '<div>Verificando...</div>';
+            
+            const archivos = [
+                'output/glb/Hombre/Duvall.glb',
+                'output/glb/Hombre/Luis.glb',
+                'output/glb/Mujer/Nancy.glb',
+                'output/glb/Mujer/Nina.glb',
+                'output/glb/Hombre/saludos/hola.glb',
+                'output/glb/Mujer/saludos/hola.glb',
+                'output/glb/Hombre/pronombres/yo.glb',
+                'output/glb/Mujer/pronombres/yo.glb'
+            ];
+            
+            result.innerHTML = '';
+            for (const archivo of archivos) {
+                try {
+                    const response = await fetch(archivo, { method: 'HEAD' });
+                    if (response.ok) {
+                        log('estructura-result', `✅ ${archivo}`, 'success');
+                    } else {
+                        log('estructura-result', `❌ ${archivo} (${response.status})`, 'error');
+                    }
+                } catch (error) {
+                    log('estructura-result', `❌ ${archivo} (Error: ${error.message})`, 'error');
+                }
+            }
+        }
+
+        async function probarAvatar(nombre) {
+            const result = document.getElementById('avatar-result');
+            result.innerHTML = `<div>Probando ${nombre}...</div>`;
+            
+            const genero = (nombre === 'Nancy' || nombre === 'Nina') ? 'Mujer' : 'Hombre';
+            const url = `output/glb/${genero}/${nombre}.glb`;
+            
+            try {
+                const response = await fetch(url);
+                if (response.ok) {
+                    const blob = await response.blob();
+                    const size = (blob.size / 1024).toFixed(2);
+                    log('avatar-result', `✅ ${nombre} cargado (${size} KB) desde ${url}`, 'success');
+                } else {
+                    log('avatar-result', `❌ ${nombre} falló (${response.status}) - URL: ${url}`, 'error');
+                }
+            } catch (error) {
+                log('avatar-result', `❌ ${nombre} error: ${error.message}`, 'error');
+            }
+        }
+
+        async function probarAnimacion(palabra, genero) {
+            const result = document.getElementById('animacion-result');
+            result.innerHTML = `<div>Probando ${palabra} (${genero})...</div>`;
+            
+            const categorias = {
+                'hola': 'saludos',
+                'yo': 'pronombres'
+            };
+            
+            const url = `output/glb/${genero}/${categorias[palabra]}/${palabra}.glb`;
+            
+            try {
+                const response = await fetch(url);
+                if (response.ok) {
+                    const blob = await response.blob();
+                    const size = (blob.size / 1024).toFixed(2);
+                    log('animacion-result', `✅ ${palabra} (${genero}) cargado (${size} KB)`, 'success');
+                } else {
+                    log('animacion-result', `❌ ${palabra} (${genero}) falló (${response.status}) - URL: ${url}`, 'error');
+                }
+            } catch (error) {
+                log('animacion-result', `❌ ${palabra} (${genero}) error: ${error.message}`, 'error');
+            }
+        }
+
+        async function pruebaCompleta() {
+            const result = document.getElementById('completa-result');
+            result.innerHTML = '<div>Iniciando prueba completa...</div>';
+            
+            log('completa-result', '1. Cargando Nancy...', 'success');
+            await probarAvatar('Nancy');
+            await new Promise(r => setTimeout(r, 500));
+            
+            log('completa-result', '2. Animando "hola" con Nancy...', 'success');
+            await probarAnimacion('hola', 'Mujer');
+            await new Promise(r => setTimeout(r, 500));
+            
+            log('completa-result', '3. Cambiando a Duvall...', 'success');
+            await probarAvatar('Duvall');
+            await new Promise(r => setTimeout(r, 500));
+            
+            log('completa-result', '4. Animando "hola" con Duvall...', 'success');
+            await probarAnimacion('hola', 'Hombre');
+            
+            log('completa-result', '✅ Prueba completa finalizada', 'success');
+        }
+    </script>
+</body>
+</html>

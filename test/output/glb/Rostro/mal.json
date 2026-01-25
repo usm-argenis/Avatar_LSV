@@ -1,0 +1,956 @@
+{
+  "name": "mal",
+  "fps": 30,
+  "duration": 2.433333333333333,
+  "frames": [
+    {
+      "frame": 0,
+      "time": 0,
+      "shape_keys": {
+        "eyeWideLeft": 0,
+        "eyeWideRight": 0,
+        "browInnerUp": 0,
+        "browOuterUpLeft": 0,
+        "browOuterUpRight": 0,
+        "mouthOpen": 0,
+        "jawOpen": 0
+      }
+    },
+    {
+      "frame": 1,
+      "time": 0.03333333333333333,
+      "shape_keys": {
+        "eyeWideLeft": 0.05,
+        "eyeWideRight": 0.05,
+        "browInnerUp": 0.04,
+        "browOuterUpLeft": 0.04,
+        "browOuterUpRight": 0.04,
+        "mouthOpen": 0.03,
+        "jawOpen": 0.03
+      }
+    },
+    {
+      "frame": 2,
+      "time": 0.06666666666666667,
+      "shape_keys": {
+        "eyeWideLeft": 0.1,
+        "eyeWideRight": 0.1,
+        "browInnerUp": 0.08,
+        "browOuterUpLeft": 0.08,
+        "browOuterUpRight": 0.08,
+        "mouthOpen": 0.06,
+        "jawOpen": 0.07
+      }
+    },
+    {
+      "frame": 3,
+      "time": 0.1,
+      "shape_keys": {
+        "eyeWideLeft": 0.15,
+        "eyeWideRight": 0.15,
+        "browInnerUp": 0.12,
+        "browOuterUpLeft": 0.12,
+        "browOuterUpRight": 0.12,
+        "mouthOpen": 0.09,
+        "jawOpen": 0.11
+      }
+    },
+    {
+      "frame": 4,
+      "time": 0.13333333333333333,
+      "shape_keys": {
+        "eyeWideLeft": 0.2,
+        "eyeWideRight": 0.2,
+        "browInnerUp": 0.16,
+        "browOuterUpLeft": 0.16,
+        "browOuterUpRight": 0.16,
+        "mouthOpen": 0.12,
+        "jawOpen": 0.14
+      }
+    },
+    {
+      "frame": 5,
+      "time": 0.16666666666666666,
+      "shape_keys": {
+        "eyeWideLeft": 0.25,
+        "eyeWideRight": 0.25,
+        "browInnerUp": 0.2,
+        "browOuterUpLeft": 0.2,
+        "browOuterUpRight": 0.2,
+        "mouthOpen": 0.15,
+        "jawOpen": 0.18
+      }
+    },
+    {
+      "frame": 6,
+      "time": 0.2,
+      "shape_keys": {
+        "eyeWideLeft": 0.3,
+        "eyeWideRight": 0.3,
+        "browInnerUp": 0.24,
+        "browOuterUpLeft": 0.24,
+        "browOuterUpRight": 0.24,
+        "mouthOpen": 0.18,
+        "jawOpen": 0.21
+      }
+    },
+    {
+      "frame": 7,
+      "time": 0.23333333333333334,
+      "shape_keys": {
+        "eyeWideLeft": 0.35,
+        "eyeWideRight": 0.35,
+        "browInnerUp": 0.28,
+        "browOuterUpLeft": 0.28,
+        "browOuterUpRight": 0.28,
+        "mouthOpen": 0.21,
+        "jawOpen": 0.24
+      }
+    },
+    {
+      "frame": 8,
+      "time": 0.26666666666666666,
+      "shape_keys": {
+        "eyeWideLeft": 0.4,
+        "eyeWideRight": 0.4,
+        "browInnerUp": 0.32,
+        "browOuterUpLeft": 0.32,
+        "browOuterUpRight": 0.32,
+        "mouthOpen": 0.24,
+        "jawOpen": 0.28
+      }
+    },
+    {
+      "frame": 9,
+      "time": 0.3,
+      "shape_keys": {
+        "eyeWideLeft": 0.45,
+        "eyeWideRight": 0.45,
+        "browInnerUp": 0.36,
+        "browOuterUpLeft": 0.36,
+        "browOuterUpRight": 0.36,
+        "mouthOpen": 0.27,
+        "jawOpen": 0.32
+      }
+    },
+    {
+      "frame": 10,
+      "time": 0.3333333333333333,
+      "shape_keys": {
+        "eyeWideLeft": 0.5,
+        "eyeWideRight": 0.5,
+        "browInnerUp": 0.4,
+        "browOuterUpLeft": 0.4,
+        "browOuterUpRight": 0.4,
+        "mouthOpen": 0.3,
+        "jawOpen": 0.35
+      }
+    },
+    {
+      "frame": 11,
+      "time": 0.36666666666666664,
+      "shape_keys": {
+        "eyeWideLeft": 0.55,
+        "eyeWideRight": 0.55,
+        "browInnerUp": 0.44,
+        "browOuterUpLeft": 0.44,
+        "browOuterUpRight": 0.44,
+        "mouthOpen": 0.33,
+        "jawOpen": 0.39
+      }
+    },
+    {
+      "frame": 12,
+      "time": 0.4,
+      "shape_keys": {
+        "eyeWideLeft": 0.6,
+        "eyeWideRight": 0.6,
+        "browInnerUp": 0.48,
+        "browOuterUpLeft": 0.48,
+        "browOuterUpRight": 0.48,
+        "mouthOpen": 0.36,
+        "jawOpen": 0.42
+      }
+    },
+    {
+      "frame": 13,
+      "time": 0.43333333333333335,
+      "shape_keys": {
+        "eyeWideLeft": 0.65,
+        "eyeWideRight": 0.65,
+        "browInnerUp": 0.52,
+        "browOuterUpLeft": 0.52,
+        "browOuterUpRight": 0.52,
+        "mouthOpen": 0.39,
+        "jawOpen": 0.45
+      }
+    },
+    {
+      "frame": 14,
+      "time": 0.4666666666666667,
+      "shape_keys": {
+        "eyeWideLeft": 0.7,
+        "eyeWideRight": 0.7,
+        "browInnerUp": 0.56,
+        "browOuterUpLeft": 0.56,
+        "browOuterUpRight": 0.56,
+        "mouthOpen": 0.42,
+        "jawOpen": 0.49
+      }
+    },
+    {
+      "frame": 15,
+      "time": 0.5,
+      "shape_keys": {
+        "eyeWideLeft": 0.75,
+        "eyeWideRight": 0.75,
+        "browInnerUp": 0.6,
+        "browOuterUpLeft": 0.6,
+        "browOuterUpRight": 0.6,
+        "mouthOpen": 0.45,
+        "jawOpen": 0.52
+      }
+    },
+    {
+      "frame": 16,
+      "time": 0.5333333333333333,
+      "shape_keys": {
+        "eyeWideLeft": 0.8,
+        "eyeWideRight": 0.8,
+        "browInnerUp": 0.64,
+        "browOuterUpLeft": 0.64,
+        "browOuterUpRight": 0.64,
+        "mouthOpen": 0.48,
+        "jawOpen": 0.56
+      }
+    },
+    {
+      "frame": 17,
+      "time": 0.5666666666666667,
+      "shape_keys": {
+        "eyeWideLeft": 0.85,
+        "eyeWideRight": 0.85,
+        "browInnerUp": 0.68,
+        "browOuterUpLeft": 0.68,
+        "browOuterUpRight": 0.68,
+        "mouthOpen": 0.51,
+        "jawOpen": 0.6
+      }
+    },
+    {
+      "frame": 18,
+      "time": 0.6,
+      "shape_keys": {
+        "eyeWideLeft": 0.9,
+        "eyeWideRight": 0.9,
+        "browInnerUp": 0.72,
+        "browOuterUpLeft": 0.72,
+        "browOuterUpRight": 0.72,
+        "mouthOpen": 0.54,
+        "jawOpen": 0.63
+      }
+    },
+    {
+      "frame": 19,
+      "time": 0.6333333333333333,
+      "shape_keys": {
+        "eyeWideLeft": 0.95,
+        "eyeWideRight": 0.95,
+        "browInnerUp": 0.76,
+        "browOuterUpLeft": 0.76,
+        "browOuterUpRight": 0.76,
+        "mouthOpen": 0.57,
+        "jawOpen": 0.66
+      }
+    },
+    {
+      "frame": 20,
+      "time": 0.6666666666666666,
+      "shape_keys": {
+        "eyeWideLeft": 1,
+        "eyeWideRight": 1,
+        "browInnerUp": 0.8,
+        "browOuterUpLeft": 0.8,
+        "browOuterUpRight": 0.8,
+        "mouthOpen": 0.6,
+        "jawOpen": 0.7
+      }
+    },
+    {
+      "frame": 21,
+      "time": 0.7,
+      "shape_keys": {
+        "eyeWideLeft": 1,
+        "eyeWideRight": 1,
+        "browInnerUp": 0.8,
+        "browOuterUpLeft": 0.8,
+        "browOuterUpRight": 0.8,
+        "mouthOpen": 0.6,
+        "jawOpen": 0.7
+      }
+    },
+    {
+      "frame": 22,
+      "time": 0.7333333333333333,
+      "shape_keys": {
+        "eyeWideLeft": 1,
+        "eyeWideRight": 1,
+        "browInnerUp": 0.8,
+        "browOuterUpLeft": 0.8,
+        "browOuterUpRight": 0.8,
+        "mouthOpen": 0.6,
+        "jawOpen": 0.7
+      }
+    },
+    {
+      "frame": 23,
+      "time": 0.7666666666666667,
+      "shape_keys": {
+        "eyeWideLeft": 1,
+        "eyeWideRight": 1,
+        "browInnerUp": 0.8,
+        "browOuterUpLeft": 0.8,
+        "browOuterUpRight": 0.8,
+        "mouthOpen": 0.6,
+        "jawOpen": 0.7
+      }
+    },
+    {
+      "frame": 24,
+      "time": 0.8,
+      "shape_keys": {
+        "eyeWideLeft": 1,
+        "eyeWideRight": 1,
+        "browInnerUp": 0.8,
+        "browOuterUpLeft": 0.8,
+        "browOuterUpRight": 0.8,
+        "mouthOpen": 0.6,
+        "jawOpen": 0.7
+      }
+    },
+    {
+      "frame": 25,
+      "time": 0.8333333333333334,
+      "shape_keys": {
+        "eyeWideLeft": 1,
+        "eyeWideRight": 1,
+        "browInnerUp": 0.8,
+        "browOuterUpLeft": 0.8,
+        "browOuterUpRight": 0.8,
+        "mouthOpen": 0.6,
+        "jawOpen": 0.7
+      }
+    },
+    {
+      "frame": 26,
+      "time": 0.8666666666666667,
+      "shape_keys": {
+        "eyeWideLeft": 1,
+        "eyeWideRight": 1,
+        "browInnerUp": 0.8,
+        "browOuterUpLeft": 0.8,
+        "browOuterUpRight": 0.8,
+        "mouthOpen": 0.6,
+        "jawOpen": 0.7
+      }
+    },
+    {
+      "frame": 27,
+      "time": 0.9,
+      "shape_keys": {
+        "eyeWideLeft": 1,
+        "eyeWideRight": 1,
+        "browInnerUp": 0.8,
+        "browOuterUpLeft": 0.8,
+        "browOuterUpRight": 0.8,
+        "mouthOpen": 0.6,
+        "jawOpen": 0.7
+      }
+    },
+    {
+      "frame": 28,
+      "time": 0.9333333333333333,
+      "shape_keys": {
+        "eyeWideLeft": 1,
+        "eyeWideRight": 1,
+        "browInnerUp": 0.8,
+        "browOuterUpLeft": 0.8,
+        "browOuterUpRight": 0.8,
+        "mouthOpen": 0.6,
+        "jawOpen": 0.7
+      }
+    },
+    {
+      "frame": 29,
+      "time": 0.9666666666666667,
+      "shape_keys": {
+        "eyeWideLeft": 1,
+        "eyeWideRight": 1,
+        "browInnerUp": 0.8,
+        "browOuterUpLeft": 0.8,
+        "browOuterUpRight": 0.8,
+        "mouthOpen": 0.6,
+        "jawOpen": 0.7
+      }
+    },
+    {
+      "frame": 30,
+      "time": 1,
+      "shape_keys": {
+        "eyeWideLeft": 1,
+        "eyeWideRight": 1,
+        "browInnerUp": 0.8,
+        "browOuterUpLeft": 0.8,
+        "browOuterUpRight": 0.8,
+        "mouthOpen": 0.6,
+        "jawOpen": 0.7
+      }
+    },
+    {
+      "frame": 31,
+      "time": 1.0333333333333334,
+      "shape_keys": {
+        "eyeWideLeft": 1,
+        "eyeWideRight": 1,
+        "browInnerUp": 0.8,
+        "browOuterUpLeft": 0.8,
+        "browOuterUpRight": 0.8,
+        "mouthOpen": 0.6,
+        "jawOpen": 0.7
+      }
+    },
+    {
+      "frame": 32,
+      "time": 1.0666666666666667,
+      "shape_keys": {
+        "eyeWideLeft": 1,
+        "eyeWideRight": 1,
+        "browInnerUp": 0.8,
+        "browOuterUpLeft": 0.8,
+        "browOuterUpRight": 0.8,
+        "mouthOpen": 0.6,
+        "jawOpen": 0.7
+      }
+    },
+    {
+      "frame": 33,
+      "time": 1.1,
+      "shape_keys": {
+        "eyeWideLeft": 1,
+        "eyeWideRight": 1,
+        "browInnerUp": 0.8,
+        "browOuterUpLeft": 0.8,
+        "browOuterUpRight": 0.8,
+        "mouthOpen": 0.6,
+        "jawOpen": 0.7
+      }
+    },
+    {
+      "frame": 34,
+      "time": 1.1333333333333333,
+      "shape_keys": {
+        "eyeWideLeft": 1,
+        "eyeWideRight": 1,
+        "browInnerUp": 0.8,
+        "browOuterUpLeft": 0.8,
+        "browOuterUpRight": 0.8,
+        "mouthOpen": 0.6,
+        "jawOpen": 0.7
+      }
+    },
+    {
+      "frame": 35,
+      "time": 1.1666666666666667,
+      "shape_keys": {
+        "eyeWideLeft": 1,
+        "eyeWideRight": 1,
+        "browInnerUp": 0.8,
+        "browOuterUpLeft": 0.8,
+        "browOuterUpRight": 0.8,
+        "mouthOpen": 0.6,
+        "jawOpen": 0.7
+      }
+    },
+    {
+      "frame": 36,
+      "time": 1.2,
+      "shape_keys": {
+        "eyeWideLeft": 1,
+        "eyeWideRight": 1,
+        "browInnerUp": 0.8,
+        "browOuterUpLeft": 0.8,
+        "browOuterUpRight": 0.8,
+        "mouthOpen": 0.6,
+        "jawOpen": 0.7
+      }
+    },
+    {
+      "frame": 37,
+      "time": 1.2333333333333334,
+      "shape_keys": {
+        "eyeWideLeft": 1,
+        "eyeWideRight": 1,
+        "browInnerUp": 0.8,
+        "browOuterUpLeft": 0.8,
+        "browOuterUpRight": 0.8,
+        "mouthOpen": 0.6,
+        "jawOpen": 0.7
+      }
+    },
+    {
+      "frame": 38,
+      "time": 1.2666666666666666,
+      "shape_keys": {
+        "eyeWideLeft": 1,
+        "eyeWideRight": 1,
+        "browInnerUp": 0.8,
+        "browOuterUpLeft": 0.8,
+        "browOuterUpRight": 0.8,
+        "mouthOpen": 0.6,
+        "jawOpen": 0.7
+      }
+    },
+    {
+      "frame": 39,
+      "time": 1.3,
+      "shape_keys": {
+        "eyeWideLeft": 1,
+        "eyeWideRight": 1,
+        "browInnerUp": 0.8,
+        "browOuterUpLeft": 0.8,
+        "browOuterUpRight": 0.8,
+        "mouthOpen": 0.6,
+        "jawOpen": 0.7
+      }
+    },
+    {
+      "frame": 40,
+      "time": 1.3333333333333333,
+      "shape_keys": {
+        "eyeWideLeft": 1,
+        "eyeWideRight": 1,
+        "browInnerUp": 0.8,
+        "browOuterUpLeft": 0.8,
+        "browOuterUpRight": 0.8,
+        "mouthOpen": 0.6,
+        "jawOpen": 0.7
+      }
+    },
+    {
+      "frame": 41,
+      "time": 1.3666666666666667,
+      "shape_keys": {
+        "eyeWideLeft": 1,
+        "eyeWideRight": 1,
+        "browInnerUp": 0.8,
+        "browOuterUpLeft": 0.8,
+        "browOuterUpRight": 0.8,
+        "mouthOpen": 0.6,
+        "jawOpen": 0.7
+      }
+    },
+    {
+      "frame": 42,
+      "time": 1.4,
+      "shape_keys": {
+        "eyeWideLeft": 1,
+        "eyeWideRight": 1,
+        "browInnerUp": 0.8,
+        "browOuterUpLeft": 0.8,
+        "browOuterUpRight": 0.8,
+        "mouthOpen": 0.6,
+        "jawOpen": 0.7
+      }
+    },
+    {
+      "frame": 43,
+      "time": 1.4333333333333333,
+      "shape_keys": {
+        "eyeWideLeft": 1,
+        "eyeWideRight": 1,
+        "browInnerUp": 0.8,
+        "browOuterUpLeft": 0.8,
+        "browOuterUpRight": 0.8,
+        "mouthOpen": 0.6,
+        "jawOpen": 0.7
+      }
+    },
+    {
+      "frame": 44,
+      "time": 1.4666666666666666,
+      "shape_keys": {
+        "eyeWideLeft": 1,
+        "eyeWideRight": 1,
+        "browInnerUp": 0.8,
+        "browOuterUpLeft": 0.8,
+        "browOuterUpRight": 0.8,
+        "mouthOpen": 0.6,
+        "jawOpen": 0.7
+      }
+    },
+    {
+      "frame": 45,
+      "time": 1.5,
+      "shape_keys": {
+        "eyeWideLeft": 1,
+        "eyeWideRight": 1,
+        "browInnerUp": 0.8,
+        "browOuterUpLeft": 0.8,
+        "browOuterUpRight": 0.8,
+        "mouthOpen": 0.6,
+        "jawOpen": 0.7
+      }
+    },
+    {
+      "frame": 46,
+      "time": 1.5333333333333334,
+      "shape_keys": {
+        "eyeWideLeft": 1,
+        "eyeWideRight": 1,
+        "browInnerUp": 0.8,
+        "browOuterUpLeft": 0.8,
+        "browOuterUpRight": 0.8,
+        "mouthOpen": 0.6,
+        "jawOpen": 0.7
+      }
+    },
+    {
+      "frame": 47,
+      "time": 1.5666666666666667,
+      "shape_keys": {
+        "eyeWideLeft": 0.96,
+        "eyeWideRight": 0.96,
+        "browInnerUp": 0.77,
+        "browOuterUpLeft": 0.77,
+        "browOuterUpRight": 0.77,
+        "mouthOpen": 0.58,
+        "jawOpen": 0.67
+      }
+    },
+    {
+      "frame": 48,
+      "time": 1.6,
+      "shape_keys": {
+        "eyeWideLeft": 0.93,
+        "eyeWideRight": 0.93,
+        "browInnerUp": 0.74,
+        "browOuterUpLeft": 0.74,
+        "browOuterUpRight": 0.74,
+        "mouthOpen": 0.56,
+        "jawOpen": 0.65
+      }
+    },
+    {
+      "frame": 49,
+      "time": 1.6333333333333333,
+      "shape_keys": {
+        "eyeWideLeft": 0.89,
+        "eyeWideRight": 0.89,
+        "browInnerUp": 0.71,
+        "browOuterUpLeft": 0.71,
+        "browOuterUpRight": 0.71,
+        "mouthOpen": 0.53,
+        "jawOpen": 0.62
+      }
+    },
+    {
+      "frame": 50,
+      "time": 1.6666666666666667,
+      "shape_keys": {
+        "eyeWideLeft": 0.85,
+        "eyeWideRight": 0.85,
+        "browInnerUp": 0.68,
+        "browOuterUpLeft": 0.68,
+        "browOuterUpRight": 0.68,
+        "mouthOpen": 0.51,
+        "jawOpen": 0.6
+      }
+    },
+    {
+      "frame": 51,
+      "time": 1.7,
+      "shape_keys": {
+        "eyeWideLeft": 0.81,
+        "eyeWideRight": 0.81,
+        "browInnerUp": 0.65,
+        "browOuterUpLeft": 0.65,
+        "browOuterUpRight": 0.65,
+        "mouthOpen": 0.49,
+        "jawOpen": 0.57
+      }
+    },
+    {
+      "frame": 52,
+      "time": 1.7333333333333334,
+      "shape_keys": {
+        "eyeWideLeft": 0.78,
+        "eyeWideRight": 0.78,
+        "browInnerUp": 0.62,
+        "browOuterUpLeft": 0.62,
+        "browOuterUpRight": 0.62,
+        "mouthOpen": 0.47,
+        "jawOpen": 0.54
+      }
+    },
+    {
+      "frame": 53,
+      "time": 1.7666666666666666,
+      "shape_keys": {
+        "eyeWideLeft": 0.74,
+        "eyeWideRight": 0.74,
+        "browInnerUp": 0.59,
+        "browOuterUpLeft": 0.59,
+        "browOuterUpRight": 0.59,
+        "mouthOpen": 0.44,
+        "jawOpen": 0.52
+      }
+    },
+    {
+      "frame": 54,
+      "time": 1.8,
+      "shape_keys": {
+        "eyeWideLeft": 0.7,
+        "eyeWideRight": 0.7,
+        "browInnerUp": 0.56,
+        "browOuterUpLeft": 0.56,
+        "browOuterUpRight": 0.56,
+        "mouthOpen": 0.42,
+        "jawOpen": 0.49
+      }
+    },
+    {
+      "frame": 55,
+      "time": 1.8333333333333333,
+      "shape_keys": {
+        "eyeWideLeft": 0.67,
+        "eyeWideRight": 0.67,
+        "browInnerUp": 0.53,
+        "browOuterUpLeft": 0.53,
+        "browOuterUpRight": 0.53,
+        "mouthOpen": 0.4,
+        "jawOpen": 0.47
+      }
+    },
+    {
+      "frame": 56,
+      "time": 1.8666666666666667,
+      "shape_keys": {
+        "eyeWideLeft": 0.63,
+        "eyeWideRight": 0.63,
+        "browInnerUp": 0.5,
+        "browOuterUpLeft": 0.5,
+        "browOuterUpRight": 0.5,
+        "mouthOpen": 0.38,
+        "jawOpen": 0.44
+      }
+    },
+    {
+      "frame": 57,
+      "time": 1.9,
+      "shape_keys": {
+        "eyeWideLeft": 0.59,
+        "eyeWideRight": 0.59,
+        "browInnerUp": 0.47,
+        "browOuterUpLeft": 0.47,
+        "browOuterUpRight": 0.47,
+        "mouthOpen": 0.36,
+        "jawOpen": 0.41
+      }
+    },
+    {
+      "frame": 58,
+      "time": 1.9333333333333333,
+      "shape_keys": {
+        "eyeWideLeft": 0.56,
+        "eyeWideRight": 0.56,
+        "browInnerUp": 0.44,
+        "browOuterUpLeft": 0.44,
+        "browOuterUpRight": 0.44,
+        "mouthOpen": 0.33,
+        "jawOpen": 0.39
+      }
+    },
+    {
+      "frame": 59,
+      "time": 1.9666666666666666,
+      "shape_keys": {
+        "eyeWideLeft": 0.52,
+        "eyeWideRight": 0.52,
+        "browInnerUp": 0.41,
+        "browOuterUpLeft": 0.41,
+        "browOuterUpRight": 0.41,
+        "mouthOpen": 0.31,
+        "jawOpen": 0.36
+      }
+    },
+    {
+      "frame": 60,
+      "time": 2,
+      "shape_keys": {
+        "eyeWideLeft": 0.48,
+        "eyeWideRight": 0.48,
+        "browInnerUp": 0.39,
+        "browOuterUpLeft": 0.39,
+        "browOuterUpRight": 0.39,
+        "mouthOpen": 0.29,
+        "jawOpen": 0.34
+      }
+    },
+    {
+      "frame": 61,
+      "time": 2.033333333333333,
+      "shape_keys": {
+        "eyeWideLeft": 0.44,
+        "eyeWideRight": 0.44,
+        "browInnerUp": 0.36,
+        "browOuterUpLeft": 0.36,
+        "browOuterUpRight": 0.36,
+        "mouthOpen": 0.27,
+        "jawOpen": 0.31
+      }
+    },
+    {
+      "frame": 62,
+      "time": 2.066666666666667,
+      "shape_keys": {
+        "eyeWideLeft": 0.41,
+        "eyeWideRight": 0.41,
+        "browInnerUp": 0.33,
+        "browOuterUpLeft": 0.33,
+        "browOuterUpRight": 0.33,
+        "mouthOpen": 0.24,
+        "jawOpen": 0.29
+      }
+    },
+    {
+      "frame": 63,
+      "time": 2.1,
+      "shape_keys": {
+        "eyeWideLeft": 0.37,
+        "eyeWideRight": 0.37,
+        "browInnerUp": 0.3,
+        "browOuterUpLeft": 0.3,
+        "browOuterUpRight": 0.3,
+        "mouthOpen": 0.22,
+        "jawOpen": 0.26
+      }
+    },
+    {
+      "frame": 64,
+      "time": 2.1333333333333333,
+      "shape_keys": {
+        "eyeWideLeft": 0.33,
+        "eyeWideRight": 0.33,
+        "browInnerUp": 0.27,
+        "browOuterUpLeft": 0.27,
+        "browOuterUpRight": 0.27,
+        "mouthOpen": 0.2,
+        "jawOpen": 0.23
+      }
+    },
+    {
+      "frame": 65,
+      "time": 2.1666666666666665,
+      "shape_keys": {
+        "eyeWideLeft": 0.3,
+        "eyeWideRight": 0.3,
+        "browInnerUp": 0.24,
+        "browOuterUpLeft": 0.24,
+        "browOuterUpRight": 0.24,
+        "mouthOpen": 0.18,
+        "jawOpen": 0.21
+      }
+    },
+    {
+      "frame": 66,
+      "time": 2.2,
+      "shape_keys": {
+        "eyeWideLeft": 0.26,
+        "eyeWideRight": 0.26,
+        "browInnerUp": 0.21,
+        "browOuterUpLeft": 0.21,
+        "browOuterUpRight": 0.21,
+        "mouthOpen": 0.16,
+        "jawOpen": 0.18
+      }
+    },
+    {
+      "frame": 67,
+      "time": 2.2333333333333334,
+      "shape_keys": {
+        "eyeWideLeft": 0.22,
+        "eyeWideRight": 0.22,
+        "browInnerUp": 0.18,
+        "browOuterUpLeft": 0.18,
+        "browOuterUpRight": 0.18,
+        "mouthOpen": 0.13,
+        "jawOpen": 0.16
+      }
+    },
+    {
+      "frame": 68,
+      "time": 2.2666666666666666,
+      "shape_keys": {
+        "eyeWideLeft": 0.19,
+        "eyeWideRight": 0.19,
+        "browInnerUp": 0.15,
+        "browOuterUpLeft": 0.15,
+        "browOuterUpRight": 0.15,
+        "mouthOpen": 0.11,
+        "jawOpen": 0.13
+      }
+    },
+    {
+      "frame": 69,
+      "time": 2.3,
+      "shape_keys": {
+        "eyeWideLeft": 0.15,
+        "eyeWideRight": 0.15,
+        "browInnerUp": 0.12,
+        "browOuterUpLeft": 0.12,
+        "browOuterUpRight": 0.12,
+        "mouthOpen": 0.09,
+        "jawOpen": 0.1
+      }
+    },
+    {
+      "frame": 70,
+      "time": 2.3333333333333335,
+      "shape_keys": {
+        "eyeWideLeft": 0.11,
+        "eyeWideRight": 0.11,
+        "browInnerUp": 0.09,
+        "browOuterUpLeft": 0.09,
+        "browOuterUpRight": 0.09,
+        "mouthOpen": 0.07,
+        "jawOpen": 0.08
+      }
+    },
+    {
+      "frame": 71,
+      "time": 2.3666666666666667,
+      "shape_keys": {
+        "eyeWideLeft": 0.07,
+        "eyeWideRight": 0.07,
+        "browInnerUp": 0.06,
+        "browOuterUpLeft": 0.06,
+        "browOuterUpRight": 0.06,
+        "mouthOpen": 0.04,
+        "jawOpen": 0.05
+      }
+    },
+    {
+      "frame": 72,
+      "time": 2.4,
+      "shape_keys": {
+        "eyeWideLeft": 0.04,
+        "eyeWideRight": 0.04,
+        "browInnerUp": 0.03,
+        "browOuterUpLeft": 0.03,
+        "browOuterUpRight": 0.03,
+        "mouthOpen": 0.02,
+        "jawOpen": 0.03
+      }
+    }
+  ]
+}

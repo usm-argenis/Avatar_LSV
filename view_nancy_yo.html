@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nancy Yo - Visor de Animación</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 30px;
+            max-width: 1200px;
+            width: 100%;
+        }
+        h1 {
+            color: #667eea;
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+        #viewer-container {
+            width: 100%;
+            height: 600px;
+            border-radius: 15px;
+            overflow: hidden;
+            background: #f0f0f0;
+            position: relative;
+        }
+        model-viewer {
+            width: 100%;
+            height: 100%;
+        }
+        .controls {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+        .btn:hover {
+            background: #764ba2;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        .info-box {
+            background: #f8f9ff;
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            margin-top: 20px;
+            border-radius: 8px;
+        }
+        .info-box h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+        .info-box ul {
+            list-style-position: inside;
+            color: #555;
+        }
+        .info-box li {
+            margin: 5px 0;
+        }
+        .success {
+            background: #d4edda;
+            border-left-color: #28a745;
+            color: #155724;
+        }
+        .success h3 {
+            color: #28a745;
+        }
+    </style>
+    <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.3.0/model-viewer.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>🎭 Nancy con Animación "Yo"</h1>
+        <p class="subtitle">Avatar Nancy animado con movimiento procedural</p>
+        
+        <div id="viewer-container">
+            <model-viewer
+                id="nancy-viewer"
+                src="nancy_yo.glb"
+                alt="Nancy con animación Yo"
+                auto-rotate
+                camera-controls
+                shadow-intensity="1"
+                exposure="1"
+                autoplay
+                animation-name="NancyYoAnimation"
+            >
+                <div class="progress-bar" slot="progress-bar">
+                    <div class="update-bar"></div>
+                </div>
+            </model-viewer>
+        </div>
+        
+        <div class="controls">
+            <button class="btn" onclick="toggleAnimation()">⏯️ Play/Pause</button>
+            <button class="btn" onclick="resetCamera()">🎥 Resetear Cámara</button>
+            <button class="btn" onclick="toggleAutoRotate()">🔄 Auto-Rotar</button>
+        </div>
+        
+        <div class="info-box success">
+            <h3>✅ Proceso Completado Exitosamente</h3>
+            <ul>
+                <li><strong>Avatar:</strong> Nancy.glb</li>
+                <li><strong>Video Original:</strong> yo.mp4</li>
+                <li><strong>Archivo Generado:</strong> nancy_yo.glb (5.2 MB)</li>
+                <li><strong>Animación:</strong> 120 frames @ 30 fps (4 segundos)</li>
+                <li><strong>Huesos Animados:</strong> Cadera, columna, brazos, antebrazos</li>
+            </ul>
+        </div>
+        
+        <div class="info-box">
+            <h3>📋 Controles del Visor</h3>
+            <ul>
+                <li><strong>Click + Arrastrar:</strong> Rotar cámara</li>
+                <li><strong>Scroll:</strong> Zoom in/out</li>
+                <li><strong>Click Derecho + Arrastrar:</strong> Mover (pan)</li>
+                <li><strong>Doble Click:</strong> Enfocar punto</li>
+            </ul>
+        </div>
+        
+        <div class="info-box">
+            <h3>🚀 Siguiente Paso: Aplicar Video Real</h3>
+            <ul>
+                <li>Este es un ejemplo con animación procedimental de prueba</li>
+                <li>Para aplicar el video real yo.mp4, necesitarías:
+                    <ul style="margin-left: 20px; margin-top: 5px;">
+                        <li>1. Extraer pose del video con FrankMocap o MediaPipe</li>
+                        <li>2. Convertir a formato BVH/FBX</li>
+                        <li>3. Retargetear al rig de Nancy en Blender</li>
+                        <li>4. Exportar nancy_yo_real.glb</li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+    </div>
+    
+    <script>
+        const viewer = document.getElementById('nancy-viewer');
+        let autoRotateEnabled = true;
+        
+        function toggleAnimation() {
+            if (viewer.paused) {
+                viewer.play();
+            } else {
+                viewer.pause();
+            }
+        }
+        
+        function resetCamera() {
+            viewer.cameraOrbit = 'auto auto auto';
+            viewer.cameraTarget = 'auto auto auto';
+            viewer.fieldOfView = 'auto';
+        }
+        
+        function toggleAutoRotate() {
+            autoRotateEnabled = !autoRotateEnabled;
+            viewer.autoRotate = autoRotateEnabled;
+        }
+        
+        // Cuando el modelo termine de cargar
+        viewer.addEventListener('load', () => {
+            console.log('✓ Nancy cargada con animación');
+            console.log('Animaciones disponibles:', viewer.availableAnimations);
+            
+            // Forzar reproducción de la animación
+            if (viewer.availableAnimations && viewer.availableAnimations.length > 0) {
+                viewer.animationName = viewer.availableAnimations[0];
+                viewer.play();
+                console.log('✓ Animación iniciada:', viewer.availableAnimations[0]);
+            } else {
+                console.warn('⚠️ No se encontraron animaciones en el modelo');
+            }
+        });
+        
+        // Manejo de errores
+        viewer.addEventListener('error', (event) => {
+            console.error('Error cargando modelo:', event);
+            alert('Error al cargar nancy_yo.glb. Verifica que el archivo esté en el mismo directorio que este HTML.');
+        });
+    </script>
+</body>
+</html>

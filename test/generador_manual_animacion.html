@@ -1,0 +1,1189 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>🎯 Generador Manual de Animación Facial</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: #0a0e27;
+            color: #fff;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 400px 1fr;
+            gap: 20px;
+        }
+        
+        .panel {
+            background: #151932;
+            border-radius: 12px;
+            padding: 25px;
+        }
+        
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-size: 28px;
+        }
+        
+        h2 {
+            color: #667eea;
+            font-size: 18px;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #2a2f4f;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            font-size: 13px;
+            color: #a0a4b8;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+        
+        input[type="number"], select {
+            width: 100%;
+            padding: 12px;
+            background: #0a0e27;
+            border: 2px solid #2a2f4f;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 14px;
+        }
+        
+        input[type="number"]:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+            margin-top: 10px;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        }
+        
+        .timeline {
+            background: #0a0e27;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .timeline-bar {
+            height: 60px;
+            background: #151932;
+            border-radius: 8px;
+            position: relative;
+            margin-top: 10px;
+            overflow: hidden;
+        }
+        
+        .timeline-section {
+            position: absolute;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 600;
+            border-right: 1px solid #0a0e27;
+        }
+        
+        .section-rampup {
+            background: linear-gradient(90deg, #667eea 0%, #38ef7d 100%);
+        }
+        
+        .section-hold {
+            background: #38ef7d;
+        }
+        
+        .section-rampdown {
+            background: linear-gradient(90deg, #38ef7d 0%, #667eea 100%);
+        }
+        
+        .preset-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .preset-btn {
+            padding: 12px;
+            background: #2a2f4f;
+            border: 2px solid #2a2f4f;
+            border-radius: 8px;
+            color: #fff;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        
+        .preset-btn:hover {
+            background: #667eea;
+            border-color: #667eea;
+        }
+        
+        .preset-btn.active {
+            background: #667eea;
+            border-color: #06ffa5;
+        }
+        
+        .shape-key-editor {
+            background: #0a0e27;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .shape-key-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .shape-key-name {
+            flex: 1;
+            font-size: 13px;
+            color: #a0a4b8;
+        }
+        
+        .shape-key-input {
+            width: 80px;
+            padding: 8px;
+            background: #151932;
+            border: 2px solid #2a2f4f;
+            border-radius: 6px;
+            color: #fff;
+            text-align: center;
+        }
+        
+        canvas {
+            width: 100%;
+            height: 600px;
+            border-radius: 12px;
+            border: 2px solid #2a2f4f;
+        }
+        
+        .info-box {
+            background: #0a0e27;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-left: 4px solid #38ef7d;
+        }
+        
+        .info-box h3 {
+            color: #38ef7d;
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+        
+        .info-box p {
+            font-size: 12px;
+            color: #a0a4b8;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+    <h1>🎯 Generador Manual de Animación Facial</h1>
+    
+    <div class="container">
+        <!-- Panel de configuración -->
+        <div class="panel">
+            <h2>⚙️ Configuración</h2>
+            
+            <div class="info-box">
+                <h3>💡 Cómo funciona</h3>
+                <p>Define el tope de tu expresión y los rangos de frames. El sistema generará automáticamente la interpolación.</p>
+            </div>
+            
+            <div class="form-group">
+                <label>Nombre de la Animación</label>
+                <input type="text" id="animName" value="amar" placeholder="ej: amar, mal, hola">
+            </div>
+            
+            <div class="form-group">
+                <label>Total de Frames</label>
+                <input type="number" id="totalFrames" value="73" min="1">
+            </div>
+            
+            <div class="form-group">
+                <label>FPS</label>
+                <input type="number" id="fps" value="30" min="1" max="60">
+            </div>
+            
+            <h2 style="margin-top: 30px;">📈 Rangos de Frames</h2>
+            
+            <div class="form-group">
+                <label>Fase 1: Ramp Up (0 → Tope)</label>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <input type="number" id="rampStart" value="0" min="0" readonly style="background: #1a1f3a;">
+                    <input type="number" id="rampEnd" value="20" min="0">
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label>Fase 2: Hold (Mantener Tope)</label>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <input type="number" id="holdStart" value="21" min="0">
+                    <input type="number" id="holdEnd" value="45" min="0">
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label>Fase 3: Ramp Down (Tope → 0)</label>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <input type="number" id="downStart" value="46" min="0">
+                    <input type="number" id="downEnd" value="73" min="0">
+                </div>
+            </div>
+            
+            <button class="btn" onclick="updateTimeline()">🔄 Actualizar Timeline</button>
+            
+            <h2 style="margin-top: 30px;">🎭 Expresión (Tope)</h2>
+            
+            <div style="margin-bottom: 15px;">
+                <label>🔍 Buscar Expresión</label>
+                <input type="text" id="presetSearch" placeholder="Ej: feliz, enojado, pregunta..." 
+                       style="width: 100%; padding: 10px; margin-bottom: 10px;"
+                       onkeyup="filterPresets()">
+            </div>
+            
+            <div id="presetCategories" style="max-height: 400px; overflow-y: auto;">
+                <!-- Básicas -->
+                <h3 style="color: #667eea; font-size: 14px; margin: 15px 0 10px 0;">🎭 Básicas</h3>
+                <div class="preset-grid">
+                    <button class="preset-btn" onclick="loadPreset('neutral')">😐 Neutral</button>
+                    <button class="preset-btn" onclick="loadPreset('happy')">😊 Feliz</button>
+                    <button class="preset-btn" onclick="loadPreset('sad')">😢 Triste</button>
+                    <button class="preset-btn" onclick="loadPreset('angry')">😠 Enojado</button>
+                    <button class="preset-btn" onclick="loadPreset('surprised')">😲 Sorpresa</button>
+                </div>
+                
+                <!-- Felicidad -->
+                <h3 style="color: #667eea; font-size: 14px; margin: 15px 0 10px 0;">😄 Felicidad</h3>
+                <div class="preset-grid">
+                    <button class="preset-btn" onclick="loadPreset('smile_light')">🙂 Sonrisa Leve</button>
+                    <button class="preset-btn" onclick="loadPreset('smile_big')">😃 Sonrisa Grande</button>
+                    <button class="preset-btn" onclick="loadPreset('laugh')">😆 Risa</button>
+                    <button class="preset-btn" onclick="loadPreset('content')">😌 Contento</button>
+                </div>
+                
+                <!-- Tristeza -->
+                <h3 style="color: #667eea; font-size: 14px; margin: 15px 0 10px 0;">😔 Tristeza</h3>
+                <div class="preset-grid">
+                    <button class="preset-btn" onclick="loadPreset('sad_light')">🙁 Triste Leve</button>
+                    <button class="preset-btn" onclick="loadPreset('sad_crying')">😭 Llorando</button>
+                    <button class="preset-btn" onclick="loadPreset('disappointed')">😞 Decepcionado</button>
+                </div>
+                
+                <!-- Enojo -->
+                <h3 style="color: #667eea; font-size: 14px; margin: 15px 0 10px 0;">😡 Enojo</h3>
+                <div class="preset-grid">
+                    <button class="preset-btn" onclick="loadPreset('angry_light')">😒 Molesto</button>
+                    <button class="preset-btn" onclick="loadPreset('angry_shouting')">🤬 Gritando</button>
+                    <button class="preset-btn" onclick="loadPreset('disgusted')">🤢 Disgusto</button>
+                </div>
+                
+                <!-- Sorpresa -->
+                <h3 style="color: #667eea; font-size: 14px; margin: 15px 0 10px 0;">😮 Sorpresa</h3>
+                <div class="preset-grid">
+                    <button class="preset-btn" onclick="loadPreset('surprised_light')">😯 Sorpresa Leve</button>
+                    <button class="preset-btn" onclick="loadPreset('shocked')">😱 Shock</button>
+                    <button class="preset-btn" onclick="loadPreset('amazed')">🤩 Asombro</button>
+                </div>
+                
+                <!-- Confusión -->
+                <h3 style="color: #667eea; font-size: 14px; margin: 15px 0 10px 0;">🤔 Confusión/Duda</h3>
+                <div class="preset-grid">
+                    <button class="preset-btn" onclick="loadPreset('confused')">😕 Confundido</button>
+                    <button class="preset-btn" onclick="loadPreset('doubtful')">🤨 Dudoso</button>
+                    <button class="preset-btn" onclick="loadPreset('skeptical')">🧐 Escéptico</button>
+                </div>
+                
+                <!-- Pensamiento -->
+                <h3 style="color: #667eea; font-size: 14px; margin: 15px 0 10px 0;">🧠 Pensamiento</h3>
+                <div class="preset-grid">
+                    <button class="preset-btn" onclick="loadPreset('thinking')">🤔 Pensando</button>
+                    <button class="preset-btn" onclick="loadPreset('concentrated')">😤 Concentrado</button>
+                    <button class="preset-btn" onclick="loadPreset('worried')">😟 Preocupado</button>
+                </div>
+                
+                <!-- Miedo -->
+                <h3 style="color: #667eea; font-size: 14px; margin: 15px 0 10px 0;">😨 Miedo/Ansiedad</h3>
+                <div class="preset-grid">
+                    <button class="preset-btn" onclick="loadPreset('fearful')">😰 Temeroso</button>
+                    <button class="preset-btn" onclick="loadPreset('anxious')">😬 Ansioso</button>
+                    <button class="preset-btn" onclick="loadPreset('nervous')">😓 Nervioso</button>
+                </div>
+                
+                <!-- Acciones -->
+                <h3 style="color: #667eea; font-size: 14px; margin: 15px 0 10px 0;">👁️ Acciones</h3>
+                <div class="preset-grid">
+                    <button class="preset-btn" onclick="loadPreset('blink')">😑 Parpadeo</button>
+                    <button class="preset-btn" onclick="loadPreset('wink_left')">😉 Guiño Izq</button>
+                    <button class="preset-btn" onclick="loadPreset('wink_right')">😜 Guiño Der</button>
+                    <button class="preset-btn" onclick="loadPreset('kiss')">😘 Beso</button>
+                    <button class="preset-btn" onclick="loadPreset('blow')">😤 Soplar</button>
+                    <button class="preset-btn" onclick="loadPreset('whistle')">😙 Silbar</button>
+                </div>
+                
+                <!-- Vocalizaciones -->
+                <h3 style="color: #667eea; font-size: 14px; margin: 15px 0 10px 0;">👄 Vocalizaciones</h3>
+                <div class="preset-grid">
+                    <button class="preset-btn" onclick="loadPreset('mouth_open')">😮 Boca Abierta</button>
+                    <button class="preset-btn" onclick="loadPreset('mouth_wide')">😁 Boca Ancha</button>
+                    <button class="preset-btn" onclick="loadPreset('mouth_o')">😲 O</button>
+                    <button class="preset-btn" onclick="loadPreset('mouth_u')">🤐 U</button>
+                </div>
+                
+                <!-- LSV -->
+                <h3 style="color: #06ffa5; font-size: 14px; margin: 15px 0 10px 0;">🤟 Lengua de Señas</h3>
+                <div class="preset-grid">
+                    <button class="preset-btn" onclick="loadPreset('lsv_question')">❓ Pregunta</button>
+                    <button class="preset-btn" onclick="loadPreset('lsv_negation')">❌ Negación</button>
+                    <button class="preset-btn" onclick="loadPreset('lsv_affirmation')">✅ Afirmación</button>
+                    <button class="preset-btn" onclick="loadPreset('lsv_emphasis')">‼️ Énfasis</button>
+                    <button class="preset-btn" onclick="loadPreset('lsv_intensity')">💪 Intensidad</button>
+                    <button class="preset-btn" onclick="loadPreset('lsv_doubt')">🤷 Duda</button>
+                </div>
+                
+                <!-- Sutiles -->
+                <h3 style="color: #667eea; font-size: 14px; margin: 15px 0 10px 0;">😶 Sutiles</h3>
+                <div class="preset-grid">
+                    <button class="preset-btn" onclick="loadPreset('relaxed')">😌 Relajado</button>
+                    <button class="preset-btn" onclick="loadPreset('tired')">😪 Cansado</button>
+                    <button class="preset-btn" onclick="loadPreset('bored')">😑 Aburrido</button>
+                </div>
+                
+                <!-- Manual -->
+                <h3 style="color: #667eea; font-size: 14px; margin: 15px 0 10px 0;">✏️ Personalizado</h3>
+                <div class="preset-grid">
+                    <button class="preset-btn" onclick="loadPreset('custom')">✨ Crear Manual</button>
+                </div>
+            </div>
+            
+            <div id="shapeKeysEditor" style="display: none;">
+                <h3 style="color: #a0a4b8; font-size: 13px; margin-bottom: 10px;">Valores del Tope (0.0 - 1.0)</h3>
+                <div id="shapeKeysList"></div>
+            </div>
+            
+            <button class="btn btn-success" onclick="generateAnimation()" style="margin-top: 20px;">
+                ✨ Generar Animación
+            </button>
+            
+            <button class="btn" onclick="exportJSON()" disabled id="exportBtn" style="margin-top: 10px;">
+                💾 Exportar JSON
+            </button>
+        </div>
+        
+        <!-- Panel de vista previa -->
+        <div class="panel">
+            <h2>👁️ Vista Previa</h2>
+            
+            <div class="timeline">
+                <h3 style="color: #a0a4b8; font-size: 13px; margin-bottom: 10px;">Timeline de Interpolación</h3>
+                <div class="timeline-bar" id="timelineBar"></div>
+                <div style="margin-top: 10px; font-size: 12px; color: #6b7280;">
+                    <span>🟦 Ramp Up</span> | 
+                    <span>🟩 Hold</span> | 
+                    <span>🟦 Ramp Down</span>
+                </div>
+            </div>
+            
+            <canvas id="canvas3d"></canvas>
+            
+            <div style="margin-top: 20px; display: flex; gap: 10px;">
+                <button class="btn" onclick="playAnimation()">▶️ Reproducir</button>
+                <button class="btn" onclick="stopAnimation()">⏹️ Detener</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    
+    <script>
+        // ============================================================
+        // PRESETS DE EXPRESIONES
+        // ============================================================
+        const EXPRESSION_PRESETS = {
+            // ========== EXPRESIONES BÁSICAS ==========
+            neutral: {
+                // Estado neutral - todas en 0
+            },
+            happy: {
+                mouthSmileLeft: 0.90,
+                mouthSmileRight: 0.90,
+                cheekSquintLeft: 0.60,
+                cheekSquintRight: 0.60,
+                eyeSquintLeft: 0.30,
+                eyeSquintRight: 0.30,
+                browInnerUp: 0.20
+            },
+            sad: {
+                browInnerUp: 0.70,
+                mouthFrownLeft: 0.50,
+                mouthFrownRight: 0.50,
+                eyeSquintLeft: 0.30,
+                eyeSquintRight: 0.30,
+                mouthLowerDownLeft: 0.25,
+                mouthLowerDownRight: 0.25
+            },
+            angry: {
+                browDownLeft: 0.80,
+                browDownRight: 0.80,
+                eyeSquintLeft: 0.60,
+                eyeSquintRight: 0.60,
+                mouthFrownLeft: 0.70,
+                mouthFrownRight: 0.70,
+                noseSneerLeft: 0.40,
+                noseSneerRight: 0.40,
+                jawOpen: 0.15
+            },
+            surprised: {
+                eyeWideLeft: 1.00,
+                eyeWideRight: 1.00,
+                browInnerUp: 0.80,
+                browOuterUpLeft: 0.80,
+                browOuterUpRight: 0.80,
+                jawOpen: 0.70,
+                mouthOpen: 0.60
+            },
+            
+            // ========== VARIACIONES DE FELICIDAD ==========
+            smile_light: {
+                mouthSmileLeft: 0.40,
+                mouthSmileRight: 0.40,
+                cheekSquintLeft: 0.20,
+                cheekSquintRight: 0.20
+            },
+            smile_big: {
+                mouthSmileLeft: 1.00,
+                mouthSmileRight: 1.00,
+                cheekSquintLeft: 0.80,
+                cheekSquintRight: 0.80,
+                eyeSquintLeft: 0.50,
+                eyeSquintRight: 0.50,
+                browInnerUp: 0.30,
+                mouthOpen: 0.20
+            },
+            laugh: {
+                mouthSmileLeft: 1.00,
+                mouthSmileRight: 1.00,
+                cheekSquintLeft: 0.90,
+                cheekSquintRight: 0.90,
+                eyeSquintLeft: 0.80,
+                eyeSquintRight: 0.80,
+                jawOpen: 0.50,
+                mouthOpen: 0.60,
+                browInnerUp: 0.40
+            },
+            
+            // ========== VARIACIONES DE TRISTEZA ==========
+            sad_light: {
+                browInnerUp: 0.40,
+                mouthFrownLeft: 0.25,
+                mouthFrownRight: 0.25
+            },
+            sad_crying: {
+                browInnerUp: 0.90,
+                mouthFrownLeft: 0.70,
+                mouthFrownRight: 0.70,
+                eyeSquintLeft: 0.60,
+                eyeSquintRight: 0.60,
+                mouthLowerDownLeft: 0.40,
+                mouthLowerDownRight: 0.40,
+                jawOpen: 0.30
+            },
+            disappointed: {
+                browInnerUp: 0.50,
+                mouthFrownLeft: 0.60,
+                mouthFrownRight: 0.60,
+                mouthLowerDownLeft: 0.30,
+                mouthLowerDownRight: 0.30,
+                eyeSquintLeft: 0.20,
+                eyeSquintRight: 0.20
+            },
+            
+            // ========== VARIACIONES DE ENOJO ==========
+            angry_light: {
+                browDownLeft: 0.50,
+                browDownRight: 0.50,
+                eyeSquintLeft: 0.30,
+                eyeSquintRight: 0.30,
+                mouthFrownLeft: 0.40,
+                mouthFrownRight: 0.40
+            },
+            angry_shouting: {
+                browDownLeft: 1.00,
+                browDownRight: 1.00,
+                eyeSquintLeft: 0.80,
+                eyeSquintRight: 0.80,
+                noseSneerLeft: 0.70,
+                noseSneerRight: 0.70,
+                jawOpen: 0.80,
+                mouthOpen: 0.70,
+                mouthUpperUpLeft: 0.50,
+                mouthUpperUpRight: 0.50
+            },
+            disgusted: {
+                browDownLeft: 0.40,
+                browDownRight: 0.40,
+                noseSneerLeft: 0.80,
+                noseSneerRight: 0.80,
+                mouthFrownLeft: 0.60,
+                mouthFrownRight: 0.60,
+                mouthUpperUpLeft: 0.60,
+                mouthUpperUpRight: 0.60,
+                eyeSquintLeft: 0.40,
+                eyeSquintRight: 0.40
+            },
+            
+            // ========== SORPRESA Y SHOCK ==========
+            surprised_light: {
+                eyeWideLeft: 0.60,
+                eyeWideRight: 0.60,
+                browInnerUp: 0.50,
+                browOuterUpLeft: 0.50,
+                browOuterUpRight: 0.50,
+                jawOpen: 0.30
+            },
+            shocked: {
+                eyeWideLeft: 1.00,
+                eyeWideRight: 1.00,
+                browInnerUp: 1.00,
+                browOuterUpLeft: 1.00,
+                browOuterUpRight: 1.00,
+                jawOpen: 0.90,
+                mouthOpen: 0.80
+            },
+            amazed: {
+                eyeWideLeft: 0.80,
+                eyeWideRight: 0.80,
+                browInnerUp: 0.70,
+                browOuterUpLeft: 0.70,
+                browOuterUpRight: 0.70,
+                mouthSmileLeft: 0.40,
+                mouthSmileRight: 0.40,
+                jawOpen: 0.40
+            },
+            
+            // ========== CONFUSIÓN Y DUDA ==========
+            confused: {
+                browInnerUp: 0.60,
+                browDownLeft: 0.30,
+                browOuterUpRight: 0.40,
+                mouthFrownLeft: 0.30,
+                eyeSquintLeft: 0.25,
+                eyeSquintRight: 0.25
+            },
+            doubtful: {
+                browInnerUp: 0.40,
+                browDownLeft: 0.20,
+                browDownRight: 0.20,
+                mouthFrownLeft: 0.35,
+                mouthFrownRight: 0.35,
+                eyeSquintLeft: 0.30,
+                eyeSquintRight: 0.30
+            },
+            skeptical: {
+                browDownLeft: 0.30,
+                browOuterUpRight: 0.50,
+                eyeSquintLeft: 0.50,
+                eyeSquintRight: 0.20,
+                mouthFrownLeft: 0.40
+            },
+            
+            // ========== PENSAMIENTO Y CONCENTRACIÓN ==========
+            thinking: {
+                browInnerUp: 0.30,
+                browDownLeft: 0.20,
+                browDownRight: 0.20,
+                eyeSquintLeft: 0.40,
+                eyeSquintRight: 0.40,
+                mouthPucker: 0.30
+            },
+            concentrated: {
+                browDownLeft: 0.50,
+                browDownRight: 0.50,
+                eyeSquintLeft: 0.60,
+                eyeSquintRight: 0.60,
+                mouthPucker: 0.20
+            },
+            worried: {
+                browInnerUp: 0.80,
+                eyeSquintLeft: 0.40,
+                eyeSquintRight: 0.40,
+                mouthFrownLeft: 0.40,
+                mouthFrownRight: 0.40
+            },
+            
+            // ========== MIEDO Y ANSIEDAD ==========
+            fearful: {
+                eyeWideLeft: 0.90,
+                eyeWideRight: 0.90,
+                browInnerUp: 0.90,
+                browDownLeft: 0.30,
+                browDownRight: 0.30,
+                mouthFrownLeft: 0.50,
+                mouthFrownRight: 0.50,
+                jawOpen: 0.40
+            },
+            anxious: {
+                browInnerUp: 0.70,
+                eyeWideLeft: 0.50,
+                eyeWideRight: 0.50,
+                mouthFrownLeft: 0.30,
+                mouthFrownRight: 0.30,
+                jawOpen: 0.15
+            },
+            nervous: {
+                browInnerUp: 0.50,
+                eyeWideLeft: 0.40,
+                eyeWideRight: 0.40,
+                mouthPucker: 0.20,
+                eyeSquintLeft: 0.20,
+                eyeSquintRight: 0.20
+            },
+            
+            // ========== ACCIONES ESPECÍFICAS ==========
+            blink: {
+                eyeBlinkLeft: 1.00,
+                eyeBlinkRight: 1.00
+            },
+            wink_left: {
+                eyeBlinkLeft: 1.00
+            },
+            wink_right: {
+                eyeBlinkRight: 1.00
+            },
+            kiss: {
+                mouthPucker: 1.00,
+                mouthFunnel: 0.30,
+                browInnerUp: 0.20
+            },
+            blow: {
+                cheekPuff: 0.90,
+                mouthPucker: 0.60
+            },
+            whistle: {
+                mouthPucker: 0.80,
+                mouthFunnel: 0.70,
+                cheekSquintLeft: 0.30,
+                cheekSquintRight: 0.30
+            },
+            
+            // ========== VOCALIZACIONES ==========
+            mouth_open: {
+                jawOpen: 0.80,
+                mouthOpen: 0.70
+            },
+            mouth_wide: {
+                jawOpen: 0.60,
+                mouthOpen: 0.50,
+                mouthSmileLeft: 0.40,
+                mouthSmileRight: 0.40
+            },
+            mouth_o: {
+                mouthFunnel: 0.90,
+                jawOpen: 0.50
+            },
+            mouth_u: {
+                mouthPucker: 0.70,
+                mouthFunnel: 0.50
+            },
+            
+            // ========== LENGUAJE DE SEÑAS ==========
+            lsv_question: {
+                browInnerUp: 0.70,
+                browOuterUpLeft: 0.70,
+                browOuterUpRight: 0.70,
+                eyeWideLeft: 0.60,
+                eyeWideRight: 0.60,
+                mouthOpen: 0.30,
+                jawOpen: 0.30
+            },
+            lsv_negation: {
+                browDownLeft: 0.50,
+                browDownRight: 0.50,
+                mouthFrownLeft: 0.60,
+                mouthFrownRight: 0.60,
+                noseSneerLeft: 0.30,
+                noseSneerRight: 0.30
+            },
+            lsv_affirmation: {
+                mouthSmileLeft: 0.60,
+                mouthSmileRight: 0.60,
+                cheekSquintLeft: 0.40,
+                cheekSquintRight: 0.40,
+                browInnerUp: 0.30
+            },
+            lsv_emphasis: {
+                eyeWideLeft: 0.70,
+                eyeWideRight: 0.70,
+                browInnerUp: 0.60,
+                browOuterUpLeft: 0.60,
+                browOuterUpRight: 0.60,
+                mouthOpen: 0.40
+            },
+            lsv_intensity: {
+                browDownLeft: 0.70,
+                browDownRight: 0.70,
+                eyeSquintLeft: 0.60,
+                eyeSquintRight: 0.60,
+                jawOpen: 0.40,
+                noseSneerLeft: 0.30,
+                noseSneerRight: 0.30
+            },
+            lsv_doubt: {
+                browInnerUp: 0.50,
+                browDownLeft: 0.30,
+                eyeSquintLeft: 0.40,
+                eyeSquintRight: 0.40,
+                mouthFrownLeft: 0.40,
+                mouthFrownRight: 0.40
+            },
+            
+            // ========== EMOCIONES SUTILES ==========
+            content: {
+                mouthSmileLeft: 0.30,
+                mouthSmileRight: 0.30,
+                cheekSquintLeft: 0.15,
+                cheekSquintRight: 0.15
+            },
+            relaxed: {
+                eyeSquintLeft: 0.15,
+                eyeSquintRight: 0.15,
+                mouthSmileLeft: 0.10,
+                mouthSmileRight: 0.10
+            },
+            tired: {
+                eyeSquintLeft: 0.50,
+                eyeSquintRight: 0.50,
+                browDownLeft: 0.30,
+                browDownRight: 0.30,
+                mouthFrownLeft: 0.20,
+                mouthFrownRight: 0.20
+            },
+            bored: {
+                eyeSquintLeft: 0.40,
+                eyeSquintRight: 0.40,
+                mouthFrownLeft: 0.30,
+                mouthFrownRight: 0.30,
+                browDownLeft: 0.20,
+                browDownRight: 0.20
+            }
+        };
+        
+        const ALL_SHAPE_KEYS = [
+            'eyeBlinkLeft', 'eyeBlinkRight', 'eyeSquintLeft', 'eyeSquintRight',
+            'eyeWideLeft', 'eyeWideRight', 'browInnerUp', 'browDownLeft',
+            'browDownRight', 'browOuterUpLeft', 'browOuterUpRight',
+            'mouthSmileLeft', 'mouthSmileRight', 'mouthFrownLeft', 'mouthFrownRight',
+            'mouthOpen', 'jawOpen', 'mouthFunnel', 'mouthPucker',
+            'mouthUpperUpLeft', 'mouthUpperUpRight', 'mouthLowerDownLeft', 'mouthLowerDownRight',
+            'cheekSquintLeft', 'cheekSquintRight', 'cheekPuff',
+            'noseSneerLeft', 'noseSneerRight'
+        ];
+        
+        let currentPeakValues = {};
+        let generatedAnimation = null;
+        let model3D, meshesWithTargets = [];
+        let animationPlaying = false;
+        let animationFrame = 0;
+        
+        // ============================================================
+        // INICIALIZACIÓN
+        // ============================================================
+        window.addEventListener('DOMContentLoaded', () => {
+            initializeThreeJS();
+            createShapeKeysEditor();
+            updateTimeline();
+            loadPreset('angry'); // Preset por defecto
+        });
+        
+        function createShapeKeysEditor() {
+            const list = document.getElementById('shapeKeysList');
+            
+            ALL_SHAPE_KEYS.forEach(key => {
+                const row = document.createElement('div');
+                row.className = 'shape-key-row';
+                row.innerHTML = `
+                    <div class="shape-key-name">${key}</div>
+                    <input type="number" class="shape-key-input" id="peak-${key}" 
+                           min="0" max="1" step="0.01" value="0">
+                `;
+                list.appendChild(row);
+            });
+        }
+        
+        function loadPreset(name) {
+            // Resetear todos los botones
+            document.querySelectorAll('.preset-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Activar botón seleccionado
+            event.target.classList.add('active');
+            
+            if (name === 'custom') {
+                document.getElementById('shapeKeysEditor').style.display = 'block';
+                return;
+            }
+            
+            document.getElementById('shapeKeysEditor').style.display = 'block';
+            
+            const preset = EXPRESSION_PRESETS[name];
+            
+            // Resetear todos
+            ALL_SHAPE_KEYS.forEach(key => {
+                document.getElementById(`peak-${key}`).value = 0;
+            });
+            
+            // Aplicar preset
+            for (const [key, value] of Object.entries(preset)) {
+                document.getElementById(`peak-${key}`).value = value;
+            }
+            
+            // Actualizar vista previa
+            applyShapeKeysTo3D(preset);
+        }
+        
+        // ============================================================
+        // TIMELINE
+        // ============================================================
+        function updateTimeline() {
+            const totalFrames = parseInt(document.getElementById('totalFrames').value);
+            const rampEnd = parseInt(document.getElementById('rampEnd').value);
+            const holdStart = parseInt(document.getElementById('holdStart').value);
+            const holdEnd = parseInt(document.getElementById('holdEnd').value);
+            const downStart = parseInt(document.getElementById('downStart').value);
+            
+            const bar = document.getElementById('timelineBar');
+            bar.innerHTML = '';
+            
+            // Calcular porcentajes
+            const rampUpWidth = (rampEnd / totalFrames) * 100;
+            const holdWidth = ((holdEnd - holdStart + 1) / totalFrames) * 100;
+            const rampDownWidth = ((totalFrames - downStart) / totalFrames) * 100;
+            
+            // Ramp Up
+            const rampUpDiv = document.createElement('div');
+            rampUpDiv.className = 'timeline-section section-rampup';
+            rampUpDiv.style.left = '0%';
+            rampUpDiv.style.width = rampUpWidth + '%';
+            rampUpDiv.textContent = `↗️ 0-${rampEnd}`;
+            bar.appendChild(rampUpDiv);
+            
+            // Hold
+            const holdDiv = document.createElement('div');
+            holdDiv.className = 'timeline-section section-hold';
+            holdDiv.style.left = rampUpWidth + '%';
+            holdDiv.style.width = holdWidth + '%';
+            holdDiv.textContent = `━ ${holdStart}-${holdEnd}`;
+            bar.appendChild(holdDiv);
+            
+            // Ramp Down
+            const rampDownDiv = document.createElement('div');
+            rampDownDiv.className = 'timeline-section section-rampdown';
+            rampDownDiv.style.left = (rampUpWidth + holdWidth) + '%';
+            rampDownDiv.style.width = rampDownWidth + '%';
+            rampDownDiv.textContent = `↘️ ${downStart}-${totalFrames}`;
+            bar.appendChild(rampDownDiv);
+        }
+        
+        // ============================================================
+        // GENERADOR DE ANIMACIÓN
+        // ============================================================
+        function generateAnimation() {
+            // Obtener configuración
+            const config = {
+                name: document.getElementById('animName').value,
+                totalFrames: parseInt(document.getElementById('totalFrames').value),
+                fps: parseInt(document.getElementById('fps').value),
+                rampEnd: parseInt(document.getElementById('rampEnd').value),
+                holdStart: parseInt(document.getElementById('holdStart').value),
+                holdEnd: parseInt(document.getElementById('holdEnd').value),
+                downStart: parseInt(document.getElementById('downStart').value)
+            };
+            
+            // Obtener valores pico
+            const peakValues = {};
+            ALL_SHAPE_KEYS.forEach(key => {
+                const value = parseFloat(document.getElementById(`peak-${key}`).value);
+                if (value > 0) {
+                    peakValues[key] = value;
+                }
+            });
+            
+            // Generar frames
+            const frames = [];
+            
+            for (let frame = 0; frame < config.totalFrames; frame++) {
+                const time = frame / config.fps;
+                let shapeKeys = {};
+                
+                if (frame <= config.rampEnd) {
+                    // Fase 1: Ramp Up (0 → Tope)
+                    const progress = frame / config.rampEnd;
+                    for (const [key, peakValue] of Object.entries(peakValues)) {
+                        shapeKeys[key] = peakValue * progress;
+                    }
+                } else if (frame >= config.holdStart && frame <= config.holdEnd) {
+                    // Fase 2: Hold (Mantener Tope)
+                    shapeKeys = { ...peakValues };
+                } else if (frame >= config.downStart) {
+                    // Fase 3: Ramp Down (Tope → 0)
+                    const totalDownFrames = config.totalFrames - config.downStart;
+                    const currentDownFrame = frame - config.downStart;
+                    const progress = 1 - (currentDownFrame / totalDownFrames);
+                    for (const [key, peakValue] of Object.entries(peakValues)) {
+                        shapeKeys[key] = peakValue * progress;
+                    }
+                }
+                
+                // Redondear valores
+                for (const key in shapeKeys) {
+                    shapeKeys[key] = Math.round(shapeKeys[key] * 100) / 100;
+                }
+                
+                frames.push({
+                    frame: frame,
+                    time: time,
+                    shape_keys: shapeKeys
+                });
+            }
+            
+            // Crear objeto de animación
+            generatedAnimation = {
+                name: config.name,
+                fps: config.fps,
+                duration: config.totalFrames / config.fps,
+                frames: frames
+            };
+            
+            document.getElementById('exportBtn').disabled = false;
+            
+            alert(`✅ Animación generada: ${config.totalFrames} frames, ${generatedAnimation.duration.toFixed(2)}s`);
+        }
+        
+        // ============================================================
+        // REPRODUCCIÓN
+        // ============================================================
+        function playAnimation() {
+            if (!generatedAnimation) {
+                alert('⚠️ Primero genera la animación');
+                return;
+            }
+            
+            animationPlaying = true;
+            animationFrame = 0;
+            animateLoop();
+        }
+        
+        function animateLoop() {
+            if (!animationPlaying || !generatedAnimation) return;
+            
+            if (animationFrame >= generatedAnimation.frames.length) {
+                animationFrame = 0; // Loop
+            }
+            
+            const frame = generatedAnimation.frames[animationFrame];
+            applyShapeKeysTo3D(frame.shape_keys);
+            
+            animationFrame++;
+            
+            setTimeout(() => {
+                requestAnimationFrame(animateLoop);
+            }, 1000 / generatedAnimation.fps);
+        }
+        
+        function stopAnimation() {
+            animationPlaying = false;
+            animationFrame = 0;
+            
+            // Reset a neutral
+            applyShapeKeysTo3D({});
+        }
+        
+        // ============================================================
+        // THREE.JS
+        // ============================================================
+        function initializeThreeJS() {
+            const canvas = document.getElementById('canvas3d');
+            const scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x0a0e27);
+            
+            const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 1000);
+            camera.position.set(0, 1.6, 2);
+            
+            const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+            renderer.setSize(canvas.clientWidth, canvas.clientHeight);
+            
+            const controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.target.set(0, 1.4, 0);
+            controls.update();
+            
+            scene.add(new THREE.AmbientLight(0xffffff, 0.7));
+            const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            dirLight.position.set(5, 10, 5);
+            scene.add(dirLight);
+            
+            // Cargar modelo Luis
+            const loader = new THREE.GLTFLoader();
+            loader.load('output/glb/Luis/Luis.glb', (gltf) => {
+                model3D = gltf.scene;
+                scene.add(model3D);
+                
+                const box = new THREE.Box3().setFromObject(model3D);
+                const center = box.getCenter(new THREE.Vector3());
+                model3D.position.sub(center);
+                model3D.position.y = 0;
+                
+                model3D.traverse(child => {
+                    if (child.isMesh && child.morphTargetInfluences) {
+                        meshesWithTargets.push(child);
+                    }
+                });
+                
+                console.log(`✅ Modelo cargado: ${meshesWithTargets.length} meshes`);
+            });
+            
+            function animate() {
+                requestAnimationFrame(animate);
+                controls.update();
+                renderer.render(scene, camera);
+            }
+            animate();
+        }
+        
+        function applyShapeKeysTo3D(shapeKeys) {
+            meshesWithTargets.forEach(mesh => {
+                // Primero resetear todos
+                if (mesh.morphTargetDictionary) {
+                    for (let i = 0; i < mesh.morphTargetInfluences.length; i++) {
+                        mesh.morphTargetInfluences[i] = 0;
+                    }
+                    
+                    // Aplicar los nuevos valores
+                    for (const [name, value] of Object.entries(shapeKeys)) {
+                        const idx = mesh.morphTargetDictionary[name];
+                        if (idx !== undefined) {
+                            mesh.morphTargetInfluences[idx] = value;
+                        }
+                    }
+                }
+            });
+        }
+        
+        // ============================================================
+        // EXPORTAR
+        // ============================================================
+        function exportJSON() {
+            if (!generatedAnimation) {
+                alert('⚠️ Primero genera la animación');
+                return;
+            }
+            
+            const blob = new Blob([JSON.stringify(generatedAnimation, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${generatedAnimation.name}_facial_animation.json`;
+            a.click();
+            
+            alert('✅ JSON exportado correctamente');
+        }
+        
+        // ============================================================
+        // BÚSQUEDA DE PRESETS
+        // ============================================================
+        function filterPresets() {
+            const search = document.getElementById('presetSearch').value.toLowerCase();
+            const allButtons = document.querySelectorAll('.preset-btn');
+            const allCategories = document.querySelectorAll('#presetCategories h3');
+            
+            if (search === '') {
+                // Mostrar todo
+                allButtons.forEach(btn => btn.style.display = 'block');
+                allCategories.forEach(cat => cat.style.display = 'block');
+                return;
+            }
+            
+            // Filtrar
+            let visibleInCategory = {};
+            
+            allButtons.forEach(btn => {
+                const text = btn.textContent.toLowerCase();
+                const preset = btn.getAttribute('onclick').match(/'([^']+)'/)[1];
+                
+                if (text.includes(search) || preset.includes(search)) {
+                    btn.style.display = 'block';
+                    
+                    // Marcar categoría como visible
+                    let category = btn.parentElement.previousElementSibling;
+                    if (category && category.tagName === 'H3') {
+                        visibleInCategory[category.textContent] = true;
+                    }
+                } else {
+                    btn.style.display = 'none';
+                }
+            });
+            
+            // Ocultar categorías vacías
+            allCategories.forEach(cat => {
+                if (visibleInCategory[cat.textContent]) {
+                    cat.style.display = 'block';
+                } else {
+                    cat.style.display = 'none';
+                }
+            });
+        }
+        
+        // Auto-actualizar valores cuando cambian inputs
+        document.addEventListener('input', (e) => {
+            if (e.target.id.startsWith('ramp') || e.target.id.startsWith('hold') || 
+                e.target.id.startsWith('down') || e.target.id === 'totalFrames') {
+                updateTimeline();
+            }
+        });
+    </script>
+</body>
+</html>

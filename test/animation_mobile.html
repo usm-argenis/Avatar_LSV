@@ -1,0 +1,1134 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LSV Mobile - Animaciones</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #ffffff;
+            overflow: hidden;
+            color: white;
+        }
+
+        #app {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #viewer-container {
+            flex: 1;
+            position: relative;
+            background: linear-gradient(180deg, #1a1a2e 0%, #2d2d44 100%);
+        }
+
+        #canvas-3d {
+            width: 100%;
+            height: 100%;
+        }
+
+        /*.status {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.95) 0%, rgba(118, 75, 162, 0.95) 100%);
+            padding: 10px 18px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            z-index: 50;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }*/
+
+        #loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        #loading.hidden {
+            display: none;
+        }
+
+        .spinner {
+            width: 70px;
+            height: 70px;
+            border: 5px solid rgba(255, 255, 255, 0.2);
+            border-top: 5px solid #f093fb;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 25px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            font-size: 20px;
+            color: #f093fb;
+            font-weight: 600;
+        }
+
+        /* Barra superior de controles */
+      .top-bar {
+            position: absolute;
+            top: 15px;
+            /* --- CAMBIOS PARA CENTRAR --- */
+            left: 50%;
+            transform: translateX(-50%);
+            /* ---------------------------- */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            z-index: 100;
+            width: max-content; /* Asegura que la barra no se estire de más */
+        }
+
+        .control-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: 2px solid rgba(255, 255, 255, 0.4);
+            color: white;
+            padding: 8px 14px;
+            border-radius: 20px;
+            font-size: 10px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 3px;
+            min-width: 70px;
+            height: auto;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        .control-btn .btn-icon {
+            font-size: 18px;
+            line-height: 1;
+        }
+
+        .control-btn .btn-text {
+            font-size: 9px;
+            line-height: 1;
+            margin-top: 2px;
+        }
+
+        .control-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .control-btn:active {
+            transform: translateY(0) scale(0.95);
+        }
+
+        .control-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Botón Pausar - Verde cuando puede pausar */
+        .control-btn.pause {
+            background: linear-gradient(135deg, #4CAF50 0%, #45A049 100%);
+            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.4);
+        }
+
+        .control-btn.pause:hover {
+            box-shadow: 0 6px 20px rgba(76, 175, 80, 0.6);
+        }
+
+        /* Botón Pausar cuando está pausado - Rojo */
+        .control-btn.pause.paused {
+            background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%);
+            box-shadow: 0 4px 15px rgba(244, 67, 54, 0.4);
+        }
+
+        .control-btn.pause.paused:hover {
+            box-shadow: 0 6px 20px rgba(244, 67, 54, 0.6);
+        }
+
+        /* Botón Repetir - Azul */
+        .control-btn.replay {
+            background: linear-gradient(135deg, #2196F3 0%, #53a5f8 100%);
+            box-shadow: 0 4px 15px rgba(33, 150, 243, 0.4);
+        }
+
+        .control-btn.replay:hover {
+            box-shadow: 0 6px 20px rgba(33, 150, 243, 0.6);
+        }
+
+        /* Botón Reset Cámara - Morado */
+        .control-btn.reset-camera {
+            background: linear-gradient(135deg, #ff3300 0%, #ff3838cb 100%);
+            box-shadow: 0 4px 15px rgba(255, 81, 0, 0.4);
+        }
+
+        .control-btn.reset-camera:hover {
+            box-shadow: 0 6px 20px rgba(156, 39, 176, 0.6);
+        }
+
+        /* Input de texto inferior */
+        .input-container {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            /*background: linear-gradient(180deg, rgba(26, 26, 46, 0.98) 0%, rgba(0, 0, 0, 0.98) 100%);
+            */padding: 15px;
+            padding-bottom: max(15px, env(safe-area-inset-bottom));
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            z-index: 100;
+            /*//box-shadow: 0 -4px 20px rgba(102, 126, 234, 0.3);
+            border-top: 3px solid rgba(102, 126, 234, 0.5);*/
+            min-height: 70px;
+        }
+
+        .text-input {
+            flex: 1;
+            background: linear-gradient(180deg, rgba(46, 46, 73, 0.98) 0%, rgb(34, 42, 54) 100%);
+            
+            border: 2px solid rgba(102, 126, 234, 0.5);
+            border-radius: 25px;
+            color: white;
+            padding: 14px 20px;
+            font-size: 16px;
+            font-weight: 500;
+            outline: none;
+            transition: all 0.3s ease;
+            box-shadow: inset 0 2px 8px rgba(0, 60, 255, 0.253);
+            min-height: 48px;
+        }
+
+        .text-input:focus {
+            border-color: #667eea;
+            background: linear-gradient(180deg, rgba(46, 46, 73, 0.98) 0%, rgb(34, 42, 54) 100%);
+            box-shadow: inset 0 2px 8px rgba(0, 60, 255, 0.253), 0 0 0 3px rgba(102, 126, 234, 0.3);
+        }
+
+        .text-input::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+            font-weight: 400;
+        }
+
+        .animate-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: 2px solid rgba(255, 255, 255, 0.4);
+            color: white;
+            padding: 14px 24px;
+            border-radius: 25px;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.5);
+            min-width: 110px;
+            min-height: 48px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .animate-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.7);
+        }
+
+        .animate-btn:active {
+            transform: translateY(0) scale(0.97);
+        }
+
+        .animate-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.2);
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <div id="viewer-container">
+            <canvas id="canvas-3d"></canvas>
+            
+            <!-- Status -->
+            <div class="status" id="status">Cargando...</div>
+            
+            <!-- Botones superiores derechos -->
+            <div class="top-bar">
+                <button class="control-btn reset-camera" id="resetCameraBtn" title="Resetear Cámara">
+                    <span class="btn-icon">🎯</span>
+                    <span class="btn-text">Resetear</span>
+                </button>
+                <button class="control-btn pause" id="pauseBtn" disabled title="Pausar/Reanudar">
+                    <span class="btn-icon" id="pauseIcon">⏸️</span>
+                    <span class="btn-text" id="pauseText">Pausar</span>
+                </button>
+                <button class="control-btn replay" id="replayBtn" disabled title="Repetir Animación">
+                    <span class="btn-icon">🔄</span>
+                    <span class="btn-text">Repetir</span>
+                </button>
+            </div>
+
+            <!-- Input de texto inferior -->
+            <div class="input-container">
+                <input 
+                    type="text" 
+                    class="text-input" 
+                    id="textInput" 
+                    placeholder="Escribe una frase aquí... ej: hola buenos dias"
+                    autocomplete="off"
+                >
+                <button class="animate-btn" id="animateBtn">
+                    ANIMAR
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="loading">
+        <div class="spinner"></div>
+        <div class="loading-text" id="loading-text">Inicializando...</div>
+    </div>
+
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+                "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+            }
+        }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+        let scene, camera, renderer, controls, clock;
+        let avatarModel, mixer;
+        let animationCache = new Map();
+        let currentAction = null;
+        let avatarActual = 'Nancy';
+        let isPaused = false;
+        let ultimoTexto = '';
+        let isAnimating = false;
+        
+        // Posición inicial de la cámara
+        const INITIAL_CAMERA_POSITION = { x: 0, y: 1.6, z: 2.2 };
+        const INITIAL_CAMERA_TARGET = { x: 0, y: 1.2, z: 0 };
+        
+        // Diccionario de mapeo
+                                const DICCIONARIO = {
+            // 📌 Generado automáticamente por update_diccionario_from_duvall.py
+            '0': { categoria: 'numero', archivo: '0' },
+            '1': { categoria: 'numero', archivo: '1' },
+            '10': { categoria: 'numero', archivo: '10' },
+            '10_o': { categoria: 'numeros ordinales', archivo: '10_o' },
+            '1_o': { categoria: 'numeros ordinales', archivo: '1_o' },
+            '1m': { categoria: 'numero', archivo: '1M' },
+            '2': { categoria: 'numero', archivo: '2' },
+            '2_o': { categoria: 'numeros ordinales', archivo: '2_o' },
+            '3': { categoria: 'numero', archivo: '3' },
+            '3_o': { categoria: 'numeros ordinales', archivo: '3_o' },
+            '4': { categoria: 'numero', archivo: '4' },
+            '4_o': { categoria: 'numeros ordinales', archivo: '4_o' },
+            '5': { categoria: 'numero', archivo: '5' },
+            '5_o': { categoria: 'numeros ordinales', archivo: '5_o' },
+            '6': { categoria: 'numero', archivo: '6' },
+            '6_o': { categoria: 'numeros ordinales', archivo: '6_o' },
+            '7': { categoria: 'numero', archivo: '7' },
+            '7_o': { categoria: 'numeros ordinales', archivo: '7_o' },
+            '8': { categoria: 'numero', archivo: '8' },
+            '8_o': { categoria: 'numeros ordinales', archivo: '8_o' },
+            '9': { categoria: 'numero', archivo: '9' },
+            '9_o': { categoria: 'numeros ordinales', archivo: '9_o' },
+            'a': { categoria: 'alfabeto', archivo: 'a' },
+            'a la orden': { categoria: 'cortesia', archivo: 'a la orden' },
+            'abogado': { categoria: 'profesion', archivo: 'abogado' },
+            'abril': { categoria: 'expresiones', archivo: 'abril' },
+            'adios': { categoria: 'saludos', archivo: 'adios' },
+            'administrador': { categoria: 'profesion', archivo: 'administrador' },
+            'adulto': { categoria: 'personas', archivo: 'adulto' },
+            'adverbios': { categoria: 'adverbios lugares', archivo: 'adverbios' },
+            'aeropuerto': { categoria: 'medios transporte/aereo', archivo: 'aeropuerto' },
+            'agosto': { categoria: 'expresiones', archivo: 'agosto' },
+            'al lado': { categoria: 'adverbios lugares', archivo: 'al lado' },
+            'albañil': { categoria: 'profesion', archivo: 'albañil' },
+            'algo': { categoria: 'preposicion', archivo: 'algo' },
+            'alguien': { categoria: 'preposicion', archivo: 'alguien' },
+            'algun': { categoria: 'preposicion', archivo: 'algun' },
+            'amar': { categoria: 'verbos', archivo: 'amar' },
+            'amigo': { categoria: 'personas', archivo: 'amigo' },
+            'analista': { categoria: 'profesion', archivo: 'analista' },
+            'anciano': { categoria: 'personas', archivo: 'anciano' },
+            'anteayer': { categoria: 'tiempo', archivo: 'anteayer' },
+            'apartamento': { categoria: 'tipos de vivienda', archivo: 'apartamento' },
+            'aterrizar': { categoria: 'medios transporte/aereo', archivo: 'aterrizar' },
+            'atras': { categoria: 'adverbios lugares', archivo: 'atras' },
+            'autobus': { categoria: 'medios transporte/terrestre', archivo: 'autobus' },
+            'auxiliar': { categoria: 'profesion', archivo: 'auxiliar' },
+            'avion': { categoria: 'medios transporte/aereo', archivo: 'avion' },
+            'avioneta': { categoria: 'medios transporte/aereo', archivo: 'avioneta' },
+            'ayer': { categoria: 'tiempo', archivo: 'ayer' },
+            'ayudar': { categoria: 'verbos', archivo: 'ayudar' },
+            'b': { categoria: 'alfabeto', archivo: 'b' },
+            'barbero': { categoria: 'profesion', archivo: 'barbero' },
+            'barco': { categoria: 'medios transporte/maritimo', archivo: 'barco' },
+            'bastante': { categoria: 'preposicion', archivo: 'bastante' },
+            'baño': { categoria: 'tipos de vivienda', archivo: 'baño' },
+            'bebe': { categoria: 'personas', archivo: 'bebe' },
+            'bicicleta': { categoria: 'medios transporte/terrestre', archivo: 'bicicleta' },
+            'bien': { categoria: 'expresiones', archivo: 'bien' },
+            'bienvenido': { categoria: 'saludos', archivo: 'bienvenido' },
+            'boleto': { categoria: 'medios transporte/aereo', archivo: 'boleto' },
+            'buen provecho': { categoria: 'cortesia', archivo: 'buen provecho' },
+            'buenas noches': { categoria: 'saludos', archivo: 'buenas noches' },
+            'buenas tardes': { categoria: 'saludos', archivo: 'buenas tardes' },
+            'buenos dias': { categoria: 'saludos', archivo: 'buenos dias' },
+            'c': { categoria: 'alfabeto', archivo: 'c' },
+            'cabletren': { categoria: 'medios transporte/terrestre', archivo: 'cabletren' },
+            'calendario': { categoria: 'tiempo', archivo: 'calendario' },
+            'camioneta': { categoria: 'medios transporte/terrestre', archivo: 'camioneta' },
+            'canoa': { categoria: 'medios transporte/maritimo', archivo: 'canoa' },
+            'cansar': { categoria: 'verbos', archivo: 'cansar' },
+            'carrera': { categoria: 'profesion', archivo: 'carrera' },
+            'carro': { categoria: 'medios transporte/terrestre', archivo: 'carro' },
+            'casa': { categoria: 'tipos de vivienda', archivo: 'casa' },
+            'casado': { categoria: 'estado civil', archivo: 'casado' },
+            'cerca': { categoria: 'adverbios lugares', archivo: 'cerca' },
+            'chao': { categoria: 'saludos', archivo: 'chao' },
+            'chef': { categoria: 'profesion', archivo: 'chef' },
+            'ciego': { categoria: 'personas', archivo: 'ciego' },
+            'cocina': { categoria: 'tipos de vivienda', archivo: 'cocina' },
+            'cocinero': { categoria: 'profesion', archivo: 'cocinero' },
+            'comedor': { categoria: 'tipos de vivienda', archivo: 'comedor' },
+            'comer': { categoria: 'verbos', archivo: 'comer' },
+            'como': { categoria: 'expresiones', archivo: 'como' },
+            'como estas': { categoria: 'preguntas', archivo: 'como estas' },
+            'compañero': { categoria: 'personas', archivo: 'compañero' },
+            'concubino': { categoria: 'estado civil', archivo: 'concubino' },
+            'conductor': { categoria: 'profesion', archivo: 'conductor' },
+            'conocer': { categoria: 'verbos', archivo: 'conocer' },
+            'constructor': { categoria: 'profesion', archivo: 'constructor' },
+            'contador': { categoria: 'profesion', archivo: 'contador' },
+            'cortesia': { categoria: 'cortesia', archivo: 'cortesia' },
+            'cual': { categoria: 'expresiones', archivo: 'cual' },
+            'cual es tu nombre': { categoria: 'preguntas', archivo: 'cual es tu nombre' },
+            'cual es tu sena': { categoria: 'preguntas', archivo: 'cual es tu sena' },
+            'cualquier': { categoria: 'preposicion', archivo: 'cualquier' },
+            'cuando': { categoria: 'expresiones', archivo: 'cuando' },
+            'cuantos': { categoria: 'expresiones', archivo: 'cuantos' },
+            'cuarto': { categoria: 'tipos de vivienda', archivo: 'cuarto' },
+            'd': { categoria: 'alfabeto', archivo: 'd' },
+            'de nada': { categoria: 'expresiones', archivo: 'de nada' },
+            'decir': { categoria: 'verbos', archivo: 'decir' },
+            'deletrear': { categoria: 'verbos', archivo: 'deletrear' },
+            'demasiado': { categoria: 'preposicion', archivo: 'demasiado' },
+            'dentista': { categoria: 'profesion', archivo: 'dentista' },
+            'derecha': { categoria: 'adverbios lugares', archivo: 'derecha' },
+            'despegar': { categoria: 'medios transporte/aereo', archivo: 'despegar' },
+            'detective': { categoria: 'profesion', archivo: 'detective' },
+            'dibujante': { categoria: 'profesion', archivo: 'dibujante' },
+            'dibujante tecnico': { categoria: 'profesion', archivo: 'dibujante tecnico' },
+            'diciembre': { categoria: 'expresiones', archivo: 'diciembre' },
+            'director': { categoria: 'profesion', archivo: 'director' },
+            'divorciado': { categoria: 'estado civil', archivo: 'divorciado' },
+            'domingo': { categoria: 'dias_semana', archivo: 'domingo' },
+            'donde': { categoria: 'expresiones', archivo: 'donde' },
+            'donde (especifico)': { categoria: 'expresiones', archivo: 'donde (especifico)' },
+            'dormir': { categoria: 'verbos', archivo: 'dormir' },
+            'e': { categoria: 'alfabeto', archivo: 'e' },
+            'economista': { categoria: 'profesion', archivo: 'economista' },
+            'edificio': { categoria: 'tipos de vivienda', archivo: 'edificio' },
+            'el': { categoria: 'pronombres', archivo: 'el' },
+            'ella': { categoria: 'pronombres', archivo: 'ella' },
+            'ellas': { categoria: 'pronombres', archivo: 'ellas' },
+            'ellos': { categoria: 'pronombres', archivo: 'ellos' },
+            'enero': { categoria: 'expresiones', archivo: 'enero' },
+            'enfermera': { categoria: 'profesion', archivo: 'enfermera' },
+            'escritor': { categoria: 'profesion', archivo: 'escritor' },
+            'estacion': { categoria: 'medios transporte/terrestre', archivo: 'estacion' },
+            'estar': { categoria: 'verbos', archivo: 'estar' },
+            'estudiar': { categoria: 'verbos', archivo: 'estudiar' },
+            'expresiones': { categoria: 'expresiones', archivo: 'expresiones' },
+            'f': { categoria: 'alfabeto', archivo: 'f' },
+            'febrero': { categoria: 'expresiones', archivo: 'febrero' },
+            'ferri': { categoria: 'medios transporte/maritimo', archivo: 'ferri' },
+            'ferrocarril': { categoria: 'medios transporte/terrestre', archivo: 'ferrocarril' },
+            'fin de semana': { categoria: 'tiempo', archivo: 'fin de semana' },
+            'fotografo': { categoria: 'profesion', archivo: 'fotografo' },
+            'frente': { categoria: 'adverbios lugares', archivo: 'frente' },
+            'g': { categoria: 'alfabeto', archivo: 'g' },
+            'gerente': { categoria: 'profesion', archivo: 'gerente' },
+            'gracias': { categoria: 'cortesia', archivo: 'gracias' },
+            'h': { categoria: 'alfabeto', archivo: 'h' },
+            'helicoptero': { categoria: 'medios transporte/aereo', archivo: 'helicoptero' },
+            'hola': { categoria: 'saludos', archivo: 'hola' },
+            'hombre': { categoria: 'personas', archivo: 'hombre' },
+            'hoy': { categoria: 'tiempo', archivo: 'hoy' },
+            'i': { categoria: 'alfabeto', archivo: 'i' },
+            'informatica': { categoria: 'profesion', archivo: 'informatica' },
+            'ingeniero': { categoria: 'profesion', archivo: 'ingeniero' },
+            'inspector': { categoria: 'profesion', archivo: 'inspector' },
+            'instructor': { categoria: 'profesion', archivo: 'instructor' },
+            'interprete': { categoria: 'profesion', archivo: 'interprete' },
+            'interrogantes': { categoria: 'expresiones', archivo: 'interrogantes' },
+            'invitar': { categoria: 'verbos', archivo: 'invitar' },
+            'izquierda': { categoria: 'adverbios lugares', archivo: 'izquierda' },
+            'j': { categoria: 'alfabeto', archivo: 'j' },
+            'jefe': { categoria: 'profesion', archivo: 'jefe' },
+            'joven': { categoria: 'personas', archivo: 'joven' },
+            'jueves': { categoria: 'dias_semana', archivo: 'jueves' },
+            'julio': { categoria: 'expresiones', archivo: 'julio' },
+            'junio': { categoria: 'expresiones', archivo: 'junio' },
+            'k': { categoria: 'alfabeto', archivo: 'k' },
+            'l': { categoria: 'alfabeto', archivo: 'l' },
+            'lancha': { categoria: 'medios transporte/maritimo', archivo: 'lancha' },
+            'lejos': { categoria: 'adverbios lugares', archivo: 'lejos' },
+            'licenciado': { categoria: 'profesion', archivo: 'licenciado' },
+            'lugares': { categoria: 'adverbios lugares', archivo: 'lugares' },
+            'lunes': { categoria: 'dias_semana', archivo: 'lunes' },
+            'm': { categoria: 'alfabeto', archivo: 'm' },
+            'maestro': { categoria: 'profesion', archivo: 'maestro' },
+            'mal': { categoria: 'expresiones', archivo: 'mal' },
+            'manana': { categoria: 'tiempo', archivo: 'manana' },
+            'martes': { categoria: 'dias_semana', archivo: 'martes' },
+            'marzo': { categoria: 'expresiones', archivo: 'marzo' },
+            'mas': { categoria: 'preposicion', archivo: 'mas' },
+            'mayo': { categoria: 'expresiones', archivo: 'mayo' },
+            'mayor': { categoria: 'personas', archivo: 'mayor' },
+            'mayor de edad': { categoria: 'personas', archivo: 'mayor de edad' },
+            'mañana': { categoria: 'tiempo', archivo: 'manana' },
+            'medico': { categoria: 'profesion', archivo: 'medico' },
+            'menor de edad': { categoria: 'personas', archivo: 'menor de edad' },
+            'mensajero': { categoria: 'profesion', archivo: 'mensajero' },
+            'mes': { categoria: 'tiempo', archivo: 'mes' },
+            'mesonero': { categoria: 'profesion', archivo: 'mesonero' },
+            'metro': { categoria: 'medios transporte/terrestre', archivo: 'metro' },
+            'metrobus': { categoria: 'medios transporte/terrestre', archivo: 'metrobus' },
+            'miercoles': { categoria: 'dias_semana', archivo: 'miercoles' },
+            'mio': { categoria: 'pronombres', archivo: 'mio' },
+            'moto': { categoria: 'medios transporte/terrestre', archivo: 'moto' },
+            'muchas gracias': { categoria: 'cortesia', archivo: 'muchas gracias' },
+            'mucho': { categoria: 'preposicion', archivo: 'mucho' },
+            'mucho gusto': { categoria: 'cortesia', archivo: 'mucho gusto' },
+            'mujer': { categoria: 'personas', archivo: 'mujer' },
+            'n': { categoria: 'alfabeto', archivo: 'n' },
+            'nada': { categoria: 'preposicion', archivo: 'nada' },
+            'nadie': { categoria: 'preposicion', archivo: 'nadie' },
+            'ningun': { categoria: 'preposicion', archivo: 'ningun' },
+            'niño': { categoria: 'personas', archivo: 'niño' },
+            'no': { categoria: 'expresiones', archivo: 'no' },
+            'nosotros': { categoria: 'pronombres', archivo: 'nosotros' },
+            'noviembre': { categoria: 'expresiones', archivo: 'noviembre' },
+            'novio': { categoria: 'personas', archivo: 'novio' },
+            'nuestro': { categoria: 'pronombres', archivo: 'nuestro' },
+            'o': { categoria: 'alfabeto', archivo: 'o' },
+            'octubre': { categoria: 'expresiones', archivo: 'octubre' },
+            'otro': { categoria: 'preposicion', archivo: 'otro' },
+            'oyente': { categoria: 'personas', archivo: 'oyente' },
+            'p': { categoria: 'alfabeto', archivo: 'p' },
+            'parada': { categoria: 'medios transporte/terrestre', archivo: 'parada' },
+            'pasado manana': { categoria: 'tiempo', archivo: 'pasado manana' },
+            'pasante': { categoria: 'profesion', archivo: 'pasante' },
+            'peluquera': { categoria: 'profesion', archivo: 'peluquera' },
+            'permiso': { categoria: 'cortesia', archivo: 'permiso' },
+            'persona': { categoria: 'personas', archivo: 'persona' },
+            'personas': { categoria: 'personas', archivo: 'personas' },
+            'piloto': { categoria: 'medios transporte/aereo', archivo: 'piloto' },
+            'pintor': { categoria: 'profesion', archivo: 'pintor' },
+            'piso': { categoria: 'tipos de vivienda', archivo: 'piso' },
+            'poco': { categoria: 'preposicion', archivo: 'poco' },
+            'policia': { categoria: 'profesion', archivo: 'policia' },
+            'porque': { categoria: 'expresiones', archivo: 'porque' },
+            'preguntar': { categoria: 'verbos', archivo: 'preguntar' },
+            'presentar': { categoria: 'verbos', archivo: 'presentar' },
+            'profesion': { categoria: 'profesion', archivo: 'profesion' },
+            'profesor': { categoria: 'profesion', archivo: 'profesor' },
+            'psicologo': { categoria: 'profesion', archivo: 'psicologo' },
+            'q': { categoria: 'alfabeto', archivo: 'q' },
+            'que': { categoria: 'expresiones', archivo: 'que' },
+            'que tal': { categoria: 'preguntas', archivo: 'que tal' },
+            'querer': { categoria: 'verbos', archivo: 'querer' },
+            'quien': { categoria: 'expresiones', archivo: 'quien' },
+            'quienquiera': { categoria: 'preposicion', archivo: 'quienquiera' },
+            'r': { categoria: 'alfabeto', archivo: 'r' },
+            'rancho': { categoria: 'tipos de vivienda', archivo: 'rancho' },
+            'regular': { categoria: 'expresiones', archivo: 'regular' },
+            'responder': { categoria: 'verbos', archivo: 'responder' },
+            'sabado': { categoria: 'dias_semana', archivo: 'sabado' },
+            'sala': { categoria: 'tipos de vivienda', archivo: 'sala' },
+            'saludar': { categoria: 'verbos', archivo: 'saludar' },
+            'saludas a': { categoria: 'expresiones', archivo: 'saludas a' },
+            'secretaria': { categoria: 'profesion', archivo: 'secretaria' },
+            'semana': { categoria: 'tiempo', archivo: 'semana' },
+            'sentir': { categoria: 'verbos', archivo: 'sentir' },
+            'separado': { categoria: 'estado civil', archivo: 'separado' },
+            'septiembre': { categoria: 'expresiones', archivo: 'septiembre' },
+            'señor': { categoria: 'personas', archivo: 'señor' },
+            'señorita': { categoria: 'personas', archivo: 'señorita' },
+            'si': { categoria: 'expresiones', archivo: 'si' },
+            'sistema': { categoria: 'profesion', archivo: 'sistema' },
+            'soltero': { categoria: 'estado civil', archivo: 'soltero' },
+            'sordo': { categoria: 'personas', archivo: 'sordo' },
+            'sordociego': { categoria: 'personas', archivo: 'sordociego' },
+            'supervisor': { categoria: 'profesion', archivo: 'supervisor' },
+            'suyo': { categoria: 'pronombres', archivo: 'suyo' },
+            't': { categoria: 'alfabeto', archivo: 't' },
+            'taxi': { categoria: 'medios transporte/terrestre', archivo: 'taxi' },
+            'tecnico': { categoria: 'profesion', archivo: 'tecnico' },
+            'todo': { categoria: 'preposicion', archivo: 'todo' },
+            'trabajar': { categoria: 'verbos', archivo: 'trabajar' },
+            'traductor': { categoria: 'profesion', archivo: 'traductor' },
+            'tren': { categoria: 'medios transporte/terrestre', archivo: 'tren' },
+            'tu': { categoria: 'pronombres', archivo: 'tu' },
+            'tuyo': { categoria: 'pronombres', archivo: 'tuyo' },
+            'u': { categoria: 'alfabeto', archivo: 'u' },
+            'ustedes': { categoria: 'pronombres', archivo: 'ustedes' },
+            'v': { categoria: 'alfabeto', archivo: 'v' },
+            'vendedor': { categoria: 'profesion', archivo: 'vendedor' },
+            'ver': { categoria: 'verbos', archivo: 'ver' },
+            'viejo': { categoria: 'personas', archivo: 'viejo' },
+            'viernes': { categoria: 'dias_semana', archivo: 'viernes' },
+            'vigilante': { categoria: 'profesion', archivo: 'vigilante' },
+            'viudo': { categoria: 'estado civil', archivo: 'viudo' },
+            'vivir': { categoria: 'verbos', archivo: 'vivir' },
+            'w': { categoria: 'alfabeto', archivo: 'w' },
+            'x': { categoria: 'alfabeto', archivo: 'x' },
+            'y': { categoria: 'alfabeto', archivo: 'y' },
+            'yo': { categoria: 'pronombres', archivo: 'yo' },
+            'z': { categoria: 'alfabeto', archivo: 'z' },
+            'ñ': { categoria: 'alfabeto', archivo: 'ñ' },
+        };
+
+        // Exponer función para React Native
+        window.animarPalabras = async function(texto, avatar = 'Nancy') {
+            if (avatar !== avatarActual) {
+                await cargarAvatar(avatar);
+            }
+            await traducirYAnimar(texto);
+        };
+
+        async function init() {
+            setupScene();
+            setupControls();
+            
+            // Obtener parámetros desde URL
+            const params = new URLSearchParams(window.location.search);
+            const avatarParam = params.get('avatar') || 'Nancy';
+            const textoParam = params.get('text') || '';
+            
+            await cargarAvatar(avatarParam);
+            
+            // Si hay texto en URL, animarlo automáticamente
+            if (textoParam) {
+                document.getElementById('textInput').value = textoParam;
+                setTimeout(() => {
+                    traducirYAnimar(textoParam);
+                }, 500);
+            }
+            
+            animate();
+        }
+
+        function setupControls() {
+            const textInput = document.getElementById('textInput');
+            const animateBtn = document.getElementById('animateBtn');
+            const pauseBtn = document.getElementById('pauseBtn');
+            const replayBtn = document.getElementById('replayBtn');
+            const resetCameraBtn = document.getElementById('resetCameraBtn');
+
+            // Botón Animar
+            animateBtn.addEventListener('click', () => {
+                const texto = textInput.value.trim();
+                if (texto && !isAnimating) {
+                    traducirYAnimar(texto);
+                }
+            });
+
+            // Enter en el input
+            textInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    const texto = textInput.value.trim();
+                    if (texto && !isAnimating) {
+                        traducirYAnimar(texto);
+                    }
+                }
+            });
+
+            // Botón Pausar/Reanudar
+            pauseBtn.addEventListener('click', () => {
+                if (!currentAction) return;
+
+                isPaused = !isPaused;
+                
+                if (isPaused) {
+                    currentAction.paused = true;
+                    pauseBtn.classList.add('paused');
+                    document.getElementById('pauseIcon').textContent = '▶️';
+                    document.getElementById('pauseText').textContent = 'Reanudar';
+                    document.getElementById('status').textContent = '⏸️ Pausado';
+                } else {
+                    currentAction.paused = false;
+                    pauseBtn.classList.remove('paused');
+                    document.getElementById('pauseIcon').textContent = '⏸️';
+                    document.getElementById('pauseText').textContent = 'Pausar';
+                    document.getElementById('status').textContent = `▶️ ${ultimoTexto}`;
+                }
+            });
+
+            // Botón Repetir
+            replayBtn.addEventListener('click', () => {
+                if (ultimoTexto && !isAnimating) {
+                    traducirYAnimar(ultimoTexto);
+                }
+            });
+            
+            // Botón Resetear Cámara
+            resetCameraBtn.addEventListener('click', () => {
+                resetCamera();
+            });
+        }
+        
+        function resetCamera() {
+            if (!camera || !controls) return;
+            
+            // Animar la transición de la cámara
+            const startPos = camera.position.clone();
+            const startTarget = controls.target.clone();
+            const duration = 800; // ms
+            const startTime = Date.now();
+            
+            function animateCameraReset() {
+                const elapsed = Date.now() - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                
+                // Easing suave (ease-out)
+                const eased = 1 - Math.pow(1 - progress, 3);
+                
+                // Interpolar posición
+                camera.position.x = startPos.x + (INITIAL_CAMERA_POSITION.x - startPos.x) * eased;
+                camera.position.y = startPos.y + (INITIAL_CAMERA_POSITION.y - startPos.y) * eased;
+                camera.position.z = startPos.z + (INITIAL_CAMERA_POSITION.z - startPos.z) * eased;
+                
+                // Interpolar target
+                controls.target.x = startTarget.x + (INITIAL_CAMERA_TARGET.x - startTarget.x) * eased;
+                controls.target.y = startTarget.y + (INITIAL_CAMERA_TARGET.y - startTarget.y) * eased;
+                controls.target.z = startTarget.z + (INITIAL_CAMERA_TARGET.z - startTarget.z) * eased;
+                
+                controls.update();
+                
+                if (progress < 1) {
+                    requestAnimationFrame(animateCameraReset);
+                }
+            }
+            
+            animateCameraReset();
+        }
+
+        function setupScene() {
+            const container = document.getElementById('viewer-container');
+            const canvas = document.getElementById('canvas-3d');
+            
+            scene = new THREE.Scene();
+            //color de fondo
+            scene.background = new THREE.Color(0xffffff);
+            
+            camera = new THREE.PerspectiveCamera(
+                50,
+                container.clientWidth / container.clientHeight,
+                0.1,
+                1000
+            );
+            camera.position.set(INITIAL_CAMERA_POSITION.x, INITIAL_CAMERA_POSITION.y, INITIAL_CAMERA_POSITION.z);
+            
+            renderer = new THREE.WebGLRenderer({ 
+                canvas: canvas,
+                antialias: true,
+                alpha: true
+            });
+            renderer.setSize(container.clientWidth, container.clientHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+            renderer.outputColorSpace = THREE.SRGBColorSpace;
+            renderer.toneMapping = THREE.ACESFilmicToneMapping;
+            renderer.toneMappingExposure = 1.2;
+            
+            controls = new OrbitControls(camera, canvas);
+            controls.target.set(INITIAL_CAMERA_TARGET.x, INITIAL_CAMERA_TARGET.y, INITIAL_CAMERA_TARGET.z);
+            controls.update();
+            
+            // Sistema de iluminación igual que avatar_static.html
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
+            scene.add(ambientLight);
+            
+            const directionalLight1 = new THREE.DirectionalLight(0xffffff, 1.2);
+            directionalLight1.position.set(5, 5, 5);
+            scene.add(directionalLight1);
+            
+            const directionalLight2 = new THREE.DirectionalLight(0xffffff, 0.6);
+            directionalLight2.position.set(-5, 3, -5);
+            scene.add(directionalLight2);
+            
+            const fillLight = new THREE.DirectionalLight(0xffffff, 0.4);
+            fillLight.position.set(0, -2, 5);
+            scene.add(fillLight);
+            
+            clock = new THREE.Clock();
+            
+            window.addEventListener('resize', () => {
+                camera.aspect = container.clientWidth / container.clientHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(container.clientWidth, container.clientHeight);
+            });
+        }
+
+        async function cargarAvatar(nombreAvatar) {
+            const loader = new GLTFLoader();
+            const loadingText = document.getElementById('loading-text');
+            const loadingDiv = document.getElementById('loading');
+            
+            loadingDiv.classList.remove('hidden');
+            loadingText.textContent = `Cargando ${nombreAvatar}...`;
+            
+            // Construir URL base para GitHub Pages o local
+            const baseUrl = window.location.hostname.includes('github.io') 
+                ? 'https://usm-argenis.github.io/STT_LSV/test/'
+                : '';
+            
+            // Determinar género del avatar
+            const genero = (nombreAvatar === 'Nancy' || nombreAvatar === 'Nina') ? 'Mujer' : 'Hombre';
+            
+            // Intentar múltiples rutas
+            const rutasAvatar = [
+                `${baseUrl}output/glb/${nombreAvatar}/${nombreAvatar}.glb`,
+                `${baseUrl}output/glb/${genero}/${nombreAvatar}.glb`
+            ];
+            
+            for (const ruta of rutasAvatar) {
+                try {
+                    const gltf = await new Promise((res, rej) => {
+                        loader.load(
+                            ruta,
+                            (result) => res(result),
+                            (progress) => {
+                                const percent = (progress.loaded / progress.total) * 100;
+                                loadingText.textContent = `Cargando ${nombreAvatar}... ${percent.toFixed(0)}%`;
+                            },
+                            (error) => rej(error)
+                        );
+                    });
+                    
+                    console.log(`✅ Avatar cargado desde: ${ruta}`);
+                    
+                    if (avatarModel) {
+                        scene.remove(avatarModel);
+                        avatarModel.traverse((child) => {
+                            if (child.geometry) child.geometry.dispose();
+                            if (child.material) child.material.dispose();
+                        });
+                    }
+                    
+                    avatarModel = gltf.scene;
+                    scene.add(avatarModel);
+                    
+                    const box = new THREE.Box3().setFromObject(avatarModel);
+                    const center = box.getCenter(new THREE.Vector3());
+                    avatarModel.position.sub(center);
+                    avatarModel.position.y = 0;
+                    
+                    // Verificar y habilitar morph targets
+                    let morphTargetMeshes = 0;
+                    const nodeNameMap = {};
+                    
+                    avatarModel.traverse((child) => {
+                        if (child.isMesh && child.morphTargetInfluences && child.morphTargetInfluences.length > 0) {
+                            morphTargetMeshes++;
+                            console.log(`🎭 Morph targets en ${child.name}: ${child.morphTargetInfluences.length}`);
+                            
+                            // Crear mapping de nombres (EyeLeft003 → EyeLeft)
+                            const baseName = child.name.replace(/\d+$/, ''); // Quitar números al final
+                            if (baseName !== child.name) {
+                                nodeNameMap[baseName] = child.name;
+                                console.log(`📝 Mapping: ${baseName} → ${child.name}`);
+                            }
+                            
+                            // Asegurar que el material actualiza los morph targets
+                            if (child.material) {
+                                child.material.morphTargets = true;
+                                child.material.needsUpdate = true;
+                            }
+                        }
+                    });
+                    
+                    // Guardar el mapping en el modelo para uso posterior
+                    avatarModel.userData.nodeNameMap = nodeNameMap;
+                    
+                    if (morphTargetMeshes > 0) {
+                        console.log(`✅ ${morphTargetMeshes} meshes con morph targets habilitados`);
+                    }
+                    
+                    mixer = new THREE.AnimationMixer(avatarModel);
+                    animationCache.clear();
+                    avatarActual = nombreAvatar;
+                    
+                    loadingDiv.classList.add('hidden');
+                    //cambio
+                    //document.getElementById('status').textContent = `✅ ${nombreAvatar} listo`;
+                    console.log(`✅ ${nombreAvatar} cargado exitosamente`);
+                    return;
+                    
+                } catch (error) {
+                    console.log(`⚠️ No se pudo cargar desde: ${ruta}`);
+                }
+            }
+            
+            // Si no se pudo cargar desde ninguna ruta
+            console.error(`❌ No se pudo cargar ${nombreAvatar} desde ninguna ubicación`);
+            document.getElementById('status').textContent = `❌ Error al cargar ${nombreAvatar}`;
+            loadingDiv.classList.add('hidden');
+            throw new Error(`No se pudo cargar ${nombreAvatar}`);
+        }
+
+        async function traducirYAnimar(texto) {
+            if (isAnimating) return;
+            
+            isAnimating = true;
+            ultimoTexto = texto;
+            isPaused = false;
+            
+            // Habilitar controles
+            document.getElementById('pauseBtn').disabled = false;
+            document.getElementById('replayBtn').disabled = false;
+            document.getElementById('animateBtn').disabled = true;
+            
+            const palabras = texto.toLowerCase().trim().split(/\s+/);
+            const animacionesValidas = [];
+            
+            let i = 0;
+            while (i < palabras.length) {
+                let encontrada = false;
+                
+                // Frases de 3 palabras
+                if (i + 2 < palabras.length) {
+                    const frase3 = palabras.slice(i, i + 3).join(' ');
+                    if (DICCIONARIO[frase3]) {
+                        animacionesValidas.push({ texto: frase3, palabra: frase3 });
+                        i += 3;
+                        encontrada = true;
+                    }
+                }
+                
+                // Frases de 2 palabras
+                if (!encontrada && i + 1 < palabras.length) {
+                    const frase2 = palabras.slice(i, i + 2).join(' ');
+                    if (DICCIONARIO[frase2]) {
+                        animacionesValidas.push({ texto: frase2, palabra: frase2 });
+                        i += 2;
+                        encontrada = true;
+                    }
+                }
+                
+                // Palabra individual
+                if (!encontrada) {
+                    if (DICCIONARIO[palabras[i]]) {
+                        animacionesValidas.push({ texto: palabras[i], palabra: palabras[i] });
+                    } else {
+                        console.warn(`⚠️ Palabra no encontrada: ${palabras[i]}`);
+                    }
+                    i++;
+                }
+            }
+            
+            if (animacionesValidas.length === 0) {
+                //cambio
+                //document.getElementById('status').textContent = '⚠️ No se encontraron animaciones';
+                isAnimating = false;
+                document.getElementById('animateBtn').disabled = false;
+                return;
+            }
+            
+            console.log(`🎬 Secuencia: ${animacionesValidas.map(a => a.texto).join(' → ')}`);
+            
+            // Reproducir secuencia
+            for (let idx = 0; idx < animacionesValidas.length; idx++) {
+                const { palabra } = animacionesValidas[idx];
+                await cargarYReproducirAnimacion(palabra);
+            }
+            
+            document.getElementById('status').textContent = '✅ Secuencia completada';
+            isAnimating = false;
+            document.getElementById('animateBtn').disabled = false;
+            
+            // Resetear botón de pausa a estado inicial (verde)
+            const pauseBtn = document.getElementById('pauseBtn');
+            pauseBtn.classList.remove('paused');
+            document.getElementById('pauseIcon').textContent = '⏸️';
+            document.getElementById('pauseText').textContent = 'Pausar';
+        }
+
+        async function cargarYReproducirAnimacion(palabra) {
+            const palabraNormalizada = palabra.toLowerCase().trim();
+            
+            if (!DICCIONARIO[palabraNormalizada]) {
+                return;
+            }
+            //cambio
+            //document.getElementById('status').textContent = `▶️ ${palabra}`;
+            
+            if (animationCache.has(palabraNormalizada)) {
+                console.log(`📦 Caché: ${palabra}`);
+                await reproducirAnimacion(animationCache.get(palabraNormalizada), palabra);
+                return;
+            }
+            
+            const loader = new GLTFLoader();
+            const { categoria, archivo } = DICCIONARIO[palabraNormalizada];
+            const baseUrl = window.location.hostname.includes('github.io') 
+                ? 'https://usm-argenis.github.io/STT_LSV/test/'
+                : '';
+            
+            // Construir el nombre del archivo según el avatar
+            // Remy usa underscores, los demás usan espacios
+            let nombreArchivo;
+            if (avatarActual === 'Remy') {
+                nombreArchivo = archivo.replace(/ /g, '_');
+            } else {
+                nombreArchivo = archivo;
+            }
+            
+            const rutaCompleta = `${baseUrl}output/glb/${avatarActual}/${categoria}/${avatarActual}_resultado_${nombreArchivo}.glb`;
+            
+            console.log(`🔄 Cargando: ${rutaCompleta}`);
+            
+            return new Promise((resolve, reject) => {
+                loader.load(
+                    rutaCompleta,
+                    async (gltf) => {
+                        if (gltf.animations && gltf.animations.length > 0) {
+                            const clip = gltf.animations[0];
+                            
+                            // Verificar si hay tracks de morph targets
+                            const morphTracks = clip.tracks.filter(t => t.name.includes('.morphTargetInfluences'));
+                            if (morphTracks.length > 0) {
+                                console.log(`🎭 ${palabra}: ${morphTracks.length} tracks de morph targets`);
+                            }
+                            
+                            // Corregir nombres de tracks si hay mapping
+                            if (avatarModel.userData.nodeNameMap) {
+                                clip.tracks = clip.tracks.map(track => {
+                                    const trackNodeName = track.name.split('.')[0];
+                                    const mappedName = avatarModel.userData.nodeNameMap[trackNodeName];
+                                    
+                                    if (mappedName) {
+                                        const newTrackName = track.name.replace(trackNodeName, mappedName);
+                                        console.log(`🔧 Corrigiendo track: ${track.name} → ${newTrackName}`);
+                                        track.name = newTrackName;
+                                    }
+                                    
+                                    return track;
+                                });
+                            }
+                            
+                            animationCache.set(palabraNormalizada, clip);
+                            console.log(`✅ Cargada: ${palabra} (${clip.duration.toFixed(2)}s)`);
+                            await reproducirAnimacion(clip, palabra);
+                            resolve();
+                        } else {
+                            console.warn(`⚠️ Sin animaciones: ${palabra}`);
+                            resolve();
+                        }
+                    },
+                    undefined,
+                    (error) => {
+                        console.error(`❌ Error: ${palabra}`, error);
+                        resolve();
+                    }
+                );
+            });
+        }
+
+        async function reproducirAnimacion(clip, palabra) {
+            return new Promise((resolve) => {
+                // Detener animación actual SIN transición para fluidez
+                if (currentAction) {
+                    currentAction.stop();
+                }
+                
+                // Reproducir nueva animación inmediatamente
+                const action = mixer.clipAction(clip);
+                action.reset();
+                action.setLoop(THREE.LoopOnce);
+                action.clampWhenFinished = true;
+                action.play();
+                
+                currentAction = action;
+                
+                const onFinished = (e) => {
+                    if (e.action === action) {
+                        console.log(`✅ Completada: ${palabra}`);
+                        mixer.removeEventListener('finished', onFinished);
+                        resolve();
+                    }
+                };
+                mixer.addEventListener('finished', onFinished);
+            });
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            const delta = clock.getDelta();
+            
+            if (mixer && !isPaused) {
+                mixer.update(delta);
+                
+                // Asegurar que los morph targets se actualicen
+                if (avatarModel) {
+                    avatarModel.traverse((child) => {
+                        if (child.isMesh && child.morphTargetInfluences) {
+                            // El material ya debería estar configurado, pero forzar update si es necesario
+                            if (child.material && !child.material.morphTargets) {
+                                child.material.morphTargets = true;
+                                child.material.needsUpdate = true;
+                            }
+                        }
+                    });
+                }
+            }
+            
+            controls.update();
+            renderer.render(scene, camera);
+        }
+
+        window.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
