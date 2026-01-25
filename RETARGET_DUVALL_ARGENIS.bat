@@ -20,7 +20,7 @@ echo 📁 Categoría: %CATEGORIA%
 echo ====================================================================
 
 REM Ruta a Blender (ajusta si es necesario)
-set BLENDER="C:\Program Files\Blender Foundation\Blender 4.1\blender.exe"
+set BLENDER="C:\Program Files\Blender Foundation\Blender 4.5\blender.exe"
 
 REM Ejecutar script de Python en Blender
 %BLENDER% --background --python scripts\retarget_duvall_argenis.py -- %CATEGORIA%
