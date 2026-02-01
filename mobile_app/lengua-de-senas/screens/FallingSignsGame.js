@@ -333,7 +333,7 @@ export default function FallingSignsGame({ route, navigation }) {
       style={styles.container}
       start={{ x: 0.5, y: 0 }}
       end={{ x: 0.5, y: 1 }}
-    > <StatusBar barStyle="light-content" backgroundColor="#04309e" translucent={true} />
+    ><StatusBar barStyle="light-content" backgroundColor="#04309e" translucent={true} />
               
       <SafeAreaView style={styles.safeArea}>
 

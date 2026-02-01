@@ -154,7 +154,6 @@ def procesar_animacion(animacion_nombre):
     print(f"{'='*80}")
     
     duvall_file = DUVALL_DIR / f"Duvall_resultado_{animacion_nombre}.glb"
-    duvall_backup = DUVALL_DIR / f"Duvall_resultado_{animacion_nombre}_SIN_CONGELAR.glb.backup"
     luis_glb_temp = Path(f"/tmp/luis_temp_{animacion_nombre}.glb")
     luis_glb_final = LUIS_OUTPUT_DIR / f"Luis_resultado_{animacion_nombre}.glb"
     
@@ -365,10 +364,6 @@ def procesar_animacion(animacion_nombre):
         
         # === PASO 7: CONGELAR DUVALL ORIGINAL ===
         print(f"❄️ [EXTRA] Congelando Duvall original...")
-        
-        # Crear backup del Duvall sin congelar
-        if not duvall_backup.exists():
-            shutil.copy2(duvall_file, duvall_backup)
         
         # Limpiar y cargar Duvall original
         bpy.ops.wm.read_factory_settings(use_empty=True)

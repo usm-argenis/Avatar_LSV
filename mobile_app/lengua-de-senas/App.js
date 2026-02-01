@@ -66,6 +66,8 @@ export default function App() {
           <Stack.Screen name="FallingSignsGame" component={FallingSignsGame} />
           <Stack.Screen name="AvatarToTextGame" component={AvatarToTextGame} />
           <Stack.Screen name="MathOperationsGame" component={MathOperationsGame} />
+          {/* Alias para compatibilidad con navegaciones antiguas */}
+          <Stack.Screen name="MathOperations" component={MathOperationsGame} />
           
           {/* Módulos adicionales */}
           <Stack.Screen name="CulturalModule" component={CulturalModule} />

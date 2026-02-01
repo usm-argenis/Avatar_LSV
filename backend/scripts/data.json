@@ -1,0 +1,1918 @@
+{
+  "familia": {
+    "categoria": "general",
+    "archivo": "familia"
+  },
+  "padre": {
+    "categoria": "general",
+    "archivo": "padre"
+  },
+  "madre": {
+    "categoria": "general",
+    "archivo": "madre"
+  },
+  "papa": {
+    "categoria": "general",
+    "archivo": "papa"
+  },
+  "mama": {
+    "categoria": "general",
+    "archivo": "mama"
+  },
+  "hijo": {
+    "categoria": "general",
+    "archivo": "hijo"
+  },
+  "hijastro": {
+    "categoria": "general",
+    "archivo": "hijastro"
+  },
+  "hermano": {
+    "categoria": "general",
+    "archivo": "hermano"
+  },
+  "hermanastro": {
+    "categoria": "general",
+    "archivo": "hermanastro"
+  },
+  "padrastro": {
+    "categoria": "general",
+    "archivo": "padrastro"
+  },
+  "madrastra": {
+    "categoria": "general",
+    "archivo": "madrastra"
+  },
+  "padrinomadrina": {
+    "categoria": "general",
+    "archivo": "padrinomadrina"
+  },
+  "cuñado": {
+    "categoria": "general",
+    "archivo": "cuñado"
+  },
+  "abuelo": {
+    "categoria": "general",
+    "archivo": "abuelo"
+  },
+  "nieto": {
+    "categoria": "general",
+    "archivo": "nieto"
+  },
+  "tio": {
+    "categoria": "general",
+    "archivo": "tio"
+  },
+  "primo": {
+    "categoria": "general",
+    "archivo": "primo"
+  },
+  "sobrino": {
+    "categoria": "general",
+    "archivo": "sobrino"
+  },
+  "suegro": {
+    "categoria": "general",
+    "archivo": "suegro"
+  },
+  "sumar": {
+    "categoria": "general",
+    "archivo": "sumar"
+  },
+  "restar": {
+    "categoria": "general",
+    "archivo": "restar"
+  },
+  "multiplicar": {
+    "categoria": "general",
+    "archivo": "multiplicar"
+  },
+  "dividir": {
+    "categoria": "general",
+    "archivo": "dividir"
+  },
+  "contar": {
+    "categoria": "general",
+    "archivo": "contar"
+  },
+  "calcular": {
+    "categoria": "general",
+    "archivo": "calcular"
+  },
+  "comer": {
+    "categoria": "general",
+    "archivo": "comer"
+  },
+  "correr": {
+    "categoria": "general",
+    "archivo": "correr"
+  },
+  "entrar": {
+    "categoria": "general",
+    "archivo": "entrar"
+  },
+  "fumar": {
+    "categoria": "general",
+    "archivo": "fumar"
+  },
+  "permitit": {
+    "categoria": "general",
+    "archivo": "permitit"
+  },
+  "prohibir": {
+    "categoria": "general",
+    "archivo": "prohibir"
+  },
+  "respetar": {
+    "categoria": "general",
+    "archivo": "respetar"
+  },
+  "viajar": {
+    "categoria": "general",
+    "archivo": "viajar"
+  },
+  "agarrar": {
+    "categoria": "general",
+    "archivo": "agarrar"
+  },
+  "atraer": {
+    "categoria": "general",
+    "archivo": "atraer"
+  },
+  "burlar": {
+    "categoria": "general",
+    "archivo": "burlar"
+  },
+  "calmar": {
+    "categoria": "general",
+    "archivo": "calmar"
+  },
+  "engañar": {
+    "categoria": "general",
+    "archivo": "engañar"
+  },
+  "guardar": {
+    "categoria": "general",
+    "archivo": "guardar"
+  },
+  "llevar": {
+    "categoria": "general",
+    "archivo": "llevar"
+  },
+  "pelear": {
+    "categoria": "general",
+    "archivo": "pelear"
+  },
+  "regalar": {
+    "categoria": "general",
+    "archivo": "regalar"
+  },
+  "ser": {
+    "categoria": "general",
+    "archivo": "ser"
+  },
+  "sufrir": {
+    "categoria": "general",
+    "archivo": "sufrir"
+  },
+  "traer": {
+    "categoria": "general",
+    "archivo": "traer"
+  },
+  "usar": {
+    "categoria": "general",
+    "archivo": "usar"
+  },
+  "vestir": {
+    "categoria": "general",
+    "archivo": "vestir"
+  },
+  "alcabala": {
+    "categoria": "general",
+    "archivo": "alcabala"
+  },
+  "ascensor": {
+    "categoria": "general",
+    "archivo": "ascensor"
+  },
+  "avenida": {
+    "categoria": "general",
+    "archivo": "avenida"
+  },
+  "avila": {
+    "categoria": "general",
+    "archivo": "avila"
+  },
+  "banco": {
+    "categoria": "general",
+    "archivo": "banco"
+  },
+  "barrio": {
+    "categoria": "general",
+    "archivo": "barrio"
+  },
+  "biblioteca": {
+    "categoria": "general",
+    "archivo": "biblioteca"
+  },
+  "calle": {
+    "categoria": "general",
+    "archivo": "calle"
+  },
+  "capital": {
+    "categoria": "general",
+    "archivo": "capital"
+  },
+  "caracas": {
+    "categoria": "general",
+    "archivo": "caracas"
+  },
+  "casa": {
+    "categoria": "general",
+    "archivo": "casa"
+  },
+  "centro comercial": {
+    "categoria": "general",
+    "archivo": "centro comercial"
+  },
+  "cine": {
+    "categoria": "general",
+    "archivo": "cine"
+  },
+  "clinica": {
+    "categoria": "general",
+    "archivo": "clinica"
+  },
+  "club": {
+    "categoria": "general",
+    "archivo": "club"
+  },
+  "colegio": {
+    "categoria": "general",
+    "archivo": "colegio"
+  },
+  "escalera": {
+    "categoria": "general",
+    "archivo": "escalera"
+  },
+  "escalera mecánica": {
+    "categoria": "general",
+    "archivo": "escalera mecánica"
+  },
+  "esquina": {
+    "categoria": "general",
+    "archivo": "esquina"
+  },
+  "estación": {
+    "categoria": "general",
+    "archivo": "estación"
+  },
+  "fabrica empresa": {
+    "categoria": "general",
+    "archivo": "fabrica empresa"
+  },
+  "farmacia": {
+    "categoria": "general",
+    "archivo": "farmacia"
+  },
+  "hospital": {
+    "categoria": "general",
+    "archivo": "hospital"
+  },
+  "hotel": {
+    "categoria": "general",
+    "archivo": "hotel"
+  },
+  "iglesia catolica": {
+    "categoria": "general",
+    "archivo": "iglesia catolica"
+  },
+  "iglesia evangelica": {
+    "categoria": "general",
+    "archivo": "iglesia evangelica"
+  },
+  "los teques": {
+    "categoria": "general",
+    "archivo": "los teques"
+  },
+  "mercado": {
+    "categoria": "general",
+    "archivo": "mercado"
+  },
+  "museo": {
+    "categoria": "general",
+    "archivo": "museo"
+  },
+  "panaderia": {
+    "categoria": "general",
+    "archivo": "panaderia"
+  },
+  "parque": {
+    "categoria": "general",
+    "archivo": "parque"
+  },
+  "plaza": {
+    "categoria": "general",
+    "archivo": "plaza"
+  },
+  "puente": {
+    "categoria": "general",
+    "archivo": "puente"
+  },
+  "quinta": {
+    "categoria": "general",
+    "archivo": "quinta"
+  },
+  "restaurante": {
+    "categoria": "general",
+    "archivo": "restaurante"
+  },
+  "teatro": {
+    "categoria": "general",
+    "archivo": "teatro"
+  },
+  "terminal": {
+    "categoria": "general",
+    "archivo": "terminal"
+  },
+  "universidad": {
+    "categoria": "general",
+    "archivo": "universidad"
+  },
+  "urbanización": {
+    "categoria": "general",
+    "archivo": "urbanización"
+  },
+  "trafico": {
+    "categoria": "general",
+    "archivo": "trafico"
+  },
+  "semáforo": {
+    "categoria": "general",
+    "archivo": "semáforo"
+  },
+  "automercado": {
+    "categoria": "general",
+    "archivo": "automercado"
+  },
+  "taller": {
+    "categoria": "general",
+    "archivo": "taller"
+  },
+  "gimnasio": {
+    "categoria": "general",
+    "archivo": "gimnasio"
+  },
+  "tienda": {
+    "categoria": "general",
+    "archivo": "tienda"
+  },
+  "gandola": {
+    "categoria": "general",
+    "archivo": "gandola"
+  },
+  "locomotora": {
+    "categoria": "general",
+    "archivo": "locomotora"
+  },
+  "metro": {
+    "categoria": "general",
+    "archivo": "metro"
+  },
+  "patines": {
+    "categoria": "general",
+    "archivo": "patines"
+  },
+  "patineta": {
+    "categoria": "general",
+    "archivo": "patineta"
+  },
+  "teleférico": {
+    "categoria": "general",
+    "archivo": "teleférico"
+  },
+  "tren": {
+    "categoria": "general",
+    "archivo": "tren"
+  },
+  "había una vez": {
+    "categoria": "general",
+    "archivo": "había una vez"
+  },
+  "hace años": {
+    "categoria": "general",
+    "archivo": "hace años"
+  },
+  "hace rato": {
+    "categoria": "general",
+    "archivo": "hace rato"
+  },
+  "antes": {
+    "categoria": "general",
+    "archivo": "antes"
+  },
+  "horario": {
+    "categoria": "general",
+    "archivo": "horario"
+  },
+  "en punto": {
+    "categoria": "general",
+    "archivo": "en punto"
+  },
+  "hora": {
+    "categoria": "general",
+    "archivo": "hora"
+  },
+  "media hora": {
+    "categoria": "general",
+    "archivo": "media hora"
+  },
+  "un cuarto": {
+    "categoria": "general",
+    "archivo": "un cuarto"
+  },
+  "un minuto": {
+    "categoria": "general",
+    "archivo": "un minuto"
+  },
+  "un segundo": {
+    "categoria": "general",
+    "archivo": "un segundo"
+  },
+  "una hora": {
+    "categoria": "general",
+    "archivo": "una hora"
+  },
+  "adverbios": {
+    "categoria": "general",
+    "archivo": "adverbios"
+  },
+  "al lado": {
+    "categoria": "general",
+    "archivo": "al lado"
+  },
+  "atras": {
+    "categoria": "general",
+    "archivo": "atras"
+  },
+  "cerca": {
+    "categoria": "general",
+    "archivo": "cerca"
+  },
+  "derecha": {
+    "categoria": "general",
+    "archivo": "derecha"
+  },
+  "frente": {
+    "categoria": "general",
+    "archivo": "frente"
+  },
+  "izquierda": {
+    "categoria": "general",
+    "archivo": "izquierda"
+  },
+  "lejos": {
+    "categoria": "general",
+    "archivo": "lejos"
+  },
+  "lugares": {
+    "categoria": "general",
+    "archivo": "lugares"
+  },
+  "a": {
+    "categoria": "alfabeto",
+    "archivo": "a"
+  },
+  "b": {
+    "categoria": "alfabeto",
+    "archivo": "b"
+  },
+  "c": {
+    "categoria": "alfabeto",
+    "archivo": "c"
+  },
+  "d": {
+    "categoria": "alfabeto",
+    "archivo": "d"
+  },
+  "e": {
+    "categoria": "alfabeto",
+    "archivo": "e"
+  },
+  "f": {
+    "categoria": "alfabeto",
+    "archivo": "f"
+  },
+  "g": {
+    "categoria": "alfabeto",
+    "archivo": "g"
+  },
+  "h": {
+    "categoria": "alfabeto",
+    "archivo": "h"
+  },
+  "i": {
+    "categoria": "alfabeto",
+    "archivo": "i"
+  },
+  "j": {
+    "categoria": "alfabeto",
+    "archivo": "j"
+  },
+  "k": {
+    "categoria": "alfabeto",
+    "archivo": "k"
+  },
+  "l": {
+    "categoria": "alfabeto",
+    "archivo": "l"
+  },
+  "m": {
+    "categoria": "alfabeto",
+    "archivo": "m"
+  },
+  "n": {
+    "categoria": "alfabeto",
+    "archivo": "n"
+  },
+  "o": {
+    "categoria": "alfabeto",
+    "archivo": "o"
+  },
+  "p": {
+    "categoria": "alfabeto",
+    "archivo": "p"
+  },
+  "q": {
+    "categoria": "alfabeto",
+    "archivo": "q"
+  },
+  "r": {
+    "categoria": "alfabeto",
+    "archivo": "r"
+  },
+  "t": {
+    "categoria": "alfabeto",
+    "archivo": "t"
+  },
+  "u": {
+    "categoria": "alfabeto",
+    "archivo": "u"
+  },
+  "v": {
+    "categoria": "alfabeto",
+    "archivo": "v"
+  },
+  "w": {
+    "categoria": "alfabeto",
+    "archivo": "w"
+  },
+  "x": {
+    "categoria": "alfabeto",
+    "archivo": "x"
+  },
+  "y": {
+    "categoria": "alfabeto",
+    "archivo": "y"
+  },
+  "z": {
+    "categoria": "alfabeto",
+    "archivo": "z"
+  },
+  "ñ": {
+    "categoria": "alfabeto",
+    "archivo": "ñ"
+  },
+  "a la orden": {
+    "categoria": "general",
+    "archivo": "a la orden"
+  },
+  "buen provecho": {
+    "categoria": "general",
+    "archivo": "buen provecho"
+  },
+  "cortesia": {
+    "categoria": "general",
+    "archivo": "cortesia"
+  },
+  "gracias": {
+    "categoria": "general",
+    "archivo": "gracias"
+  },
+  "muchas gracias": {
+    "categoria": "general",
+    "archivo": "muchas gracias"
+  },
+  "mucho gusto": {
+    "categoria": "general",
+    "archivo": "mucho gusto"
+  },
+  "permiso": {
+    "categoria": "general",
+    "archivo": "permiso"
+  },
+  "domingo": {
+    "categoria": "general",
+    "archivo": "domingo"
+  },
+  "jueves": {
+    "categoria": "general",
+    "archivo": "jueves"
+  },
+  "lunes": {
+    "categoria": "general",
+    "archivo": "lunes"
+  },
+  "martes": {
+    "categoria": "general",
+    "archivo": "martes"
+  },
+  "miercoles": {
+    "categoria": "general",
+    "archivo": "miercoles"
+  },
+  "sabado": {
+    "categoria": "general",
+    "archivo": "sabado"
+  },
+  "viernes": {
+    "categoria": "general",
+    "archivo": "viernes"
+  },
+  "casado": {
+    "categoria": "general",
+    "archivo": "casado"
+  },
+  "concubino": {
+    "categoria": "general",
+    "archivo": "concubino"
+  },
+  "divorciado": {
+    "categoria": "general",
+    "archivo": "divorciado"
+  },
+  "separado": {
+    "categoria": "general",
+    "archivo": "separado"
+  },
+  "soltero": {
+    "categoria": "general",
+    "archivo": "soltero"
+  },
+  "viudo": {
+    "categoria": "general",
+    "archivo": "viudo"
+  },
+  "abril": {
+    "categoria": "general",
+    "archivo": "abril"
+  },
+  "agosto": {
+    "categoria": "general",
+    "archivo": "agosto"
+  },
+  "bien": {
+    "categoria": "general",
+    "archivo": "bien"
+  },
+  "como": {
+    "categoria": "general",
+    "archivo": "como"
+  },
+  "cual": {
+    "categoria": "general",
+    "archivo": "cual"
+  },
+  "cuando": {
+    "categoria": "general",
+    "archivo": "cuando"
+  },
+  "cuantos": {
+    "categoria": "general",
+    "archivo": "cuantos"
+  },
+  "de nada": {
+    "categoria": "general",
+    "archivo": "de nada"
+  },
+  "diciembre": {
+    "categoria": "general",
+    "archivo": "diciembre"
+  },
+  "donde especifico": {
+    "categoria": "general",
+    "archivo": "donde especifico"
+  },
+  "donde": {
+    "categoria": "general",
+    "archivo": "donde"
+  },
+  "enero": {
+    "categoria": "general",
+    "archivo": "enero"
+  },
+  "expresiones": {
+    "categoria": "general",
+    "archivo": "expresiones"
+  },
+  "febrero": {
+    "categoria": "general",
+    "archivo": "febrero"
+  },
+  "interrogantes": {
+    "categoria": "general",
+    "archivo": "interrogantes"
+  },
+  "julio": {
+    "categoria": "general",
+    "archivo": "julio"
+  },
+  "junio": {
+    "categoria": "general",
+    "archivo": "junio"
+  },
+  "mal": {
+    "categoria": "general",
+    "archivo": "mal"
+  },
+  "marzo": {
+    "categoria": "general",
+    "archivo": "marzo"
+  },
+  "mayo": {
+    "categoria": "general",
+    "archivo": "mayo"
+  },
+  "no": {
+    "categoria": "general",
+    "archivo": "no"
+  },
+  "noviembre": {
+    "categoria": "general",
+    "archivo": "noviembre"
+  },
+  "octubre": {
+    "categoria": "general",
+    "archivo": "octubre"
+  },
+  "porque": {
+    "categoria": "general",
+    "archivo": "porque"
+  },
+  "que": {
+    "categoria": "general",
+    "archivo": "que"
+  },
+  "quien": {
+    "categoria": "general",
+    "archivo": "quien"
+  },
+  "regular": {
+    "categoria": "general",
+    "archivo": "regular"
+  },
+  "saludas a": {
+    "categoria": "general",
+    "archivo": "saludas a"
+  },
+  "septiembre": {
+    "categoria": "general",
+    "archivo": "septiembre"
+  },
+  "si": {
+    "categoria": "general",
+    "archivo": "si"
+  },
+  "adulto": {
+    "categoria": "general",
+    "archivo": "adulto"
+  },
+  "amigo": {
+    "categoria": "general",
+    "archivo": "amigo"
+  },
+  "anciano": {
+    "categoria": "general",
+    "archivo": "anciano"
+  },
+  "bebe": {
+    "categoria": "general",
+    "archivo": "bebe"
+  },
+  "ciego": {
+    "categoria": "general",
+    "archivo": "ciego"
+  },
+  "compañero": {
+    "categoria": "general",
+    "archivo": "compañero"
+  },
+  "hombre": {
+    "categoria": "general",
+    "archivo": "hombre"
+  },
+  "joven": {
+    "categoria": "general",
+    "archivo": "joven"
+  },
+  "mayor de edad": {
+    "categoria": "general",
+    "archivo": "mayor de edad"
+  },
+  "mayor": {
+    "categoria": "general",
+    "archivo": "mayor"
+  },
+  "menor de edad": {
+    "categoria": "general",
+    "archivo": "menor de edad"
+  },
+  "mujer": {
+    "categoria": "general",
+    "archivo": "mujer"
+  },
+  "niño": {
+    "categoria": "general",
+    "archivo": "niño"
+  },
+  "novio": {
+    "categoria": "general",
+    "archivo": "novio"
+  },
+  "oyente": {
+    "categoria": "general",
+    "archivo": "oyente"
+  },
+  "persona": {
+    "categoria": "general",
+    "archivo": "persona"
+  },
+  "personas": {
+    "categoria": "general",
+    "archivo": "persona"
+  },
+  "señor": {
+    "categoria": "general",
+    "archivo": "señor"
+  },
+  "señorita": {
+    "categoria": "general",
+    "archivo": "señorita"
+  },
+  "sordo": {
+    "categoria": "general",
+    "archivo": "sordo"
+  },
+  "sordociego": {
+    "categoria": "general",
+    "archivo": "sordociego"
+  },
+  "viejo": {
+    "categoria": "general",
+    "archivo": "viejo"
+  },
+  "como estas": {
+    "categoria": "general",
+    "archivo": "como estas"
+  },
+  "cual es tu nombre": {
+    "categoria": "general",
+    "archivo": "cual es tu nombre"
+  },
+  "cual es tu sena": {
+    "categoria": "general",
+    "archivo": "cual es tu sena"
+  },
+  "que tal": {
+    "categoria": "general",
+    "archivo": "que tal"
+  },
+  "algo": {
+    "categoria": "general",
+    "archivo": "algo"
+  },
+  "alguien": {
+    "categoria": "general",
+    "archivo": "alguien"
+  },
+  "algun": {
+    "categoria": "general",
+    "archivo": "algun"
+  },
+  "bastante": {
+    "categoria": "general",
+    "archivo": "bastante"
+  },
+  "cualquier": {
+    "categoria": "general",
+    "archivo": "cualquier"
+  },
+  "demasiado": {
+    "categoria": "general",
+    "archivo": "demasiado"
+  },
+  "mas": {
+    "categoria": "general",
+    "archivo": "mas"
+  },
+  "mucho": {
+    "categoria": "general",
+    "archivo": "mucho"
+  },
+  "nada": {
+    "categoria": "general",
+    "archivo": "nada"
+  },
+  "nadie": {
+    "categoria": "general",
+    "archivo": "nadie"
+  },
+  "ningun": {
+    "categoria": "general",
+    "archivo": "ningun"
+  },
+  "otro": {
+    "categoria": "general",
+    "archivo": "otro"
+  },
+  "poco": {
+    "categoria": "general",
+    "archivo": "poco"
+  },
+  "quienquiera": {
+    "categoria": "general",
+    "archivo": "quienquiera"
+  },
+  "todo": {
+    "categoria": "general",
+    "archivo": "todo"
+  },
+  "abogado": {
+    "categoria": "general",
+    "archivo": "abogado"
+  },
+  "administrador": {
+    "categoria": "general",
+    "archivo": "administrador"
+  },
+  "albañil": {
+    "categoria": "general",
+    "archivo": "albañil"
+  },
+  "analista": {
+    "categoria": "general",
+    "archivo": "analista"
+  },
+  "auxiliar": {
+    "categoria": "general",
+    "archivo": "auxiliar"
+  },
+  "barbero": {
+    "categoria": "general",
+    "archivo": "barbero"
+  },
+  "carrera": {
+    "categoria": "general",
+    "archivo": "profesion"
+  },
+  "chef": {
+    "categoria": "general",
+    "archivo": "chef"
+  },
+  "cocinero": {
+    "categoria": "general",
+    "archivo": "cocinero"
+  },
+  "conductor": {
+    "categoria": "general",
+    "archivo": "conductor"
+  },
+  "constructor": {
+    "categoria": "general",
+    "archivo": "constructor"
+  },
+  "contador": {
+    "categoria": "general",
+    "archivo": "contador"
+  },
+  "dentista": {
+    "categoria": "general",
+    "archivo": "dentista"
+  },
+  "detective": {
+    "categoria": "general",
+    "archivo": "detective"
+  },
+  "dibujante tecnico": {
+    "categoria": "general",
+    "archivo": "dibujante tecnico"
+  },
+  "dibujante": {
+    "categoria": "general",
+    "archivo": "dibujante"
+  },
+  "director": {
+    "categoria": "general",
+    "archivo": "director"
+  },
+  "economista": {
+    "categoria": "general",
+    "archivo": "economista"
+  },
+  "enfermera": {
+    "categoria": "general",
+    "archivo": "enfermera"
+  },
+  "escritor": {
+    "categoria": "general",
+    "archivo": "escritor"
+  },
+  "fotografo": {
+    "categoria": "general",
+    "archivo": "fotografo"
+  },
+  "gerente": {
+    "categoria": "general",
+    "archivo": "gerente"
+  },
+  "informatica": {
+    "categoria": "general",
+    "archivo": "informatica"
+  },
+  "ingeniero": {
+    "categoria": "general",
+    "archivo": "ingeniero"
+  },
+  "inspector": {
+    "categoria": "general",
+    "archivo": "inspector"
+  },
+  "instructor": {
+    "categoria": "general",
+    "archivo": "instructor"
+  },
+  "interprete": {
+    "categoria": "general",
+    "archivo": "interprete"
+  },
+  "jefe": {
+    "categoria": "general",
+    "archivo": "jefe"
+  },
+  "licenciado": {
+    "categoria": "general",
+    "archivo": "licenciado"
+  },
+  "maestro": {
+    "categoria": "general",
+    "archivo": "maestro"
+  },
+  "medico": {
+    "categoria": "general",
+    "archivo": "medico"
+  },
+  "mensajero": {
+    "categoria": "general",
+    "archivo": "mensajero"
+  },
+  "mesonero": {
+    "categoria": "general",
+    "archivo": "mesonero"
+  },
+  "pasante": {
+    "categoria": "general",
+    "archivo": "pasante"
+  },
+  "peluquera": {
+    "categoria": "general",
+    "archivo": "peluquera"
+  },
+  "pintor": {
+    "categoria": "general",
+    "archivo": "pintor"
+  },
+  "policia": {
+    "categoria": "general",
+    "archivo": "policia"
+  },
+  "profesion": {
+    "categoria": "general",
+    "archivo": "profesion"
+  },
+  "profesor": {
+    "categoria": "general",
+    "archivo": "profesor"
+  },
+  "psicologo": {
+    "categoria": "general",
+    "archivo": "psicologo"
+  },
+  "secretaria": {
+    "categoria": "general",
+    "archivo": "secretaria"
+  },
+  "sistema": {
+    "categoria": "general",
+    "archivo": "sistema"
+  },
+  "supervisor": {
+    "categoria": "general",
+    "archivo": "supervisor"
+  },
+  "tecnico": {
+    "categoria": "general",
+    "archivo": "tecnico"
+  },
+  "traductor": {
+    "categoria": "general",
+    "archivo": "traductor"
+  },
+  "vendedor": {
+    "categoria": "general",
+    "archivo": "vendedor"
+  },
+  "vigilante": {
+    "categoria": "general",
+    "archivo": "vigilante"
+  },
+  "el": {
+    "categoria": "general",
+    "archivo": "el"
+  },
+  "ella": {
+    "categoria": "general",
+    "archivo": "ella"
+  },
+  "ellas": {
+    "categoria": "general",
+    "archivo": "ellas"
+  },
+  "ellos": {
+    "categoria": "general",
+    "archivo": "ellos"
+  },
+  "mio": {
+    "categoria": "general",
+    "archivo": "mio"
+  },
+  "nosotros": {
+    "categoria": "general",
+    "archivo": "nosotros"
+  },
+  "nuestro": {
+    "categoria": "general",
+    "archivo": "nuestro"
+  },
+  "suyo": {
+    "categoria": "general",
+    "archivo": "suyo"
+  },
+  "tu": {
+    "categoria": "general",
+    "archivo": "tu"
+  },
+  "tuyo": {
+    "categoria": "general",
+    "archivo": "tuyo"
+  },
+  "ustedes": {
+    "categoria": "general",
+    "archivo": "ustedes"
+  },
+  "yo": {
+    "categoria": "general",
+    "archivo": "yo"
+  },
+  "adios": {
+    "categoria": "general",
+    "archivo": "adios"
+  },
+  "bienvenido": {
+    "categoria": "general",
+    "archivo": "bienvenido"
+  },
+  "buenas noches": {
+    "categoria": "general",
+    "archivo": "buenas noches"
+  },
+  "buenas tardes": {
+    "categoria": "general",
+    "archivo": "buenas tardes"
+  },
+  "buenos dias": {
+    "categoria": "general",
+    "archivo": "buenos dias"
+  },
+  "chao": {
+    "categoria": "general",
+    "archivo": "chao"
+  },
+  "hola": {
+    "categoria": "general",
+    "archivo": "hola"
+  },
+  "anteayer": {
+    "categoria": "general",
+    "archivo": "anteayer"
+  },
+  "ayer": {
+    "categoria": "general",
+    "archivo": "ayer"
+  },
+  "calendario": {
+    "categoria": "general",
+    "archivo": "calendario"
+  },
+  "fin de semana": {
+    "categoria": "general",
+    "archivo": "fin de semana"
+  },
+  "hoy": {
+    "categoria": "general",
+    "archivo": "hoy"
+  },
+  "mañana": {
+    "categoria": "general",
+    "archivo": "mañana"
+  },
+  "mes": {
+    "categoria": "general",
+    "archivo": "mes"
+  },
+  "pasado mañana": {
+    "categoria": "general",
+    "archivo": "pasado mañana"
+  },
+  "semana": {
+    "categoria": "general",
+    "archivo": "semana"
+  },
+  "apartamento": {
+    "categoria": "general",
+    "archivo": "apartamento"
+  },
+  "baño": {
+    "categoria": "general",
+    "archivo": "baño"
+  },
+  "cocina": {
+    "categoria": "general",
+    "archivo": "cocina"
+  },
+  "comedor": {
+    "categoria": "general",
+    "archivo": "comedor"
+  },
+  "cuarto": {
+    "categoria": "general",
+    "archivo": "cuarto"
+  },
+  "edificio": {
+    "categoria": "general",
+    "archivo": "edificio"
+  },
+  "piso": {
+    "categoria": "general",
+    "archivo": "piso"
+  },
+  "rancho": {
+    "categoria": "general",
+    "archivo": "rancho"
+  },
+  "sala": {
+    "categoria": "general",
+    "archivo": "sala"
+  },
+  "amar": {
+    "categoria": "general",
+    "archivo": "amar"
+  },
+  "ayudar": {
+    "categoria": "general",
+    "archivo": "ayudar"
+  },
+  "cansar": {
+    "categoria": "general",
+    "archivo": "cansar"
+  },
+  "conocer": {
+    "categoria": "general",
+    "archivo": "conocer"
+  },
+  "decir": {
+    "categoria": "general",
+    "archivo": "decir"
+  },
+  "deletrear": {
+    "categoria": "general",
+    "archivo": "deletrear"
+  },
+  "dormir": {
+    "categoria": "general",
+    "archivo": "dormir"
+  },
+  "estar": {
+    "categoria": "general",
+    "archivo": "estar"
+  },
+  "estudiar": {
+    "categoria": "general",
+    "archivo": "estudiar"
+  },
+  "invitar": {
+    "categoria": "general",
+    "archivo": "invitar"
+  },
+  "preguntar": {
+    "categoria": "general",
+    "archivo": "preguntar"
+  },
+  "presentar": {
+    "categoria": "general",
+    "archivo": "presentar"
+  },
+  "querer": {
+    "categoria": "general",
+    "archivo": "querer"
+  },
+  "responder": {
+    "categoria": "general",
+    "archivo": "responder"
+  },
+  "saludar": {
+    "categoria": "general",
+    "archivo": "saludar"
+  },
+  "sentir": {
+    "categoria": "general",
+    "archivo": "sentir"
+  },
+  "trabajar": {
+    "categoria": "general",
+    "archivo": "trabajar"
+  },
+  "ver": {
+    "categoria": "general",
+    "archivo": "ver"
+  },
+  "vivir": {
+    "categoria": "general",
+    "archivo": "vivir"
+  },
+  "aeropuerto": {
+    "categoria": "general",
+    "archivo": "aeropuerto"
+  },
+  "aterrizar": {
+    "categoria": "general",
+    "archivo": "aterrizar"
+  },
+  "avion": {
+    "categoria": "general",
+    "archivo": "avion"
+  },
+  "avioneta": {
+    "categoria": "general",
+    "archivo": "avioneta"
+  },
+  "boleto": {
+    "categoria": "general",
+    "archivo": "boleto"
+  },
+  "despegar": {
+    "categoria": "general",
+    "archivo": "despegar"
+  },
+  "helicoptero": {
+    "categoria": "general",
+    "archivo": "helicoptero"
+  },
+  "piloto": {
+    "categoria": "general",
+    "archivo": "piloto"
+  },
+  "barco": {
+    "categoria": "general",
+    "archivo": "barco"
+  },
+  "canoa": {
+    "categoria": "general",
+    "archivo": "canoa"
+  },
+  "ferri": {
+    "categoria": "general",
+    "archivo": "ferri"
+  },
+  "lancha": {
+    "categoria": "general",
+    "archivo": "lancha"
+  },
+  "autobus": {
+    "categoria": "general",
+    "archivo": "autobus"
+  },
+  "bicicleta": {
+    "categoria": "general",
+    "archivo": "bicicleta"
+  },
+  "cabletren": {
+    "categoria": "general",
+    "archivo": "cabletren"
+  },
+  "camioneta": {
+    "categoria": "general",
+    "archivo": "camioneta"
+  },
+  "carro": {
+    "categoria": "general",
+    "archivo": "carro"
+  },
+  "estacion": {
+    "categoria": "general",
+    "archivo": "estacion"
+  },
+  "ferrocarril": {
+    "categoria": "general",
+    "archivo": "ferrocarril"
+  },
+  "metrobus": {
+    "categoria": "general",
+    "archivo": "metrobus"
+  },
+  "moto": {
+    "categoria": "general",
+    "archivo": "moto"
+  },
+  "parada": {
+    "categoria": "general",
+    "archivo": "parada"
+  },
+  "taxi": {
+    "categoria": "general",
+    "archivo": "taxi"
+  },
+  "0": {
+    "categoria": "numero",
+    "archivo": "0"
+  },
+  "1": {
+    "categoria": "numero",
+    "archivo": "1"
+  },
+  "2": {
+    "categoria": "numero",
+    "archivo": "2"
+  },
+  "3": {
+    "categoria": "numero",
+    "archivo": "3"
+  },
+  "4": {
+    "categoria": "numero",
+    "archivo": "4"
+  },
+  "5": {
+    "categoria": "numero",
+    "archivo": "5"
+  },
+  "6": {
+    "categoria": "numero",
+    "archivo": "6"
+  },
+  "7": {
+    "categoria": "numero",
+    "archivo": "7"
+  },
+  "8": {
+    "categoria": "numero",
+    "archivo": "8"
+  },
+  "9": {
+    "categoria": "numero",
+    "archivo": "9"
+  },
+  "10": {
+    "categoria": "numero",
+    "archivo": "10"
+  },
+  "1m": {
+    "categoria": "numero",
+    "archivo": "1M"
+  },
+  "s": {
+    "categoria": "alfabeto",
+    "archivo": "s"
+  },
+  "carreras": {
+    "categoria": "general",
+    "archivo": "profesion"
+  },
+  "profesiones": {
+    "categoria": "general",
+    "archivo": "profesion"
+  },
+  "trabajo": {
+    "categoria": "general",
+    "archivo": "profesion"
+  },
+  "trabajos": {
+    "categoria": "general",
+    "archivo": "profesion"
+  },
+  "ocupacion": {
+    "categoria": "general",
+    "archivo": "profesion"
+  },
+  "ingenieria": {
+    "categoria": "general",
+    "archivo": "ingeniero"
+  },
+  "ingenierias": {
+    "categoria": "general",
+    "archivo": "ingeniero"
+  },
+  "sistemas": {
+    "categoria": "general",
+    "archivo": "sistema"
+  },
+  "matematicas": {
+    "categoria": "general",
+    "archivo": "matematica"
+  },
+  "ciencias": {
+    "categoria": "general",
+    "archivo": "ciencia"
+  },
+  "escuela": {
+    "categoria": "general",
+    "archivo": "colegio"
+  },
+  "liceo": {
+    "categoria": "general",
+    "archivo": "colegio"
+  },
+  "centro": {
+    "categoria": "general",
+    "archivo": "centro comercial"
+  },
+  "centros": {
+    "categoria": "general",
+    "archivo": "centro comercial"
+  },
+  "padres": {
+    "categoria": "general",
+    "archivo": "padre"
+  },
+  "madres": {
+    "categoria": "general",
+    "archivo": "madre"
+  },
+  "hijos": {
+    "categoria": "general",
+    "archivo": "hijo"
+  },
+  "hermanos": {
+    "categoria": "general",
+    "archivo": "hermano"
+  },
+  "abuelos": {
+    "categoria": "general",
+    "archivo": "abuelo"
+  },
+  "tios": {
+    "categoria": "general",
+    "archivo": "tio"
+  },
+  "primos": {
+    "categoria": "general",
+    "archivo": "primo"
+  },
+  "sobrinos": {
+    "categoria": "general",
+    "archivo": "sobrino"
+  },
+  "nietos": {
+    "categoria": "general",
+    "archivo": "nieto"
+  },
+  "niños": {
+    "categoria": "general",
+    "archivo": "niño"
+  },
+  "hombres": {
+    "categoria": "general",
+    "archivo": "hombre"
+  },
+  "mujeres": {
+    "categoria": "general",
+    "archivo": "mujer"
+  },
+  "amigos": {
+    "categoria": "general",
+    "archivo": "amigo"
+  },
+  "ancianos": {
+    "categoria": "general",
+    "archivo": "anciano"
+  },
+  "jovenes": {
+    "categoria": "general",
+    "archivo": "joven"
+  },
+  "bebes": {
+    "categoria": "general",
+    "archivo": "bebe"
+  },
+  "adultos": {
+    "categoria": "general",
+    "archivo": "adulto"
+  },
+  "novios": {
+    "categoria": "general",
+    "archivo": "novio"
+  },
+  "compañeros": {
+    "categoria": "general",
+    "archivo": "compañero"
+  },
+  "señores": {
+    "categoria": "general",
+    "archivo": "señor"
+  },
+  "viejos": {
+    "categoria": "general",
+    "archivo": "viejo"
+  },
+  "carros": {
+    "categoria": "general",
+    "archivo": "carro"
+  },
+  "autos": {
+    "categoria": "general",
+    "archivo": "carro"
+  },
+  "automovil": {
+    "categoria": "general",
+    "archivo": "carro"
+  },
+  "automoviles": {
+    "categoria": "general",
+    "archivo": "carro"
+  },
+  "autobuses": {
+    "categoria": "general",
+    "archivo": "autobus"
+  },
+  "buses": {
+    "categoria": "general",
+    "archivo": "autobus"
+  },
+  "camiones": {
+    "categoria": "general",
+    "archivo": "camioneta"
+  },
+  "motos": {
+    "categoria": "general",
+    "archivo": "moto"
+  },
+  "motocicleta": {
+    "categoria": "general",
+    "archivo": "moto"
+  },
+  "motocicletas": {
+    "categoria": "general",
+    "archivo": "moto"
+  },
+  "bicicletas": {
+    "categoria": "general",
+    "archivo": "bicicleta"
+  },
+  "bicis": {
+    "categoria": "general",
+    "archivo": "bicicleta"
+  },
+  "taxis": {
+    "categoria": "general",
+    "archivo": "taxi"
+  },
+  "trenes": {
+    "categoria": "general",
+    "archivo": "tren"
+  },
+  "metros": {
+    "categoria": "general",
+    "archivo": "metro"
+  },
+  "aviones": {
+    "categoria": "general",
+    "archivo": "avion"
+  },
+  "barcos": {
+    "categoria": "general",
+    "archivo": "barco"
+  },
+  "casas": {
+    "categoria": "general",
+    "archivo": "casa"
+  },
+  "hogares": {
+    "categoria": "general",
+    "archivo": "casa"
+  },
+  "edificios": {
+    "categoria": "general",
+    "archivo": "edificio"
+  },
+  "apartamentos": {
+    "categoria": "general",
+    "archivo": "apartamento"
+  },
+  "deptos": {
+    "categoria": "general",
+    "archivo": "apartamento"
+  },
+  "cuartos": {
+    "categoria": "general",
+    "archivo": "cuarto"
+  },
+  "habitaciones": {
+    "categoria": "general",
+    "archivo": "cuarto"
+  },
+  "baños": {
+    "categoria": "general",
+    "archivo": "baño"
+  },
+  "cocinas": {
+    "categoria": "general",
+    "archivo": "cocina"
+  },
+  "comedores": {
+    "categoria": "general",
+    "archivo": "comedor"
+  },
+  "salas": {
+    "categoria": "general",
+    "archivo": "sala"
+  },
+  "calles": {
+    "categoria": "general",
+    "archivo": "calle"
+  },
+  "avenidas": {
+    "categoria": "general",
+    "archivo": "avenida"
+  },
+  "plazas": {
+    "categoria": "general",
+    "archivo": "plaza"
+  },
+  "parques": {
+    "categoria": "general",
+    "archivo": "parque"
+  },
+  "tiendas": {
+    "categoria": "general",
+    "archivo": "tienda"
+  },
+  "comercios": {
+    "categoria": "general",
+    "archivo": "tienda"
+  },
+  "hospitales": {
+    "categoria": "general",
+    "archivo": "hospital"
+  },
+  "clinicas": {
+    "categoria": "general",
+    "archivo": "clinica"
+  },
+  "bancos": {
+    "categoria": "general",
+    "archivo": "banco"
+  },
+  "iglesias": {
+    "categoria": "general",
+    "archivo": "iglesia catolica"
+  },
+  "templos": {
+    "categoria": "general",
+    "archivo": "iglesia catolica"
+  },
+  "universidades": {
+    "categoria": "general",
+    "archivo": "universidad"
+  },
+  "colegios": {
+    "categoria": "general",
+    "archivo": "colegio"
+  },
+  "escuelas": {
+    "categoria": "general",
+    "archivo": "colegio"
+  },
+  "restaurantes": {
+    "categoria": "general",
+    "archivo": "restaurante"
+  },
+  "comiendo": {
+    "categoria": "general",
+    "archivo": "comer"
+  },
+  "corriendo": {
+    "categoria": "general",
+    "archivo": "correr"
+  },
+  "estudiando": {
+    "categoria": "general",
+    "archivo": "estudiar"
+  },
+  "trabajando": {
+    "categoria": "general",
+    "archivo": "trabajar"
+  },
+  "viviendo": {
+    "categoria": "general",
+    "archivo": "vivir"
+  },
+  "durmiendo": {
+    "categoria": "general",
+    "archivo": "dormir"
+  },
+  "viendo": {
+    "categoria": "general",
+    "archivo": "ver"
+  },
+  "ayudando": {
+    "categoria": "general",
+    "archivo": "ayudar"
+  },
+  "amando": {
+    "categoria": "general",
+    "archivo": "amar"
+  },
+  "conociendo": {
+    "categoria": "general",
+    "archivo": "conocer"
+  },
+  "diciendo": {
+    "categoria": "general",
+    "archivo": "decir"
+  },
+  "preguntando": {
+    "categoria": "general",
+    "archivo": "preguntar"
+  },
+  "presentando": {
+    "categoria": "general",
+    "archivo": "presentar"
+  },
+  "respondiendo": {
+    "categoria": "general",
+    "archivo": "responder"
+  },
+  "saludando": {
+    "categoria": "general",
+    "archivo": "saludar"
+  },
+  "sintiendo": {
+    "categoria": "general",
+    "archivo": "sentir"
+  },
+  "queriendo": {
+    "categoria": "general",
+    "archivo": "querer"
+  },
+  "holas": {
+    "categoria": "general",
+    "archivo": "hola"
+  },
+  "chau": {
+    "categoria": "general",
+    "archivo": "chao"
+  },
+  "adiós": {
+    "categoria": "general",
+    "archivo": "adios"
+  },
+  "buendía": {
+    "categoria": "general",
+    "archivo": "buenos dias"
+  },
+  "buen día": {
+    "categoria": "general",
+    "archivo": "buenos dias"
+  },
+  "ok": {
+    "categoria": "general",
+    "archivo": "bien"
+  },
+  "vale": {
+    "categoria": "general",
+    "archivo": "bien"
+  },
+  "por favor": {
+    "categoria": "cortesia",
+    "archivo": "por favor"
+  }
+}

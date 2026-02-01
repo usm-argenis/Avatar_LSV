@@ -2,7 +2,9 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
     <title>LSV Mobile - Animaciones</title>
     <style>
         * {
@@ -332,6 +334,22 @@
         import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
         import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
+        // Función para enviar logs a React Native
+        function logToExpo(message, data = null) {
+            const logMessage = data ? `${message} ${JSON.stringify(data)}` : message;
+            console.log(logMessage); // También en consola web
+            
+            // Enviar a React Native si está disponible
+            if (window.ReactNativeWebView) {
+                window.ReactNativeWebView.postMessage(JSON.stringify({
+                    type: 'LOG',
+                    message: message,
+                    data: data,
+                    timestamp: new Date().toISOString()
+                }));
+            }
+        }
+
         let scene, camera, renderer, controls, clock;
         let avatarModel, mixer;
         let animationCache = new Map();
@@ -341,9 +359,413 @@
         let ultimoTexto = '';
         let isAnimating = false;
         
+        // Control de API backend
+        let useBackendAPI = true;  // Activado por defecto
+        const BACKEND_URL = 'http://localhost:3000';
+        
+        // Control de teclado virtual y viewport
+        let initialViewportHeight = window.innerHeight;
+        let isKeyboardOpen = false;
+        let savedCameraState = null;
+        
+        // Optimizaciones de rendimiento
+        let loaderInstance = null; // Reutilizar loader
+        let preloadQueue = [];
+        let isPreloading = false;
+        
+        // Detección de dispositivo móvil
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        const MAX_CACHE_SIZE = isMobile ? 15 : 50; // Menos caché en móvil
+        const PRELOAD_COUNT = isMobile ? 3 : 10; // Menos precarga en móvil
+        const LOAD_DELAY = isMobile ? 300 : 100; // Mayor delay entre cargas en móvil
+        const LOOKAHEAD = isMobile ? 2 : 3; // Cuantas animaciones precargar por adelantado
+        
+        // Sistema de precarga anticipada
+        let currentSequence = [];
+        let currentIndex = 0;
+        
         // Posición inicial de la cámara
         const INITIAL_CAMERA_POSITION = { x: 0, y: 1.6, z: 2.2 };
         const INITIAL_CAMERA_TARGET = { x: 0, y: 1.2, z: 0 };
+        
+        // Palabras que se omiten en LSV (no se traducen)
+        const PALABRAS_OMITIDAS = new Set([
+            // Artículos definidos
+            'el', 'la', 'los', 'las',
+            // Artículos indefinidos
+            'un', 'una', 'unos', 'unas',
+            // Preposiciones que no existen en LSV
+            'de', 'del', 'al',
+            // Conectores que se omiten
+            'y', 'e', 'o', 'u',
+            // Pronombres que se omiten en ciertos contextos
+            'se', 'me', 'te', 'le', 'les', 'nos',
+            // Signos de interrogación (se procesarán aparte)
+        ]);
+        
+        // Palabras de TIEMPO que van al inicio en LSV
+        const PALABRAS_TIEMPO = new Set([
+            'ayer', 'hoy', 'mañana', 'anteayer', 'pasado mañana',
+            'hace rato', 'hace años', 'había una vez', 'antes',
+            'ahora', 'despues', 'luego', 'pronto', 'tarde', 'temprano',
+            'lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado', 'domingo',
+            'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
+            'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre',
+        ]);
+        
+        // Palabras FEMENINAS que requieren MUJER después
+        const PALABRAS_FEMENINAS = {
+            'maestra': 'maestro',
+            'profesora': 'profesor',
+            'doctora': 'medico',
+            'enfermera': 'enfermera', // Ya existe como femenino
+            'abuela': 'abuelo',
+            'nieta': 'nieto',
+            'tia': 'tio',
+            'prima': 'primo',
+            'sobrina': 'sobrino',
+            'suegra': 'suegro',
+            'cuñada': 'cuñado',
+            'hermana': 'hermano',
+            'hija': 'hijo',
+            'mama': 'papa',
+            'madre': 'padre',
+            'madrina': 'padrino',
+            'madrastra': 'padrastro',
+            'hijastra': 'hijastro',
+            'hermanastra': 'hermanastro',
+            'señora': 'señor',
+            'novia': 'novio',
+            'amiga': 'amigo',
+            'vieja': 'viejo',
+            'niña': 'niño',
+            'jefa': 'jefe',
+            'directora': 'director',
+            'gerenta': 'gerente',
+            'secretaria': 'secretaria', // Ya existe
+            'vendedora': 'vendedor',
+            'cocinera': 'cocinero',
+            'peluquera': 'peluquera', // Ya existe
+            'dibujante': 'dibujante', // Neutro
+            'abogada': 'abogado',
+            'administradora': 'administrador',
+            'contadora': 'contador',
+            'economista': 'economista', // Neutro
+            'ingeniera': 'ingeniero',
+            'psicologa': 'psicologo',
+            'detective': 'detective', // Neutro
+        };
+        
+        // Normalizaciones de plural a singular y otras simplificaciones LSV
+        const NORMALIZACION_LSV = {
+            // Plurales → Singular
+            'todos': 'todo',
+            'todas': 'todo',
+            'muchos': 'mucho',
+            'muchas': 'mucho',
+            'pocos': 'poco',
+            'pocas': 'poco',
+            'algunos': 'algun',
+            'algunas': 'algun',
+            'ningunos': 'ningun',
+            'ningunas': 'ningun',
+            'otros': 'otro',
+            'otras': 'otro',
+            'demasiados': 'demasiado',
+            'demasiadas': 'demasiado',
+            'bastantes': 'bastante',
+            
+            // Días de la semana (formas alternativas)
+            'lun': 'lunes',
+            'mar': 'martes',
+            'mie': 'miercoles',
+            'jue': 'jueves',
+            'vie': 'viernes',
+            'sab': 'sabado',
+            'dom': 'domingo',
+            
+            // Meses
+            'ene': 'enero',
+            'feb': 'febrero',
+            'mar': 'marzo',
+            'abr': 'abril',
+            'may': 'mayo',
+            'jun': 'junio',
+            'jul': 'julio',
+            'ago': 'agosto',
+            'sep': 'septiembre',
+            'oct': 'octubre',
+            'nov': 'noviembre',
+            'dic': 'diciembre',
+            
+            // Simplificaciones comunes
+            'dias': 'dia',
+            'años': 'año',
+            'meses': 'mes',
+            'semanas': 'semana',
+            'horas': 'hora',
+            'minutos': 'minuto',
+            'segundos': 'segundo',
+            
+            // Pronombres en plural
+            'nosotras': 'nosotros',
+            'vosotros': 'ustedes',
+            'vosotras': 'ustedes',
+            
+            // Pronombres posesivos → LSV
+            'mi': 'mio',
+            'mis': 'mio',
+            'tu': 'tuyo',
+            'tus': 'tuyo',
+            'su': 'suyo',
+            'sus': 'suyo',
+            'nuestro': 'nuestro',
+            'nuestra': 'nuestro',
+            'nuestros': 'nuestro',
+            'nuestras': 'nuestro',
+        };
+        
+        // Sistema de normalización de verbos (conjugaciones → infinitivo)
+        const NORMALIZACION_VERBOS = {
+            // Trabajar
+            'trabajo': 'trabajar', 'trabajas': 'trabajar', 'trabaja': 'trabajar',
+            'trabajamos': 'trabajar', 'trabajan': 'trabajar', 'trabajé': 'trabajar',
+            'trabajaste': 'trabajar', 'trabajó': 'trabajar', 'trabajaron': 'trabajar',
+            'trabajaba': 'trabajar', 'trabajando': 'trabajar',
+            
+            // Estudiar
+            'estudio': 'estudiar', 'estudias': 'estudiar', 'estudia': 'estudiar',
+            'estudiamos': 'estudiar', 'estudian': 'estudiar', 'estudié': 'estudiar',
+            'estudiaste': 'estudiar', 'estudió': 'estudiar', 'estudiaron': 'estudiar',
+            'estudiaba': 'estudiar', 'estudiando': 'estudiar',
+            
+            // Comer
+            'como': 'comer', 'comes': 'comer', 'come': 'comer',
+            'comemos': 'comer', 'comen': 'comer', 'comí': 'comer',
+            'comiste': 'comer', 'comió': 'comer', 'comieron': 'comer',
+            'comía': 'comer', 'comiendo': 'comer',
+            
+            // Vivir
+            'vivo': 'vivir', 'vives': 'vivir', 'vive': 'vivir',
+            'vivimos': 'vivir', 'viven': 'vivir', 'viví': 'vivir',
+            'viviste': 'vivir', 'vivió': 'vivir', 'vivieron': 'vivir',
+            'vivía': 'vivir', 'viviendo': 'vivir',
+            
+            // Dormir
+            'duermo': 'dormir', 'duermes': 'dormir', 'duerme': 'dormir',
+            'dormimos': 'dormir', 'duermen': 'dormir', 'dormí': 'dormir',
+            'dormiste': 'dormir', 'durmió': 'dormir', 'durmieron': 'dormir',
+            'dormía': 'dormir', 'durmiendo': 'dormir',
+            
+            // Ver
+            'veo': 'ver', 'ves': 'ver', 've': 'ver',
+            'vemos': 'ver', 'ven': 'ver', 'vi': 'ver',
+            'viste': 'ver', 'vio': 'ver', 'vieron': 'ver',
+            'veía': 'ver', 'viendo': 'ver',
+            
+            // Estar
+            'estoy': 'estar', 'estás': 'estar', 'está': 'estar',
+            'estamos': 'estar', 'están': 'estar', 'estuve': 'estar',
+            'estuviste': 'estar', 'estuvo': 'estar', 'estuvieron': 'estar',
+            'estaba': 'estar', 'estando': 'estar',
+            
+            // Ser
+            'soy': 'ser', 'eres': 'ser', 'es': 'ser',
+            'somos': 'ser', 'son': 'ser', 'fui': 'ser',
+            'fuiste': 'ser', 'fue': 'ser', 'fueron': 'ser',
+            'era': 'ser', 'siendo': 'ser',
+            
+            // Ayudar
+            'ayudo': 'ayudar', 'ayudas': 'ayudar', 'ayuda': 'ayudar',
+            'ayudamos': 'ayudar', 'ayudan': 'ayudar', 'ayudé': 'ayudar',
+            'ayudando': 'ayudar',
+            
+            // Amar
+            'amo': 'amar', 'amas': 'amar', 'ama': 'amar',
+            'amamos': 'amar', 'aman': 'amar', 'amé': 'amar',
+            'amando': 'amar',
+            
+            // Cansar
+            'canso': 'cansar', 'cansas': 'cansar', 'cansa': 'cansar',
+            'cansamos': 'cansar', 'cansan': 'cansar', 'cansé': 'cansar',
+            'cansando': 'cansar',
+            
+            // Conocer
+            'conozco': 'conocer', 'conoces': 'conocer', 'conoce': 'conocer',
+            'conocemos': 'conocer', 'conocen': 'conocer', 'conocí': 'conocer',
+            'conociendo': 'conocer',
+            
+            // Decir
+            'digo': 'decir', 'dices': 'decir', 'dice': 'decir',
+            'decimos': 'decir', 'dicen': 'decir', 'dije': 'decir',
+            'diciendo': 'decir',
+            
+            // Deletrear
+            'deletreo': 'deletrear', 'deletreas': 'deletrear', 'deletrea': 'deletrear',
+            'deletreamos': 'deletrear', 'deletrean': 'deletrear',
+            
+            // Invitar
+            'invito': 'invitar', 'invitas': 'invitar', 'invita': 'invitar',
+            'invitamos': 'invitar', 'invitan': 'invitar', 'invité': 'invitar',
+            'invitando': 'invitar',
+            
+            // Preguntar
+            'pregunto': 'preguntar', 'preguntas': 'preguntar', 'pregunta': 'preguntar',
+            'preguntamos': 'preguntar', 'preguntan': 'preguntar', 'pregunté': 'preguntar',
+            'preguntando': 'preguntar',
+            
+            // Presentar
+            'presento': 'presentar', 'presentas': 'presentar', 'presenta': 'presentar',
+            'presentamos': 'presentar', 'presentan': 'presentar', 'presenté': 'presentar',
+            'presentando': 'presentar',
+            
+            // Querer
+            'quiero': 'querer', 'quieres': 'querer', 'quiere': 'querer',
+            'queremos': 'querer', 'quieren': 'querer', 'quise': 'querer',
+            'queriendo': 'querer',
+            
+            // Responder
+            'respondo': 'responder', 'respondes': 'responder', 'responde': 'responder',
+            'respondemos': 'responder', 'responden': 'responder', 'respondí': 'responder',
+            'respondiendo': 'responder',
+            
+            // Saludar
+            'saludo': 'saludar', 'saludas': 'saludar', 'saluda': 'saludar',
+            'saludamos': 'saludar', 'saludan': 'saludar', 'saludé': 'saludar',
+            'saludando': 'saludar',
+            
+            // Sentir
+            'siento': 'sentir', 'sientes': 'sentir', 'siente': 'sentir',
+            'sentimos': 'sentir', 'sienten': 'sentir', 'sentí': 'sentir',
+            'sintiendo': 'sentir',
+            
+            // Correr
+            'corro': 'correr', 'corres': 'correr', 'corre': 'correr',
+            'corremos': 'correr', 'corren': 'correr', 'corrí': 'correr',
+            'corriendo': 'correr',
+            
+            // Entrar
+            'entro': 'entrar', 'entras': 'entrar', 'entra': 'entrar',
+            'entramos': 'entrar', 'entran': 'entrar', 'entré': 'entrar',
+            'entrando': 'entrar',
+            
+            // Viajar
+            'viajo': 'viajar', 'viajas': 'viajar', 'viaja': 'viajar',
+            'viajamos': 'viajar', 'viajan': 'viajar', 'viajé': 'viajar',
+            'viajando': 'viajar',
+        };
+        
+        // Función para convertir número a secuencia de glosas LSV
+        function numeroAGlosas(numero) {
+            const num = parseInt(numero);
+            
+            // Números 0-10: directos
+            if (num >= 0 && num <= 10) {
+                return [num.toString()];
+            }
+            
+            // Números 11-19: 10 + segundo dígito
+            if (num >= 11 && num <= 19) {
+                const segundoDigito = num % 10;
+                return ['10', segundoDigito.toString()];
+            }
+            
+            // Números 20+: separar cada dígito
+            if (num >= 20) {
+                return numero.split('');
+            }
+            
+            return null;
+        }
+        
+        // Función para normalizar palabras (convertir conjugaciones a infinitivos)
+        function normalizarPalabra(palabra) {
+            const palabraLower = palabra.toLowerCase();
+            
+            // 0. Verificar si es un número
+            if (/^\d+$/.test(palabraLower)) {
+                return palabraLower; // Retornar el número como está, se procesará después
+            }
+            
+            // 1. Verificar si es una palabra que se omite en LSV
+            if (PALABRAS_OMITIDAS.has(palabraLower)) {
+                return null; // null indica que se debe omitir
+            }
+            
+            // 2. Verificar normalizaciones LSV (plural → singular, etc.)
+            if (NORMALIZACION_LSV[palabraLower]) {
+                return NORMALIZACION_LSV[palabraLower];
+            }
+            
+            // 3. Verificar normalizaciones de verbos
+            if (NORMALIZACION_VERBOS[palabraLower]) {
+                return NORMALIZACION_VERBOS[palabraLower];
+            }
+            
+            // 4. Si está directamente en el diccionario, retornar como está
+            if (DICCIONARIO[palabraLower]) {
+                return palabraLower;
+            }
+            
+            // 5. Reglas genéricas para verbos regulares no mapeados
+            // Presente: -o, -as, -a, -amos, -áis, -an → -ar/-er/-ir
+            if (palabraLower.endsWith('ando') || palabraLower.endsWith('iendo')) {
+                // Gerundio
+                const raiz = palabraLower.slice(0, -4);
+                const candidatos = [raiz + 'ar', raiz + 'er', raiz + 'ir'];
+                for (const candidato of candidatos) {
+                    if (DICCIONARIO[candidato]) return candidato;
+                }
+            }
+            
+            if (palabraLower.endsWith('o') && palabraLower.length > 2) {
+                const raiz = palabraLower.slice(0, -1);
+                const candidatos = [raiz + 'ar', raiz + 'er', raiz + 'ir'];
+                for (const candidato of candidatos) {
+                    if (DICCIONARIO[candidato]) return candidato;
+                }
+            }
+            
+            if (palabraLower.endsWith('as') || palabraLower.endsWith('es')) {
+                const raiz = palabraLower.slice(0, -2);
+                const candidatos = [raiz + 'ar', raiz + 'er', raiz + 'ir'];
+                for (const candidato of candidatos) {
+                    if (DICCIONARIO[candidato]) return candidato;
+                }
+            }
+            
+            if (palabraLower.endsWith('a') && palabraLower.length > 2) {
+                const raiz = palabraLower.slice(0, -1);
+                if (DICCIONARIO[raiz + 'ar']) return raiz + 'ar';
+            }
+            
+            if (palabraLower.endsWith('e') && palabraLower.length > 2) {
+                const raiz = palabraLower.slice(0, -1);
+                const candidatos = [raiz + 'er', raiz + 'ar', raiz + 'ir'];
+                for (const candidato of candidatos) {
+                    if (DICCIONARIO[candidato]) return candidato;
+                }
+            }
+            
+            if (palabraLower.endsWith('amos') || palabraLower.endsWith('emos') || palabraLower.endsWith('imos')) {
+                const raiz = palabraLower.slice(0, -4);
+                const candidatos = [raiz + 'ar', raiz + 'er', raiz + 'ir'];
+                for (const candidato of candidatos) {
+                    if (DICCIONARIO[candidato]) return candidato;
+                }
+            }
+            
+            if (palabraLower.endsWith('an') || palabraLower.endsWith('en')) {
+                const raiz = palabraLower.slice(0, -2);
+                const candidatos = [raiz + 'ar', raiz + 'er', raiz + 'ir'];
+                for (const candidato of candidatos) {
+                    if (DICCIONARIO[candidato]) return candidato;
+                }
+            }
+            
+            // Si no se encontró ninguna normalización, retornar la palabra original
+            return palabraLower;
+        }
         
         // Diccionario de mapeo
                                 const DICCIONARIO = {
@@ -641,12 +1063,18 @@
             setupScene();
             setupControls();
             
+            // Crear instancia única de loader para reutilizar
+            loaderInstance = new GLTFLoader();
+            
             // Obtener parámetros desde URL
             const params = new URLSearchParams(window.location.search);
             const avatarParam = params.get('avatar') || 'Nancy';
             const textoParam = params.get('text') || '';
             
             await cargarAvatar(avatarParam);
+            
+            // Precargar animaciones comunes en background
+            precargarAnimacionesComunes();
             
             // Si hay texto en URL, animarlo automáticamente
             if (textoParam) {
@@ -716,16 +1144,28 @@
             resetCameraBtn.addEventListener('click', () => {
                 resetCamera();
             });
+            
+            console.log('🤖 Modo API activado permanentemente - Corrección con IA');
         }
         
         function resetCamera() {
             if (!camera || !controls) return;
             
-            // Animar la transición de la cámara
+            // SOLUCIÓN: Deshabilitar OrbitControls durante el reset para evitar interferencia
+            controls.enabled = false;
+            
             const startPos = camera.position.clone();
             const startTarget = controls.target.clone();
             const duration = 800; // ms
             const startTime = Date.now();
+            
+            // Valores objetivo fijos (nunca cambian)
+            const targetPosX = INITIAL_CAMERA_POSITION.x;
+            const targetPosY = INITIAL_CAMERA_POSITION.y;
+            const targetPosZ = INITIAL_CAMERA_POSITION.z;
+            const targetLookX = INITIAL_CAMERA_TARGET.x;
+            const targetLookY = INITIAL_CAMERA_TARGET.y;
+            const targetLookZ = INITIAL_CAMERA_TARGET.z;
             
             function animateCameraReset() {
                 const elapsed = Date.now() - startTime;
@@ -734,20 +1174,27 @@
                 // Easing suave (ease-out)
                 const eased = 1 - Math.pow(1 - progress, 3);
                 
-                // Interpolar posición
-                camera.position.x = startPos.x + (INITIAL_CAMERA_POSITION.x - startPos.x) * eased;
-                camera.position.y = startPos.y + (INITIAL_CAMERA_POSITION.y - startPos.y) * eased;
-                camera.position.z = startPos.z + (INITIAL_CAMERA_POSITION.z - startPos.z) * eased;
+                // Interpolar hacia valores ABSOLUTOS (no acumulativos)
+                camera.position.x = startPos.x + (targetPosX - startPos.x) * eased;
+                camera.position.y = startPos.y + (targetPosY - startPos.y) * eased;
+                camera.position.z = startPos.z + (targetPosZ - startPos.z) * eased;
                 
-                // Interpolar target
-                controls.target.x = startTarget.x + (INITIAL_CAMERA_TARGET.x - startTarget.x) * eased;
-                controls.target.y = startTarget.y + (INITIAL_CAMERA_TARGET.y - startTarget.y) * eased;
-                controls.target.z = startTarget.z + (INITIAL_CAMERA_TARGET.z - startTarget.z) * eased;
-                
-                controls.update();
+                controls.target.x = startTarget.x + (targetLookX - startTarget.x) * eased;
+                controls.target.y = startTarget.y + (targetLookY - startTarget.y) * eased;
+                controls.target.z = startTarget.z + (targetLookZ - startTarget.z) * eased;
                 
                 if (progress < 1) {
                     requestAnimationFrame(animateCameraReset);
+                } else {
+                    // Forzar valores exactos al final
+                    camera.position.set(targetPosX, targetPosY, targetPosZ);
+                    controls.target.set(targetLookX, targetLookY, targetLookZ);
+                    
+                    // Reactivar OrbitControls después del reset
+                    controls.enabled = true;
+                    controls.update();
+                    
+                    console.log('🎯 Cámara reseteada a posición inicial');
                 }
             }
             
@@ -803,20 +1250,141 @@
             
             clock = new THREE.Clock();
             
+            // LOGGING INICIAL - Posición al iniciar
+            logToExpo('🟢 CÁMARA INICIAL:', {
+                position: { x: camera.position.x, y: camera.position.y, z: camera.position.z },
+                target: { x: controls.target.x, y: controls.target.y, z: controls.target.z },
+                zoom: camera.zoom,
+                fov: camera.fov
+            });
+            
+            // Mejorado: Detectar teclado virtual y CONGELAR controles completamente
             window.addEventListener('resize', () => {
-                camera.aspect = container.clientWidth / container.clientHeight;
-                camera.updateProjectionMatrix();
-                renderer.setSize(container.clientWidth, container.clientHeight);
+                const currentHeight = window.innerHeight;
+                const currentWidth = window.innerWidth;
+                const heightDifference = initialViewportHeight - currentHeight;
+                
+                logToExpo('📏 RESIZE DETECTADO:', {
+                    initialHeight: initialViewportHeight,
+                    currentHeight: currentHeight,
+                    currentWidth: currentWidth,
+                    difference: heightDifference,
+                    aspect: currentWidth / currentHeight,
+                    isKeyboardOpen: isKeyboardOpen
+                });
+                
+                // Detectar si el teclado virtual se abrió (altura reducida significativamente)
+                if (heightDifference > 150 && !isKeyboardOpen) {
+                    // Teclado abierto
+                    isKeyboardOpen = true;
+                    
+                    // Guardar estado actual de la cámara
+                    if (camera && controls) {
+                        savedCameraState = {
+                            position: camera.position.clone(),
+                            target: controls.target.clone(),
+                            zoom: camera.zoom,
+                            fov: camera.fov
+                        };
+                        
+                        logToExpo('🔴 TECLADO ABIERTO - Estado guardado:', {
+                            position: { x: savedCameraState.position.x, y: savedCameraState.position.y, z: savedCameraState.position.z },
+                            target: { x: savedCameraState.target.x, y: savedCameraState.target.y, z: savedCameraState.target.z },
+                            zoom: savedCameraState.zoom,
+                            fov: savedCameraState.fov
+                        });
+                        
+                        // CONGELAR OrbitControls completamente
+                        controls.enabled = false;
+                        logToExpo('⛔ OrbitControls DESHABILITADO');
+                    }
+                } else if (heightDifference < 100 && isKeyboardOpen) {
+                    // Teclado cerrado
+                    isKeyboardOpen = false;
+                    
+                    logToExpo('🟢 TECLADO CERRADO - Antes de restaurar:', {
+                        currentPosition: { x: camera.position.x, y: camera.position.y, z: camera.position.z },
+                        currentTarget: { x: controls.target.x, y: controls.target.y, z: controls.target.z },
+                        currentZoom: camera.zoom,
+                        currentFov: camera.fov
+                    });
+                    
+                    // Restaurar posición exacta de la cámara después de un breve delay
+                    setTimeout(() => {
+                        if (savedCameraState && camera && controls) {
+                            // Restaurar TODOS los valores guardados
+                            camera.position.set(
+                                savedCameraState.position.x,
+                                savedCameraState.position.y,
+                                savedCameraState.position.z
+                            );
+                            controls.target.set(
+                                savedCameraState.target.x,
+                                savedCameraState.target.y,
+                                savedCameraState.target.z
+                            );
+                            camera.zoom = savedCameraState.zoom;
+                            camera.fov = savedCameraState.fov;
+                            camera.updateProjectionMatrix();
+                            
+                            // Reactivar OrbitControls
+                            controls.enabled = true;
+                            controls.update();
+                            
+                            logToExpo('✅ Cámara RESTAURADA:', {
+                                restoredPosition: { x: camera.position.x, y: camera.position.y, z: camera.position.z },
+                                restoredTarget: { x: controls.target.x, y: controls.target.y, z: controls.target.z },
+                                restoredZoom: camera.zoom,
+                                restoredFov: camera.fov
+                            });
+                            logToExpo('✅ OrbitControls REACTIVADO');
+                        }
+                    }, 100);
+                }
+                
+                // NO actualizar aspect ratio ni renderer cuando el input está enfocado (savedCameraState existe)
+                if (camera && renderer && !savedCameraState) {
+                    const container = document.getElementById('viewer-container');
+                    const newWidth = container.clientWidth;
+                    const newHeight = container.clientHeight;
+                    const newAspect = newWidth / newHeight;
+                    
+                    logToExpo('📐 Calculando nuevo aspect:', {
+                        containerWidth: newWidth,
+                        containerHeight: newHeight,
+                        newAspect: newAspect,
+                        currentAspect: camera.aspect,
+                        willUpdate: Math.abs(camera.aspect - newAspect) > 0.01
+                    });
+                    
+                    if (Math.abs(camera.aspect - newAspect) > 0.01) {
+                        camera.aspect = newAspect;
+                        camera.updateProjectionMatrix();
+                        logToExpo('🔄 Aspect ratio actualizado:', { aspect: newAspect });
+                    }
+                    renderer.setSize(newWidth, newHeight);
+                } else if (savedCameraState) {
+                    logToExpo('⏸️ Aspect ratio bloqueado (input enfocado)');
+                }
+            });
+            
+            // Actualizar altura inicial cuando la página carga completamente
+            window.addEventListener('load', () => {
+                initialViewportHeight = window.innerHeight;
+                logToExpo('🟢 Altura inicial establecida:', { height: initialViewportHeight });
             });
         }
 
         async function cargarAvatar(nombreAvatar) {
-            const loader = new GLTFLoader();
             const loadingText = document.getElementById('loading-text');
             const loadingDiv = document.getElementById('loading');
             
             loadingDiv.classList.remove('hidden');
             loadingText.textContent = `Cargando ${nombreAvatar}...`;
+            
+            // Reutilizar loader si existe, sino crear uno nuevo
+            const loader = loaderInstance || new GLTFLoader();
+            if (!loaderInstance) loaderInstance = loader;
             
             // Construir URL base para GitHub Pages o local
             const baseUrl = window.location.hostname.includes('github.io') 
@@ -849,10 +1417,19 @@
                     console.log(`✅ Avatar cargado desde: ${ruta}`);
                     
                     if (avatarModel) {
+                        // Limpieza eficiente del avatar anterior
                         scene.remove(avatarModel);
                         avatarModel.traverse((child) => {
-                            if (child.geometry) child.geometry.dispose();
-                            if (child.material) child.material.dispose();
+                            if (child.geometry) {
+                                child.geometry.dispose();
+                            }
+                            if (child.material) {
+                                if (Array.isArray(child.material)) {
+                                    child.material.forEach(m => m.dispose());
+                                } else {
+                                    child.material.dispose();
+                                }
+                            }
                         });
                     }
                     
@@ -873,10 +1450,13 @@
                             morphTargetMeshes++;
                             console.log(`🎭 Morph targets en ${child.name}: ${child.morphTargetInfluences.length}`);
                             
-                            // Crear mapping de nombres (EyeLeft003 → EyeLeft)
-                            const baseName = child.name.replace(/\d+$/, ''); // Quitar números al final
+                            // Crear mapping bidireccional de nombres
+                            const baseName = child.name.replace(/\.\d+$/, ''); // Quitar sufijos .001, .004, etc
+                            
+                            // Mapear DESDE nombre base (del GLB) HACIA nombre real (del avatar)
+                            nodeNameMap[baseName] = child.name;
+                            
                             if (baseName !== child.name) {
-                                nodeNameMap[baseName] = child.name;
                                 console.log(`📝 Mapping: ${baseName} → ${child.name}`);
                             }
                             
@@ -896,6 +1476,8 @@
                     }
                     
                     mixer = new THREE.AnimationMixer(avatarModel);
+                    
+                    // Limpiar caché de animaciones al cambiar avatar
                     animationCache.clear();
                     avatarActual = nombreAvatar;
                     
@@ -917,6 +1499,50 @@
             throw new Error(`No se pudo cargar ${nombreAvatar}`);
         }
 
+        // Función para llamar al backend API
+        async function traducirConBackend(texto) {
+            try {
+                console.log('🌐 Llamando a backend API...');
+                const response = await fetch(`${BACKEND_URL}/api/translate`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        texto: texto,
+                        avatar: avatarActual,
+                        deletrear_desconocidas: true,
+                        corregir_ortografia: true,
+                        velocidad_deletreo: 1.2
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Error HTTP: ${response.status}`);
+                }
+
+                const resultado = await response.json();
+                
+                // Mostrar correcciones si las hay
+                if (resultado.correcciones && resultado.correcciones.length > 0) {
+                    console.log('✏️ Correcciones aplicadas:');
+                    resultado.correcciones.forEach(corr => {
+                        console.log(`  "${corr.original}" → "${corr.corregida}" (${corr.tipo}, ${corr.confianza}% confianza)`);
+                    });
+                }
+                
+                console.log(`📊 Backend: ${resultado.total_animaciones} animaciones generadas`);
+                console.log(`📝 Texto corregido: "${resultado.texto_corregido}"`);
+                
+                return resultado;
+                
+            } catch (error) {
+                console.error('❌ Error conectando con backend:', error);
+                console.log('🔄 Usando modo local como fallback');
+                return null; // Indica que debe usar modo local
+            }
+        }
+
         async function traducirYAnimar(texto) {
             if (isAnimating) return;
             
@@ -929,8 +1555,36 @@
             document.getElementById('replayBtn').disabled = false;
             document.getElementById('animateBtn').disabled = true;
             
+            let animacionesValidas = [];
+            
+            // Si está activado el modo API, intentar usar backend
+            if (useBackendAPI) {
+                const resultadoBackend = await traducirConBackend(texto);
+                
+                if (resultadoBackend && resultadoBackend.animaciones) {
+                    // El backend YA devuelve las frases combinadas correctamente
+                    // Solo necesitamos convertir a formato de animaciones válidas
+                    animacionesValidas = resultadoBackend.animaciones.map(anim => ({
+                        texto: anim.nombre,
+                        palabra: anim.nombre.toLowerCase()
+                    }));
+                    
+                    console.log(`🤖 Usando ${animacionesValidas.length} animaciones del backend`);
+                    console.log(`📋 Secuencia: ${animacionesValidas.map(a => a.texto).join(' → ')}`);
+                    
+                    // Si el backend procesó el texto, saltamos el procesamiento local
+                    if (animacionesValidas.length > 0) {
+                        // Ir directamente a reproducción
+                        await reproducirSecuencia(animacionesValidas);
+                        return;
+                    }
+                }
+                // Si falló el backend, continuar con modo local
+                console.log('⚡ Procesando localmente...');
+            }
+            
+            // Modo local (o fallback si API falló)
             const palabras = texto.toLowerCase().trim().split(/\s+/);
-            const animacionesValidas = [];
             
             let i = 0;
             while (i < palabras.length) {
@@ -939,8 +1593,18 @@
                 // Frases de 3 palabras
                 if (i + 2 < palabras.length) {
                     const frase3 = palabras.slice(i, i + 3).join(' ');
-                    if (DICCIONARIO[frase3]) {
-                        animacionesValidas.push({ texto: frase3, palabra: frase3 });
+                    const frase3Normalizada = normalizarPalabra(frase3);
+                    
+                    // Si la frase debe omitirse (null)
+                    if (frase3Normalizada === null) {
+                        i++;
+                        continue;
+                    }
+                    
+                    // Buscar la frase directamente o normalizada en el diccionario
+                    if (DICCIONARIO[frase3Normalizada] || DICCIONARIO[frase3]) {
+                        const palabraFinal = DICCIONARIO[frase3Normalizada] ? frase3Normalizada : frase3;
+                        animacionesValidas.push({ texto: frase3, palabra: palabraFinal });
                         i += 3;
                         encontrada = true;
                     }
@@ -949,8 +1613,18 @@
                 // Frases de 2 palabras
                 if (!encontrada && i + 1 < palabras.length) {
                     const frase2 = palabras.slice(i, i + 2).join(' ');
-                    if (DICCIONARIO[frase2]) {
-                        animacionesValidas.push({ texto: frase2, palabra: frase2 });
+                    const frase2Normalizada = normalizarPalabra(frase2);
+                    
+                    // Si la frase debe omitirse (null)
+                    if (frase2Normalizada === null) {
+                        i++;
+                        continue;
+                    }
+                    
+                    // Buscar la frase directamente o normalizada en el diccionario
+                    if (DICCIONARIO[frase2Normalizada] || DICCIONARIO[frase2]) {
+                        const palabraFinal = DICCIONARIO[frase2Normalizada] ? frase2Normalizada : frase2;
+                        animacionesValidas.push({ texto: frase2, palabra: palabraFinal });
                         i += 2;
                         encontrada = true;
                     }
@@ -958,10 +1632,59 @@
                 
                 // Palabra individual
                 if (!encontrada) {
-                    if (DICCIONARIO[palabras[i]]) {
-                        animacionesValidas.push({ texto: palabras[i], palabra: palabras[i] });
+                    const palabraNormalizada = normalizarPalabra(palabras[i]);
+                    
+                    // Si la palabra debe omitirse (null)
+                    if (palabraNormalizada === null) {
+                        console.log(`⊘ Omitida: "${palabras[i]}" (no se usa en LSV)`);
+                        i++;
+                        continue;
+                    }
+                    
+                    // Verificar si es un número
+                    if (/^\d+$/.test(palabraNormalizada)) {
+                        const glosasNumero = numeroAGlosas(palabraNormalizada);
+                        if (glosasNumero) {
+                            console.log(`🔢 Número: "${palabraNormalizada}" → ${glosasNumero.join(' ')}`);
+                            // Agregar cada glosa del número
+                            for (const glosa of glosasNumero) {
+                                if (DICCIONARIO[glosa]) {
+                                    animacionesValidas.push({ texto: glosa, palabra: glosa });
+                                } else {
+                                    console.warn(`⚠️ Glosa numérica no encontrada: ${glosa}`);
+                                }
+                            }
+                            i++;
+                            continue;
+                        }
+                    }
+                    
+                    if (DICCIONARIO[palabraNormalizada]) {
+                        // Palabra encontrada (puede ser normalizada o no)
+                        if (palabraNormalizada !== palabras[i]) {
+                            console.log(`🔄 Normalizada: "${palabras[i]}" → "${palabraNormalizada}"`);
+                        }
+                        animacionesValidas.push({ texto: palabras[i], palabra: palabraNormalizada });
                     } else {
-                        console.warn(`⚠️ Palabra no encontrada: ${palabras[i]}`);
+                        // Palabra no encontrada - deletrear
+                        console.warn(`⚠️ Palabra no encontrada, deletreando: ${palabras[i]}`);
+                        
+                        // Agregar animación de "deletrear"
+                        if (DICCIONARIO['deletrear']) {
+                            animacionesValidas.push({ texto: 'deletrear', palabra: 'deletrear' });
+                        }
+                        
+                        // Separar la palabra en letras
+                        const letras = palabras[i].split('');
+                        for (const letra of letras) {
+                            const letraLower = letra.toLowerCase();
+                            // Verificar si la letra existe en el alfabeto
+                            if (DICCIONARIO[letraLower]) {
+                                animacionesValidas.push({ texto: letraLower, palabra: letraLower });
+                            } else {
+                                console.warn(`⚠️ Letra no encontrada en alfabeto: ${letraLower}`);
+                            }
+                        }
                     }
                     i++;
                 }
@@ -975,11 +1698,31 @@
                 return;
             }
             
+            await reproducirSecuencia(animacionesValidas);
+        }
+        
+        // Función reutilizable para reproducir secuencia de animaciones
+        async function reproducirSecuencia(animacionesValidas) {
             console.log(`🎬 Secuencia: ${animacionesValidas.map(a => a.texto).join(' → ')}`);
+            console.log(`🎯 Animaciones: ${animacionesValidas.map(a => a.palabra).join(' → ')}`);
             
-            // Reproducir secuencia
+            // Guardar secuencia actual
+            currentSequence = animacionesValidas.map(a => a.palabra);
+            currentIndex = 0;
+            
+            // Precargar las primeras animaciones
+            precargarSiguientes(0);
+            
+            // Reproducir secuencia sin delays
             for (let idx = 0; idx < animacionesValidas.length; idx++) {
                 const { palabra } = animacionesValidas[idx];
+                currentIndex = idx;
+                
+                // Precargar siguientes mientras reproduce actual
+                if (idx + 1 < animacionesValidas.length) {
+                    precargarSiguientes(idx + 1);
+                }
+                
                 await cargarYReproducirAnimacion(palabra);
             }
             
@@ -994,6 +1737,83 @@
             document.getElementById('pauseText').textContent = 'Pausar';
         }
 
+        // Función para precargar las siguientes N animaciones
+        function precargarSiguientes(startIdx) {
+            const endIdx = Math.min(startIdx + LOOKAHEAD, currentSequence.length);
+            
+            for (let i = startIdx; i < endIdx; i++) {
+                const palabra = currentSequence[i];
+                const palabraNormalizada = palabra.toLowerCase().trim();
+                
+                // Si ya está en caché, continuar
+                if (animationCache.has(palabraNormalizada)) {
+                    continue;
+                }
+                
+                // Precargar en background sin bloquear
+                precargarAnimacionSilenciosa(palabraNormalizada);
+            }
+        }
+        
+        // Precarga silenciosa sin bloquear la ejecución
+        async function precargarAnimacionSilenciosa(palabraNormalizada) {
+            if (!DICCIONARIO[palabraNormalizada] || animationCache.has(palabraNormalizada)) {
+                return;
+            }
+            
+            try {
+                const loader = loaderInstance || new GLTFLoader();
+                const { categoria, archivo } = DICCIONARIO[palabraNormalizada];
+                const baseUrl = window.location.hostname.includes('github.io') 
+                    ? 'https://usm-argenis.github.io/STT_LSV/test/'
+                    : '';
+                
+                let nombreArchivo = avatarActual === 'Remy' 
+                    ? archivo.replace(/ /g, '_') 
+                    : archivo;
+                
+                const rutaCompleta = `${baseUrl}output/glb/${avatarActual}/${categoria}/${avatarActual}_resultado_${nombreArchivo}.glb`;
+                
+                const gltf = await new Promise((resolve, reject) => {
+                    const timeoutId = setTimeout(() => reject(new Error('Timeout')), 5000);
+                    loader.load(
+                        rutaCompleta,
+                        (result) => { clearTimeout(timeoutId); resolve(result); },
+                        undefined,
+                        (error) => { clearTimeout(timeoutId); reject(error); }
+                    );
+                });
+                
+                if (gltf.animations && gltf.animations.length > 0) {
+                    const clip = gltf.animations[0];
+                    procesarTracksAnimacion(clip);
+                    
+                    if (animationCache.size >= MAX_CACHE_SIZE) {
+                        const firstKey = animationCache.keys().next().value;
+                        animationCache.delete(firstKey);
+                    }
+                    
+                    animationCache.set(palabraNormalizada, clip);
+                    console.log(`📦 Precargada anticipadamente: ${palabraNormalizada}`);
+                    
+                    if (gltf.scene) {
+                        gltf.scene.traverse((child) => {
+                            if (child.geometry) child.geometry.dispose();
+                            if (child.material) {
+                                if (Array.isArray(child.material)) {
+                                    child.material.forEach(m => m.dispose());
+                                } else {
+                                    child.material.dispose();
+                                }
+                            }
+                        });
+                    }
+                }
+            } catch (error) {
+                // Ignorar errores de precarga silenciosa
+            }
+        }
+        
         async function cargarYReproducirAnimacion(palabra) {
             const palabraNormalizada = palabra.toLowerCase().trim();
             
@@ -1004,12 +1824,16 @@
             //document.getElementById('status').textContent = `▶️ ${palabra}`;
             
             if (animationCache.has(palabraNormalizada)) {
-                console.log(`📦 Caché: ${palabra}`);
-                await reproducirAnimacion(animationCache.get(palabraNormalizada), palabra);
+                console.log(`⚡ Instantánea desde caché: ${palabra}`);
+                const clip = animationCache.get(palabraNormalizada);
+                await reproducirAnimacion(clip, palabra);
                 return;
             }
             
-            const loader = new GLTFLoader();
+            console.log(`⏳ Cargando: ${palabra}`);
+            
+            // Reutilizar loader global
+            const loader = loaderInstance || new GLTFLoader();
             const { categoria, archivo } = DICCIONARIO[palabraNormalizada];
             const baseUrl = window.location.hostname.includes('github.io') 
                 ? 'https://usm-argenis.github.io/STT_LSV/test/'
@@ -1029,37 +1853,48 @@
             console.log(`🔄 Cargando: ${rutaCompleta}`);
             
             return new Promise((resolve, reject) => {
+                const timeout = isMobile ? 8000 : 15000; // Timeout más corto en móvil
+                const timeoutId = setTimeout(() => {
+                    console.error(`⏱️ Timeout cargando: ${palabra}`);
+                    resolve(); // Continuar con siguiente palabra
+                }, timeout);
+                
                 loader.load(
                     rutaCompleta,
                     async (gltf) => {
+                        clearTimeout(timeoutId);
                         if (gltf.animations && gltf.animations.length > 0) {
                             const clip = gltf.animations[0];
                             
-                            // Verificar si hay tracks de morph targets
-                            const morphTracks = clip.tracks.filter(t => t.name.includes('.morphTargetInfluences'));
-                            if (morphTracks.length > 0) {
-                                console.log(`🎭 ${palabra}: ${morphTracks.length} tracks de morph targets`);
-                            }
+                            // Optimización: Procesar tracks una sola vez
+                            procesarTracksAnimacion(clip);
                             
-                            // Corregir nombres de tracks si hay mapping
-                            if (avatarModel.userData.nodeNameMap) {
-                                clip.tracks = clip.tracks.map(track => {
-                                    const trackNodeName = track.name.split('.')[0];
-                                    const mappedName = avatarModel.userData.nodeNameMap[trackNodeName];
-                                    
-                                    if (mappedName) {
-                                        const newTrackName = track.name.replace(trackNodeName, mappedName);
-                                        console.log(`🔧 Corrigiendo track: ${track.name} → ${newTrackName}`);
-                                        track.name = newTrackName;
-                                    }
-                                    
-                                    return track;
-                                });
+                            // Gestión de caché con límite
+                            if (animationCache.size >= MAX_CACHE_SIZE) {
+                                // Eliminar la animación más antigua
+                                const firstKey = animationCache.keys().next().value;
+                                animationCache.delete(firstKey);
+                                console.log(`🗑️ Caché lleno, eliminada: ${firstKey}`);
                             }
                             
                             animationCache.set(palabraNormalizada, clip);
-                            console.log(`✅ Cargada: ${palabra} (${clip.duration.toFixed(2)}s)`);
+                            console.log(`✅ Cargada: ${palabra} (${clip.duration.toFixed(2)}s) - Caché: ${animationCache.size}/${MAX_CACHE_SIZE}`);
                             await reproducirAnimacion(clip, palabra);
+                            
+                            // Liberar memoria de geometrías del GLB
+                            if (gltf.scene) {
+                                gltf.scene.traverse((child) => {
+                                    if (child.geometry) child.geometry.dispose();
+                                    if (child.material) {
+                                        if (Array.isArray(child.material)) {
+                                            child.material.forEach(m => m.dispose());
+                                        } else {
+                                            child.material.dispose();
+                                        }
+                                    }
+                                });
+                            }
+                            
                             resolve();
                         } else {
                             console.warn(`⚠️ Sin animaciones: ${palabra}`);
@@ -1068,13 +1903,35 @@
                     },
                     undefined,
                     (error) => {
+                        clearTimeout(timeoutId);
                         console.error(`❌ Error: ${palabra}`, error);
                         resolve();
                     }
                 );
             });
         }
-
+        
+        // Nueva función para procesar tracks una sola vez
+        function procesarTracksAnimacion(clip) {
+            // Verificar si hay tracks de morph targets
+            const morphTracks = clip.tracks.filter(t => t.name.includes('.morphTargetInfluences'));
+            if (morphTracks.length > 0) {
+                console.log(`🎭 Animación con ${morphTracks.length} tracks de morph targets`);
+            }
+            
+            // Corregir nombres de tracks si hay mapping
+            if (avatarModel && avatarModel.userData.nodeNameMap) {
+                clip.tracks.forEach((track, index) => {
+                    const trackNodeName = track.name.split('.')[0];
+                    const mappedName = avatarModel.userData.nodeNameMap[trackNodeName];
+                    
+                    if (mappedName) {
+                        const newTrackName = track.name.replace(trackNodeName, mappedName);
+                        track.name = newTrackName;
+                    }
+                });
+            }
+        }
         async function reproducirAnimacion(clip, palabra) {
             return new Promise((resolve) => {
                 // Detener animación actual SIN transición para fluidez
@@ -1100,6 +1957,86 @@
                 };
                 mixer.addEventListener('finished', onFinished);
             });
+        }
+        
+        // Nueva función: Precargar animaciones más comunes en background
+        async function precargarAnimacionesComunes() {
+            // En móvil, precargar menos animaciones
+            const animacionesComunes = isMobile 
+                ? ['hola', 'gracias', 'si'] // Solo 3 en móvil
+                : ['hola', 'buenos dias', 'gracias', 'por favor', 'adios', 'si', 'no', 'bien', 'mal', 'mucho gusto'];
+            
+            console.log('🔄 Iniciando precarga de animaciones comunes...');
+            
+            for (const palabra of animacionesComunes) {
+                if (animationCache.has(palabra)) continue;
+                
+                const palabraNormalizada = palabra.toLowerCase().trim();
+                if (!DICCIONARIO[palabraNormalizada]) continue;
+                
+                try {
+                    const loader = loaderInstance || new GLTFLoader();
+                    const { categoria, archivo } = DICCIONARIO[palabraNormalizada];
+                    const baseUrl = window.location.hostname.includes('github.io') 
+                        ? 'https://usm-argenis.github.io/STT_LSV/test/'
+                        : '';
+                    
+                    let nombreArchivo = avatarActual === 'Remy' 
+                        ? archivo.replace(/ /g, '_') 
+                        : archivo;
+                    
+                    const rutaCompleta = `${baseUrl}output/glb/${avatarActual}/${categoria}/${avatarActual}_resultado_${nombreArchivo}.glb`;
+                    
+                    await new Promise((resolve) => {
+                        const timeout = isMobile ? 10000 : 15000; // Timeout más corto en móvil
+                        const timeoutId = setTimeout(() => {
+                            console.log(`⏱️ Timeout precargando: ${palabra}`);
+                            resolve();
+                        }, timeout);
+                        
+                        loader.load(
+                            rutaCompleta,
+                            (gltf) => {
+                                clearTimeout(timeoutId);
+                                if (gltf.animations && gltf.animations.length > 0) {
+                                    const clip = gltf.animations[0];
+                                    procesarTracksAnimacion(clip);
+                                    animationCache.set(palabraNormalizada, clip);
+                                    console.log(`✅ Precargada: ${palabra}`);
+                                    
+                                    // Liberar recursos del GLB
+                                    if (gltf.scene) {
+                                        gltf.scene.traverse((child) => {
+                                            if (child.geometry) child.geometry.dispose();
+                                            if (child.material) {
+                                                if (Array.isArray(child.material)) {
+                                                    child.material.forEach(m => m.dispose());
+                                                } else {
+                                                    child.material.dispose();
+                                                }
+                                            }
+                                        });
+                                    }
+                                }
+                                resolve();
+                            },
+                            undefined,
+                            () => {
+                                clearTimeout(timeoutId);
+                                resolve(); // Ignorar errores en precarga
+                            }
+                        );
+                    });
+                    
+                    // Pausa adaptativa según dispositivo
+                    await new Promise(r => setTimeout(r, LOAD_DELAY));
+                    
+                } catch (error) {
+                    console.log(`⚠️ No se pudo precargar: ${palabra}`);
+                }
+            }
+            
+            console.log(`✅ Precarga completada: ${animationCache.size} animaciones en caché`);
         }
 
         function animate() {
@@ -1127,6 +2064,58 @@
             controls.update();
             renderer.render(scene, camera);
         }
+
+        // Detectar eventos de focus/blur que también indican teclado virtual
+        window.addEventListener('focusin', () => {
+            logToExpo('🔍 FOCUSIN detectado');
+            if (isMobile && camera && controls && !savedCameraState) {
+                savedCameraState = {
+                    position: camera.position.clone(),
+                    target: controls.target.clone(),
+                    zoom: camera.zoom,
+                    fov: camera.fov
+                };
+                logToExpo('🔴 Input enfocado - estado guardado:', {
+                    position: { x: savedCameraState.position.x, y: savedCameraState.position.y, z: savedCameraState.position.z },
+                    target: { x: savedCameraState.target.x, y: savedCameraState.target.y, z: savedCameraState.target.z }
+                });
+                
+                // CONGELAR OrbitControls
+                controls.enabled = false;
+                logToExpo('⛔ OrbitControls DESHABILITADO (focusin)');
+            }
+        });
+        
+        window.addEventListener('focusout', (e) => {
+            // Solo actuar si el foco sale completamente del documento (teclado cerrado)
+            setTimeout(() => {
+                const activeElement = document.activeElement;
+                const isInputActive = activeElement && activeElement.tagName === 'INPUT';
+                
+                logToExpo('🔓 FOCUSOUT detectado', { 
+                    isMobile, 
+                    hasSavedState: !!savedCameraState,
+                    isInputStillActive: isInputActive,
+                    activeElement: activeElement ? activeElement.tagName : 'none'
+                });
+                
+                // Solo restaurar si el input ya NO está activo (teclado realmente cerrado)
+                if (isMobile && savedCameraState && !isInputActive) {
+                    logToExpo('⏰ Ejecutando restauración con resetCamera()');
+                    
+                    // Usar la función resetCamera() que ya existe
+                    resetCamera();
+                    
+                    // Limpiar estado guardado
+                    savedCameraState = null;
+                    logToExpo('✅ Estado limpiado');
+                } else {
+                    logToExpo('⚠️ No se restaura:', { 
+                        razon: !isMobile ? 'No es móvil' : (!savedCameraState ? 'No hay estado guardado' : 'Input aún activo')
+                    });
+                }
+            }, 100); // Pequeño delay para que activeElement se actualice
+        });
 
         window.addEventListener('DOMContentLoaded', init);
     </script>

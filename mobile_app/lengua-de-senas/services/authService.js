@@ -23,12 +23,14 @@ const API_URL = 'http://192.168.10.93:3000';
 // ============================================
 export const register = async (full_name, email, password) => {
   try {
+    console.log('[AuthService][register] Enviando datos de registro:', { full_name, email });
     const response = await axios.post(`${API_URL}/api/register`, {
       full_name,
       email,
       password
     });
 
+    console.log('[AuthService][register] Respuesta del backend:', response.data);
     if (response.data.success) {
       // IMPORTANTE: Limpiar PRIMERO todo el AsyncStorage
       await AsyncStorage.multiRemove([
@@ -43,26 +45,31 @@ export const register = async (full_name, email, password) => {
         'soundEnabled',
         'notificationsEnabled'
       ]);
+      console.log('[AuthService][register] AsyncStorage limpiado');
 
       // Guardar datos del nuevo usuario
       const newUserId = response.data.data.id.toString();
       await AsyncStorage.setItem('userId', newUserId);
       await AsyncStorage.setItem('userEmail', response.data.data.email);
       await AsyncStorage.setItem('userName', response.data.data.full_name);
+      console.log('[AuthService][register] Usuario guardado:', { id: newUserId, email: response.data.data.email });
       
       // Inicializar progreso en 0 para nuevo usuario
       await AsyncStorage.setItem('userStars', '0');
       await AsyncStorage.setItem('userLevel', '1');
       await AsyncStorage.setItem('totalScore', '0');
       await AsyncStorage.setItem('wordsCompleted', '0');
+      console.log('[AuthService][register] Progreso inicializado en 0');
       
       // TAMBIÉN guardar con el formato específico por usuario para LearningScreen
       await AsyncStorage.setItem(`stars_${newUserId}`, '0');
       await AsyncStorage.setItem(`currentLevel_${newUserId}`, '1');
+      console.log('[AuthService][register] Progreso guardado en formato específico:', { [`stars_${newUserId}`]: '0', [`currentLevel_${newUserId}`]: '1' });
     }
 
     return response.data;
   } catch (error) {
+    console.log('[AuthService][register] Error:', error);
     if (error.response) {
       return error.response.data;
     }
@@ -78,14 +85,104 @@ export const register = async (full_name, email, password) => {
 // ============================================
 export const login = async (email, password) => {
   try {
-    const response = await axios.post(`${API_URL}/api/login`, {
-      email,
-      password
-    });
+    console.log('[AuthService][login] Iniciando login para:', email);
+    let response;
+    try {
+      response = await axios.post(`${API_URL}/api/login`, {
+        email,
+        password
+      }, {
+        timeout: 10000 // 10 segundos
+      });
+      console.log('[AuthService][login] Respuesta del backend:', response.data);
+    } catch (axiosError) {
+      console.log('[AuthService][login][AXIOS ERROR]', axiosError);
+      if (axiosError.response) {
+        console.log('[AuthService][login][AXIOS ERROR] response:', axiosError.response.data);
+        return axiosError.response.data;
+      }
+      if (axiosError.request) {
+        console.log('[AuthService][login][AXIOS ERROR] request:', axiosError.request);
+      }
+      if (axiosError.message) {
+        console.log('[AuthService][login][AXIOS ERROR] message:', axiosError.message);
+      }
+      // Intentar con fetch si axios falla por red
+      try {
+        console.log('[AuthService][login][FETCH] Intentando login con fetch...');
+        const fetchResponse = await fetch(`${API_URL}/api/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
+        });
+        const fetchData = await fetchResponse.json();
+        console.log('[AuthService][login][FETCH] Respuesta:', fetchData);
 
-    if (response.data.success) {
-      console.log('🔑 [AuthService] Login exitoso, datos recibidos del backend:', JSON.stringify(response.data.data, null, 2));
-      
+        // Si el login fue exitoso con fetch, guardar en AsyncStorage igual que con axios
+        if (fetchData && fetchData.success && fetchData.data) {
+          await AsyncStorage.multiRemove([
+            'userId',
+            'userEmail',
+            'userName',
+            'userStars',
+            'userLevel',
+            'totalScore',
+            'wordsCompleted',
+            'theme',
+            'soundEnabled',
+            'notificationsEnabled'
+          ]);
+          console.log('[AuthService][login][FETCH] AsyncStorage limpiado');
+
+          const { user, progress, settings } = fetchData.data;
+          await AsyncStorage.setItem('userId', user.id.toString());
+          await AsyncStorage.setItem('userEmail', user.email);
+          await AsyncStorage.setItem('userName', user.full_name);
+          console.log('[AuthService][login][FETCH] Usuario guardado:', { id: user.id, email: user.email });
+
+          const userId = user.id.toString();
+          if (progress) {
+            console.log('[AuthService][login][FETCH] Progreso recibido del backend:', progress);
+            await AsyncStorage.setItem('userStars', progress.stars.toString());
+            await AsyncStorage.setItem('userLevel', progress.level.toString());
+            await AsyncStorage.setItem('totalScore', progress.total_score.toString());
+            await AsyncStorage.setItem('wordsCompleted', progress.words_completed.toString());
+            await AsyncStorage.setItem(`stars_${userId}`, progress.stars.toString());
+            await AsyncStorage.setItem(`currentLevel_${userId}`, progress.level.toString());
+            console.log('[AuthService][login][FETCH] Progreso guardado:', {
+              userStars: progress.stars,
+              [`stars_${userId}`]: progress.stars,
+              userLevel: progress.level,
+              [`currentLevel_${userId}`]: progress.level
+            });
+          } else {
+            console.log('[AuthService][login][FETCH] No hay progreso en el backend, inicializando con 0');
+            await AsyncStorage.setItem('userStars', '0');
+            await AsyncStorage.setItem('userLevel', '1');
+            await AsyncStorage.setItem('totalScore', '0');
+            await AsyncStorage.setItem('wordsCompleted', '0');
+            await AsyncStorage.setItem(`stars_${userId}`, '0');
+            await AsyncStorage.setItem(`currentLevel_${userId}`, '1');
+            console.log('[AuthService][login][FETCH] Progreso inicial guardado con valores en 0');
+          }
+
+          if (settings) {
+            await AsyncStorage.setItem('theme', settings.theme || 'light');
+            await AsyncStorage.setItem('soundEnabled', settings.sound_enabled?.toString() || 'true');
+            await AsyncStorage.setItem('notificationsEnabled', settings.notifications_enabled?.toString() || 'true');
+            console.log('[AuthService][login][FETCH] Configuraciones guardadas:', settings);
+          }
+        }
+        return fetchData;
+      } catch (fetchError) {
+        console.log('[AuthService][login][FETCH ERROR]', fetchError);
+        return {
+          success: false,
+          mensaje: 'Error de red/fetch: ' + (fetchError.message || fetchError.toString())
+        };
+      }
+    }
+    if (response && response.data && response.data.success) {
       // IMPORTANTE: Limpiar PRIMERO todo el AsyncStorage del usuario anterior
       await AsyncStorage.multiRemove([
         'userId',
@@ -99,51 +196,43 @@ export const login = async (email, password) => {
         'soundEnabled',
         'notificationsEnabled'
       ]);
-      
-      console.log('🧹 [AuthService] AsyncStorage limpiado');
+      console.log('[AuthService][login] AsyncStorage limpiado');
 
       // Ahora guardar datos del nuevo usuario
       const { user, progress, settings } = response.data.data;
-      
       await AsyncStorage.setItem('userId', user.id.toString());
       await AsyncStorage.setItem('userEmail', user.email);
       await AsyncStorage.setItem('userName', user.full_name);
-      
-      console.log(`👤 [AuthService] Usuario guardado: ID=${user.id}, Nombre=${user.full_name}`);
-      
+      console.log('[AuthService][login] Usuario guardado:', { id: user.id, email: user.email });
+
       // Guardar progreso (esto asegura que cada usuario tenga sus propias estrellas)
       const userId = user.id.toString();
       if (progress) {
-        console.log(`📊 [AuthService] Progreso recibido del backend:`, progress);
-        
+        console.log('[AuthService][login] Progreso recibido del backend:', progress);
         await AsyncStorage.setItem('userStars', progress.stars.toString());
         await AsyncStorage.setItem('userLevel', progress.level.toString());
         await AsyncStorage.setItem('totalScore', progress.total_score.toString());
         await AsyncStorage.setItem('wordsCompleted', progress.words_completed.toString());
-        
         // TAMBIÉN guardar con el formato específico por usuario para LearningScreen
         await AsyncStorage.setItem(`stars_${userId}`, progress.stars.toString());
         await AsyncStorage.setItem(`currentLevel_${userId}`, progress.level.toString());
-        
-        console.log(`✅ [AuthService] Progreso guardado:`);
-        console.log(`   - userStars = ${progress.stars}`);
-        console.log(`   - stars_${userId} = ${progress.stars}`);
-        console.log(`   - userLevel = ${progress.level}`);
-        console.log(`   - currentLevel_${userId} = ${progress.level}`);
+        console.log('[AuthService][login] Progreso guardado:', {
+          userStars: progress.stars,
+          [`stars_${userId}`]: progress.stars,
+          userLevel: progress.level,
+          [`currentLevel_${userId}`]: progress.level
+        });
       } else {
-        console.log('⚠️ [AuthService] No hay progreso en el backend, inicializando con 0');
-        
+        console.log('[AuthService][login] No hay progreso en el backend, inicializando con 0');
         // Si no hay progreso, inicializar con 0
         await AsyncStorage.setItem('userStars', '0');
         await AsyncStorage.setItem('userLevel', '1');
         await AsyncStorage.setItem('totalScore', '0');
         await AsyncStorage.setItem('wordsCompleted', '0');
-        
         // TAMBIÉN guardar con el formato específico por usuario para LearningScreen
         await AsyncStorage.setItem(`stars_${userId}`, '0');
         await AsyncStorage.setItem(`currentLevel_${userId}`, '1');
-        
-        console.log(`✅ [AuthService] Progreso inicial guardado con valores en 0`);
+        console.log('[AuthService][login] Progreso inicial guardado con valores en 0');
       }
 
       // Guardar configuraciones
@@ -151,11 +240,12 @@ export const login = async (email, password) => {
         await AsyncStorage.setItem('theme', settings.theme || 'light');
         await AsyncStorage.setItem('soundEnabled', settings.sound_enabled?.toString() || 'true');
         await AsyncStorage.setItem('notificationsEnabled', settings.notifications_enabled?.toString() || 'true');
+        console.log('[AuthService][login] Configuraciones guardadas:', settings);
       }
     }
-
-    return response.data;
+    return response && response.data ? response.data : { success: false, mensaje: 'Respuesta inesperada del backend.' };
   } catch (error) {
+    console.log('[AuthService][login] Error FINAL:', error);
     if (error.response) {
       return error.response.data;
     }

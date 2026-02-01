@@ -1,0 +1,447 @@
+=== GLOSAS PROPORCIONADAS ===
+
+== Familia ==
+Familia
+Padre
+Madre
+Papa
+Mama
+Hijo
+Hijastro
+Hermano
+Hermanastro
+Padrastro
+Madrastra
+Padrino/madrina
+Cuñado
+Abuelo
+Nieto
+Tio
+Primo
+Sobrino
+Suegro
+
+== Operaciones Matemáticas ==
+Sumar
+Restar
+Multiplicar
+Dividir
+Contar
+Calcular
+
+== Verbos ==
+Comer
+Correr
+Entrar
+Fumar
+Permitit
+Prohibir
+Respetar
+Viajar
+agarrar
+atraer
+burlar
+calmar
+engañar
+guardar
+llevar
+pelear
+regalar
+ser
+sufrir
+traer
+usar
+vestir
+
+== Lugares ==
+Alcabala
+Ascensor
+Avenida
+Avila
+Banco
+Barrio
+Biblioteca
+Calle
+Capital
+Caracas
+Casa
+Centro comercial
+Cine
+Clinica
+Club
+Colegio
+Escalera
+Escalera mecánica
+Esquina
+Estación
+Fabrica empresa
+Farmacia
+Hospital
+Hotel
+Iglesia catolica
+Iglesia evangelica
+Los teques
+Mercado
+Museo
+Panaderia
+Parque
+Plaza
+Puente
+Quinta
+Restaurante
+Teatro
+Terminal
+Universidad
+Urbanización
+Trafico
+Semáforo
+Automercado
+Taller
+Gimnasio
+Tienda
+
+== Transporte ==
+Gandola
+Locomotora
+Metro
+Patines
+Patineta
+Teleférico
+Tren
+
+== Tiempo ==
+Había una vez
+Hace años
+Hace rato
+Antes
+Horario
+En punto
+Hora
+Media hora
+un cuarto
+un minuto
+Un segundo
+una hora
+
+
+=== GLOSAS ENCONTRADAS EN CARPETA DUVALL ===
+
+== Adverbios de Lugar ==
+adverbios
+al lado
+atras
+cerca
+derecha
+frente
+izquierda
+lejos
+lugares
+
+== Alfabeto ==
+a
+b
+c
+d
+e
+f
+g
+h
+i
+j
+k
+l
+m
+n
+o
+p
+q
+r
+t
+u
+v
+w
+x
+y
+z
+ñ
+
+== Cortesía ==
+a la orden
+buen provecho
+cortesia
+gracias
+muchas gracias
+mucho gusto
+permiso
+
+== Días de la Semana ==
+domingo
+jueves
+lunes
+martes
+miercoles
+sabado
+viernes
+
+== Estado Civil ==
+casado
+concubino
+divorciado
+separado
+soltero
+viudo
+
+== Expresiones ==
+abril
+agosto
+bien
+como
+cual
+cuando
+cuantos
+de nada
+diciembre
+donde (especifico)
+donde
+enero
+expresiones
+febrero
+interrogantes
+julio
+junio
+mal
+marzo
+mayo
+no
+noviembre
+octubre
+porque
+que
+quien
+regular
+saludas a
+septiembre
+si
+
+== Números ==
+0
+1
+10
+1M
+2
+3
+4
+5
+6
+7
+8
+9
+
+== Números Ordinales ==
+10_o
+1_o
+2_o
+3_o
+4_o
+5_o
+6_o
+7_o
+8_o
+9_o
+
+== Personas ==
+adulto
+amigo
+anciano
+bebe
+ciego
+compañero
+hombre
+joven
+mayor de edad
+mayor
+menor de edad
+mujer
+niño
+novio
+oyente
+persona
+personas
+señor
+señorita
+sordo
+sordociego
+viejo
+
+== Preguntas ==
+como estas
+cual es tu nombre
+cual es tu seña
+que tal
+nombre
+seña
+
+== Preposiciones ==
+algo
+alguien
+algun
+bastante
+cualquier
+demasiado
+mas
+mucho
+nada
+nadie
+ningun
+otro
+poco
+quienquiera
+todo
+
+== Profesiones ==
+abogado
+administrador
+albañil
+analista
+auxiliar
+barbero
+carrera
+chef
+cocinero
+conductor
+constructor
+contador
+dentista
+detective
+dibujante tecnico
+dibujante
+director
+economista
+enfermera
+escritor
+fotografo
+gerente
+informatica
+ingeniero
+inspector
+instructor
+interprete
+jefe
+licenciado
+maestro
+medico
+mensajero
+mesonero
+pasante
+peluquera
+pintor
+policia
+profesion
+profesor
+psicologo
+secretaria
+sistema
+supervisor
+tecnico
+traductor
+vendedor
+vigilante
+
+== Pronombres ==
+el
+ella
+ellas
+ellos
+mio
+nosotros
+nuestro
+suyo
+tu
+tuyo
+ustedes
+yo
+
+== Saludos ==
+adios
+bienvenido
+buenas noches
+buenas tardes
+buenos dias
+chao
+hola
+
+== Tiempo ==
+anteayer
+ayer
+calendario
+fin de semana
+hoy
+mañana
+mes
+pasado mañana
+semana
+
+== Tipos de Vivienda ==
+apartamento
+baño
+casa
+cocina
+comedor
+cuarto
+edificio
+piso
+rancho
+sala
+
+== Verbos (Duvall) ==
+amar
+ayudar
+cansar
+comer
+conocer
+decir
+deletrear
+dormir
+estar
+estudiar
+invitar
+preguntar
+presentar
+querer
+responder
+saludar
+sentir
+trabajar
+ver
+vivir
+
+== Medios de Transporte - Aéreo ==
+aeropuerto
+aterrizar
+avion
+avioneta
+boleto
+despegar
+helicoptero
+piloto
+
+== Medios de Transporte - Marítimo ==
+barco
+canoa
+ferri
+lancha
+
+== Medios de Transporte - Terrestre ==
+autobus
+bicicleta
+cabletren
+camioneta
+carro
+estacion
+ferrocarril
+metro
+metrobus
+moto
+parada
+taxi
+tren

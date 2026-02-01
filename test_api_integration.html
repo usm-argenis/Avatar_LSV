@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Test API Integration</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 20px;
+            background: #1a1a2e;
+            color: white;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        input {
+            width: 70%;
+            padding: 10px;
+            font-size: 16px;
+            border-radius: 5px;
+            border: 2px solid #667eea;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+        button:hover {
+            opacity: 0.9;
+        }
+        #resultado {
+            margin-top: 20px;
+            padding: 20px;
+            background: #2d2d44;
+            border-radius: 10px;
+            white-space: pre-wrap;
+            font-family: 'Courier New', monospace;
+        }
+        .success { color: #38ef7d; }
+        .error { color: #ff5151; }
+        .info { color: #667eea; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Test de Integración con Backend API</h1>
+        <p>Prueba la conexión con el backend en <strong>http://localhost:3000</strong></p>
+        
+        <div>
+            <input type="text" id="textoInput" placeholder="Escribe un texto para traducir..." value="ola cmo estas traajo">
+            <button onclick="probarAPI()">Probar API</button>
+        </div>
+        
+        <div id="resultado"></div>
+    </div>
+
+    <script>
+        const BACKEND_URL = 'http://localhost:3000';
+        
+        async function probarAPI() {
+            const texto = document.getElementById('textoInput').value;
+            const resultado = document.getElementById('resultado');
+            
+            resultado.innerHTML = '<span class="info">⏳ Conectando con backend...</span>';
+            
+            try {
+                const response = await fetch(`${BACKEND_URL}/api/translate`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        texto: texto,
+                        avatar: 'Nancy',
+                        deletrear_desconocidas: true,
+                        corregir_ortografia: true,
+                        velocidad_deletreo: 1.2
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Error HTTP: ${response.status}`);
+                }
+
+                const data = await response.json();
+                
+                let html = '<span class="success">✅ Conexión exitosa!</span>\n\n';
+                html += `<strong>Texto original:</strong> "${data.texto_original}"\n`;
+                html += `<strong>Texto corregido:</strong> "${data.texto_corregido}"\n\n`;
+                
+                if (data.correcciones && data.correcciones.length > 0) {
+                    html += '<strong>📝 Correcciones aplicadas:</strong>\n';
+                    data.correcciones.forEach(corr => {
+                        html += `  • "${corr.original}" → "${corr.corregida}" (${corr.tipo}, ${corr.confianza}% confianza)\n`;
+                    });
+                    html += '\n';
+                }
+                
+                html += `<strong>📊 Total de animaciones:</strong> ${data.total_animaciones}\n\n`;
+                
+                if (data.animaciones && data.animaciones.length > 0) {
+                    html += '<strong>🎬 Secuencia de animaciones:</strong>\n';
+                    html += data.animaciones.map(a => a.nombre).join(' → ') + '\n\n';
+                }
+                
+                if (data.palabras_deletreadas && data.palabras_deletreadas.length > 0) {
+                    html += `<strong>🔤 Palabras deletreadas:</strong> ${data.palabras_deletreadas.join(', ')}\n`;
+                }
+                
+                resultado.innerHTML = html;
+                
+            } catch (error) {
+                resultado.innerHTML = `<span class="error">❌ Error: ${error.message}</span>\n\n`;
+                resultado.innerHTML += '<span class="info">Verifica que el backend esté corriendo en http://localhost:3000</span>';
+            }
+        }
+        
+        // Probar conexión al cargar
+        window.onload = () => {
+            setTimeout(probarAPI, 500);
+        };
+    </script>
+</body>
+</html>

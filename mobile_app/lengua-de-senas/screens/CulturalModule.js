@@ -302,7 +302,7 @@ const CulturalModule = ({ navigation, route }) => {
           </TouchableOpacity>
         ))}
 
-        {missionCompleted && (
+        {missionAnswered && (
           <TouchableOpacity 
             style={styles.continueButton} 
             onPress={() => goToNextSection()}
@@ -404,19 +404,43 @@ const CulturalModule = ({ navigation, route }) => {
   };
 
   // Finalizar módulo
-  const finishModule = (finalScore) => {
+  const finishModule = async (finalScore) => {
     // Usar starsEarned directamente (no calcular desde finalScore)
     const stars = starsEarned;
+    const scoreThreshold = 50; // Umbral para sumar estrellas
+    
+    let message = '';
+    let starsToAdd = 0;
+    
+    if (stars >= scoreThreshold) {
+      message = `Has ganado ${stars} estrellas ⭐\n\n¡Excelente! Tus estrellas se han sumado a tu cuenta.\n\nAhora entiendes mejor la cultura Sorda y cómo interactuar respetuosamente.`;
+      starsToAdd = stars;
+      
+      // Desbloquear módulos de alfabeto y números
+      try {
+        const userId = await AsyncStorage.getItem('userId');
+        if (userId) {
+          await AsyncStorage.setItem(`module_alfabeto_unlocked_${userId}`, 'true');
+          await AsyncStorage.setItem(`module_numeros_unlocked_${userId}`, 'true');
+          console.log('✅ [CulturalModule] Módulos de alfabeto y números desbloqueados');
+        }
+      } catch (error) {
+        console.error('❌ [CulturalModule] Error desbloqueando módulos:', error);
+      }
+    } else {
+      message = `Obtuviste ${stars} estrellas de 50 posibles.\n\nNecesitas al menos 50 estrellas para que se sumen a tu cuenta y desbloquear nuevos módulos.\n\n¡Intenta nuevamente!`;
+      starsToAdd = 0;
+    }
     
     Alert.alert(
-      '🏆 ¡Módulo Completado!',
-      `Has ganado ${stars} estrellas ⭐\n\nAhora entiendes mejor la cultura Sorda y cómo interactuar respetuosamente.`,
+      stars >= scoreThreshold ? '🏆 ¡Módulo Completado!' : '⚠️ Intenta Nuevamente',
+      message,
       [
         {
           text: 'Continuar',
           onPress: () => {
             if (onComplete) {
-              onComplete(stars); // Pasar estrellas ganadas a la experiencia
+              onComplete(starsToAdd); // Solo pasar estrellas si alcanzó el umbral
             }
             navigation.goBack();
           }

@@ -65,6 +65,8 @@
 
         // Variables globales
         let scene, camera, renderer, avatar;
+        const avatarCache = {}; // Cache para avatares ya cargados
+        let isLoading = false;
 
         // Inicializar escena
         function init() {
@@ -122,36 +124,77 @@
         }
 
         function loadAvatar(name) {
+            // Prevenir cargas múltiples simultáneas
+            if (isLoading) {
+                console.log('⏳ Carga en progreso, ignorando...');
+                return;
+            }
+
+            // Si el avatar ya está cargado y en caché, solo intercambiarlo
+            if (avatarCache[name]) {
+                console.log(`⚡ Usando ${name} desde caché`);
+                
+                if (avatar) {
+                    scene.remove(avatar);
+                    avatar.visible = false;
+                }
+                
+                avatar = avatarCache[name];
+                avatar.visible = true;
+                scene.add(avatar);
+                return;
+            }
+
+            isLoading = true;
             const loader = new GLTFLoader();
             const avatarPath = AVATAR_PATHS[name] || AVATAR_PATHS['Luis'];
 
             loader.load(
                 avatarPath,
                 (gltf) => {
+                    const newAvatar = gltf.scene;
+                    
+                    // Configurar avatar
+                    newAvatar.position.set(0, 0, 0);
+                    newAvatar.rotation.y = 0;
+                    
+                    const scale = name === 'Nancy' || name === 'Carla' ? 1.0 : 1.0;
+                    newAvatar.scale.set(scale, scale, scale);
+
+                    // Optimizar materiales
+                    newAvatar.traverse((child) => {
+                        if (child.isMesh) {
+                            child.frustumCulled = true;
+                            if (child.material) {
+                                child.material.needsUpdate = false;
+                            }
+                        }
+                    });
+
+                    // Guardar en caché
+                    avatarCache[name] = newAvatar;
+
+                    // Remover avatar anterior
                     if (avatar) {
                         scene.remove(avatar);
+                        avatar.visible = false;
                     }
 
-                    avatar = gltf.scene;
-                    
-                    // Posicionar avatar
-                    avatar.position.set(0, 0, 0);
-                    avatar.rotation.y = 0; // Mirando al frente
-                    
-                    // Escalar según el avatar
-                    const scale = name === 'Nancy' || name === 'Carla' ? 1.0 : 1.0;
-                    avatar.scale.set(scale, scale, scale);
-
+                    avatar = newAvatar;
                     scene.add(avatar);
+                    isLoading = false;
 
-                    console.log(`✅ Avatar ${name} cargado exitosamente`);
+                    console.log(`✅ Avatar ${name} cargado y cacheado`);
                 },
                 (progress) => {
-                    const percent = (progress.loaded / progress.total) * 100;
-                    console.log(`Cargando avatar: ${percent.toFixed(0)}%`);
+                    if (progress.total > 0) {
+                        const percent = (progress.loaded / progress.total) * 100;
+                        console.log(`Cargando ${name}: ${percent.toFixed(0)}%`);
+                    }
                 },
                 (error) => {
                     console.error('❌ Error cargando avatar:', error);
+                    isLoading = false;
                 }
             );
         }

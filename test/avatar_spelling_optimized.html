@@ -3,7 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Avatar Spelling - LSV</title>
+    <meta name="cache-control" content="no-cache, no-store, must-revalidate">
+    <meta name="pragma" content="no-cache">
+    <meta name="expires" content="0">
+    <title>Avatar Spelling - LSV v2.3 (N1:3s N2:1.4s N3:1s)</title>
     <style>
         * {
             margin: 0;
@@ -50,6 +53,61 @@
             color: #f093fb;
         }
 
+        /* Botones de control */
+        .control-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 3px;
+            min-width: 70px;
+            height: auto;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .control-btn .btn-icon {
+            font-size: 18px;
+            line-height: 1;
+        }
+
+        .control-btn .btn-text {
+            font-size: 9px;
+            line-height: 1;
+            margin-top: 2px;
+        }
+
+        .control-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .control-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .control-btn.replay {
+            background: linear-gradient(135deg, #2196F3 0%, #53a5f8 100%);
+            box-shadow: 0 4px 15px rgba(33, 150, 243, 0.4);
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            z-index: 100;
+        }
+
+        .control-btn.replay:hover {
+            box-shadow: 0 6px 20px rgba(33, 150, 243, 0.6);
+        }
+
         #loading {
             position: fixed;
             top: 0;
@@ -57,7 +115,7 @@
             width: 100%;
             height: 100%;
             background: rgba(0, 0, 0, 0.95);
-            display: flex;
+            display: none;
             flex-direction: column;
             justify-content: center;
             align-items: center;
@@ -93,10 +151,13 @@
 <body>
     <div id="app">
         <div id="viewer-container">
-            <canvas id="canvas-3d"><div id="loading">
-        <div class="spinner"></div>
-        <div class="loading-text" id="loading-text">Cargando avatar...</div>
-    </canvas></div>
+            <canvas id="canvas-3d"></canvas>
+            
+            <!-- Botón Repetir -->
+            <button class="control-btn replay" id="replayBtn" disabled title="Repetir Palabra">
+                <span class="btn-icon">🔄</span>
+                <span class="btn-text">Repetir</span>
+            </button>
         </div>
     </div>
 
@@ -125,25 +186,60 @@
         let avatarActual = 'Nancy';
         let palabraActual = '';
         let autoplay = false;
+        let currentSpeed = 3.0; // Velocidad dinámica (por defecto nivel 1 = 3 segundos)
+        let currentLevel = 1; // Nivel actual
+        
+        // Optimizaciones de rendimiento
+        let loaderInstance = null; // Reutilizar loader
+        
+        // Detección de dispositivo móvil
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        const MAX_CACHE_SIZE = isMobile ? 10 : 30; // Menos caché en móvil
+        const PRELOAD_COUNT = isMobile ? 5 : 10; // Menos precarga en móvil
+        const LOAD_DELAY = isMobile ? 400 : 100; // Mayor delay entre cargas en móvil
+        const LOOKAHEAD = isMobile ? 2 : 3; // Cuantas letras precargar por adelantado
+        
+        // Sistema de precarga anticipada
+        let currentWord = [];
+        let currentLetterIndex = 0;
         
         async function init() {
+            console.log('🚀 Avatar Spelling v2.3 (N1:3s N2:1.4s N3:1s) - Iniciando...');
             // Obtener parámetros desde URL
             const params = new URLSearchParams(window.location.search);
             avatarActual = params.get('avatar') || 'Nancy';
-            palabraActual = params.get('word') || params.get('text') || 'hola';
-            autoplay = params.get('autoplay') === 'true';
+            // NO usar palabra ni autoplay de la URL
+            // Esperar mensaje de React Native con la velocidad correcta
 
             setupScene();
+            setupControls(); // Configurar botón repetir
+            
+            // Crear instancia única de loader para reutilizar
+            loaderInstance = new GLTFLoader();
+            
+            // NO mostrar loading, cargar directamente
             await cargarAvatar(avatarActual);
             
-            if (autoplay && palabraActual) {
-                // NO precargar, usar lazy loading
-                setTimeout(() => {
-                    deletrearPalabra(palabraActual);
-                }, 500);
-            }
+            // Precargar letras más comunes en background
+            precargarLetrasComunes();
+            
+            // NO iniciar automáticamente - esperar mensaje de React Native
+            console.log('✅ Avatar cargado, esperando mensaje de React Native...');
             
             animate();
+        }
+
+        function setupControls() {
+            const replayBtn = document.getElementById('replayBtn');
+            
+            // Botón Repetir
+            if (replayBtn) {
+                replayBtn.addEventListener('click', () => {
+                    if (palabraActual && !currentAction) {
+                        deletrearPalabra(palabraActual);
+                    }
+                });
+            }
         }
 
         function setupScene() {
@@ -164,17 +260,22 @@
             
             renderer = new THREE.WebGLRenderer({ 
                 canvas: canvas,
-                antialias: true
+                antialias: true,
+                alpha: true
             });
             renderer.setSize(container.clientWidth, container.clientHeight);
             renderer.setPixelRatio(window.devicePixelRatio);
+            renderer.outputColorSpace = THREE.SRGBColorSpace;
+            renderer.toneMapping = THREE.ACESFilmicToneMapping;
+            renderer.toneMappingExposure = 1.2;
             
             controls = new OrbitControls(camera, canvas);
             controls.target.set(0, 1.2, 0);
             // Deshabilitar controles de usuario
             controls.enabled = false;
             controls.update();
-             // Luces
+            
+            // Sistema de iluminación igual que lesson_simple.html
             const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
             scene.add(ambientLight);
 
@@ -201,12 +302,11 @@
 
         async function cargarAvatar(nombreAvatar) {
             return new Promise(async (resolve, reject) => {
-                const loader = new GLTFLoader();
-                const loadingText = document.getElementById('loading-text');
-                const loadingDiv = document.getElementById('loading');
+                // Reutilizar loader si existe, sino crear uno nuevo
+                const loader = loaderInstance || new GLTFLoader();
+                if (!loaderInstance) loaderInstance = loader;
                 
-                loadingDiv.classList.remove('hidden');
-                loadingText.textContent = `Cargando ${nombreAvatar}...`;
+                // NO mostrar loading para inicio instantáneo
                 
                 // Determinar género según el avatar
                 const genero = (nombreAvatar === 'Nancy' || nombreAvatar === 'Nina' || nombreAvatar === 'Carla') ? 'Mujer' : 'Hombre';
@@ -234,19 +334,28 @@
                             loader.load(
                                 ruta,
                                 (result) => res(result),
-                                (progress) => {
-                                    const percent = (progress.loaded / progress.total) * 100;
-                                    loadingText.textContent = `Cargando ${nombreAvatar}... ${percent.toFixed(0)}%`;
-                                },
+                                undefined, // Sin progreso para inicio más rápido
                                 (error) => rej(error)
                             );
                         });
                         
                         console.log(`✅ Avatar cargado desde: ${ruta}`);
                         
-                        // Remover avatar anterior si existe
+                        // Limpieza eficiente del avatar anterior
                         if (avatarModel) {
                             scene.remove(avatarModel);
+                            avatarModel.traverse((child) => {
+                                if (child.geometry) {
+                                    child.geometry.dispose();
+                                }
+                                if (child.material) {
+                                    if (Array.isArray(child.material)) {
+                                        child.material.forEach(m => m.dispose());
+                                    } else {
+                                        child.material.dispose();
+                                    }
+                                }
+                            });
                         }
                         
                         // Agregar nuevo avatar
@@ -278,8 +387,9 @@
                         // Crear mixer
                         mixer = new THREE.AnimationMixer(avatarModel);
                         
-                        loadingDiv.classList.add('hidden');
-                        //document.getElementById('status').textContent = `✅ ${nombreAvatar} listo`;
+                        // Habilitar botón repetir
+                        const replayBtn = document.getElementById('replayBtn');
+                        if (replayBtn) replayBtn.disabled = false;
                         
                         cargado = true;
                         resolve();
@@ -291,8 +401,6 @@
                 
                 if (!cargado) {
                     console.error(`❌ Error cargando ${nombreAvatar}`);
-                    document.getElementById('status').textContent = `❌ Error al cargar ${nombreAvatar}`;
-                    loadingDiv.classList.add('hidden');
                     reject(new Error(`No se pudo cargar ${nombreAvatar}`));
                 }
             });
@@ -404,13 +512,21 @@
 
         async function deletrearPalabra(palabra) {
             const letras = palabra.toLowerCase().split('');
+            currentWord = letras;
+            currentLetterIndex = 0;
             
-            console.log(`🔡 Deletreando: "${palabra}" (${letras.length} letras)`);
+            console.log(`🔡 Deletreando: "${palabra}" (${letras.length} letras) - Velocidad: ${currentSpeed}s - Nivel: ${currentLevel}`);
+            
+            // Deshabilitar botón repetir mientras anima
+            const replayBtn = document.getElementById('replayBtn');
+            if (replayBtn) replayBtn.disabled = true;
+            
+            // Precargar las primeras letras
+            precargarSiguientesLetras(0);
             
             for (let i = 0; i < letras.length; i++) {
                 const letra = letras[i];
-                
-                //document.getElementById('status').textContent = `📝 Letra ${i + 1}/${letras.length}: ${letra.toUpperCase()}`;
+                currentLetterIndex = i;
                 
                 // Enviar mensaje a React Native
                 if (window.ReactNativeWebView) {
@@ -421,12 +537,22 @@
                     }));
                 }
                 
-                await cargarYReproducirLetra(letra);
+                // Precargar siguientes letras mientras reproduce actual
+                if (i + 1 < letras.length) {
+                    precargarSiguientesLetras(i + 1);
+                }
                 
-                console.log(`✅ Letra ${i + 1}/${letras.length} completada: ${letra}`);
+                await cargarYReproducirLetra(letra, currentSpeed);
+                
+                console.log(`✅ Letra ${i + 1}/${letras.length} completada: ${letra} (velocidad usada: ${currentSpeed}s)`);
             }
             
-            //document.getElementById('status').textContent = `✅ Palabra completada: ${palabra.toUpperCase()}`;
+            // Limpiar variables de palabra
+            currentWord = [];
+            currentLetterIndex = 0;
+            
+            // Habilitar botón repetir
+            if (replayBtn) replayBtn.disabled = false;
             
             // Notificar que terminó
             if (window.ReactNativeWebView) {
@@ -437,20 +563,113 @@
             }
         }
 
-        async function cargarYReproducirLetra(letra) {
+        // Función para precargar las siguientes N letras
+        function precargarSiguientesLetras(startIdx) {
+            const endIdx = Math.min(startIdx + LOOKAHEAD, currentWord.length);
+            
+            for (let i = startIdx; i < endIdx; i++) {
+                const letra = currentWord[i];
+                precargarLetraSilenciosa(letra);
+            }
+        }
+        
+        // Precarga silenciosa de letra sin bloquear
+        async function precargarLetraSilenciosa(letra) {
+            const letraNormalizada = letra.toLowerCase().trim();
+            
+            if (animationClipsCache[letraNormalizada]) {
+                return; // Ya está en caché
+            }
+            
+            try {
+                const loader = loaderInstance || new GLTFLoader();
+                const avatarCapitalizado = avatarActual.charAt(0).toUpperCase() + avatarActual.slice(1);
+                
+                const patronesNombre = [
+                    `${avatarCapitalizado}_resultado_${letraNormalizada}`,
+                    `${avatarActual}_resultado_${letraNormalizada}`,
+                ];
+                
+                for (const patron of patronesNombre) {
+                    const rutasCompletas = [
+                        `../output/glb/${avatarCapitalizado}/alfabeto/${patron}.glb`,
+                        `../output/glb/${avatarActual}/alfabeto/${patron}.glb`
+                    ];
+                    
+                    for (const rutaCompleta of rutasCompletas) {
+                        try {
+                            const gltf = await new Promise((resolve, reject) => {
+                                const timeout = 5000;
+                                const timeoutId = setTimeout(() => reject(new Error('Timeout')), timeout);
+                                loader.load(
+                                    rutaCompleta, 
+                                    (result) => { clearTimeout(timeoutId); resolve(result); },
+                                    undefined, 
+                                    (error) => { clearTimeout(timeoutId); reject(error); }
+                                );
+                            });
+                            
+                            if (gltf.animations && gltf.animations.length > 0) {
+                                const clip = gltf.animations[0];
+                                if (avatarModel.userData.nodeNameMap) {
+                                    clip.tracks = clip.tracks.map(track => {
+                                        const trackNodeName = track.name.split('.')[0];
+                                        const mappedName = avatarModel.userData.nodeNameMap[trackNodeName];
+                                        if (mappedName) {
+                                            track.name = track.name.replace(trackNodeName, mappedName);
+                                        }
+                                        return track;
+                                    });
+                                }
+                                
+                                const cacheKeys = Object.keys(animationClipsCache);
+                                if (cacheKeys.length >= MAX_CACHE_SIZE) {
+                                    const firstKey = cacheKeys[0];
+                                    delete animationClipsCache[firstKey];
+                                }
+                                
+                                animationClipsCache[letraNormalizada] = clip;
+                                console.log(`📦 Precargada anticipadamente: ${letraNormalizada}`);
+                                
+                                if (gltf.scene) {
+                                    gltf.scene.traverse((child) => {
+                                        if (child.geometry) child.geometry.dispose();
+                                        if (child.material) {
+                                            if (Array.isArray(child.material)) {
+                                                child.material.forEach(m => m.dispose());
+                                            } else {
+                                                child.material.dispose();
+                                            }
+                                        }
+                                    });
+                                }
+                                
+                                return; // Éxito, salir
+                            }
+                        } catch (error) {
+                            // Continuar con siguiente ruta
+                        }
+                    }
+                }
+            } catch (error) {
+                // Ignorar errores de precarga silenciosa
+            }
+        }
+        
+        async function cargarYReproducirLetra(letra, speed = 3.0) {
             const letraNormalizada = letra.toLowerCase().trim();
             
             // OPTIMIZACIÓN: Usar clip de animación del cache
             if (animationClipsCache[letraNormalizada]) {
                 const clip = animationClipsCache[letraNormalizada];
-                console.log(`🎬 Reproduciendo letra ${letraNormalizada} desde caché`);
-                await reproducirAnimacion(clip, 2.0);
+                console.log(`⚡ Instantánea desde caché: ${letraNormalizada} - Velocidad: ${speed}s`);
+                await reproducirAnimacion(clip, speed);
                 return Promise.resolve();
             }
             
             // LAZY LOADING: Cargar bajo demanda si no está en caché
-            console.log(`📥 Cargando bajo demanda: ${letraNormalizada}`);
-            const loader = new GLTFLoader();
+            console.log(`⏳ Cargando: ${letraNormalizada}`);
+            const loader = loaderInstance || new GLTFLoader();
             
             const patronesNombre = [
                 `${avatarActual}_resultado_${letraNormalizada}`,
@@ -468,21 +687,22 @@
                 for (const rutaCompleta of rutasCompletas) {
                     try {
                         const gltf = await new Promise((resolve, reject) => {
-                            const timeout = setTimeout(() => reject(new Error('Timeout')), 15000);
+                            const timeout = isMobile ? 8000 : 15000; // Timeout más corto en móvil
+                            const timeoutId = setTimeout(() => reject(new Error('Timeout')), timeout);
                             loader.load(
                                 rutaCompleta,
                                 (result) => {
-                                    clearTimeout(timeout);
+                                    clearTimeout(timeoutId);
                                     resolve(result);
                                 },
                                 (progress) => {
-                                    if (progress.total > 0) {
+                                    if (progress.total > 0 && !isMobile) { // No mostrar progreso en móvil para mejor rendimiento
                                         const percent = Math.round((progress.loaded / progress.total) * 100);
                                         console.log(`⏳ ${letraNormalizada.toUpperCase()}: ${percent}%`);
                                     }
                                 },
                                 (error) => {
-                                    clearTimeout(timeout);
+                                    clearTimeout(timeoutId);
                                     reject(error);
                                 }
                             );
@@ -501,9 +721,33 @@
                                     return track;
                                 });
                             }
+                            
+                            // Gestión de caché con límite
+                            const cacheKeys = Object.keys(animationClipsCache);
+                            if (cacheKeys.length >= MAX_CACHE_SIZE) {
+                                const firstKey = cacheKeys[0];
+                                delete animationClipsCache[firstKey];
+                                console.log(`🗑️ Caché lleno, eliminada: ${firstKey}`);
+                            }
+                            
                             animationClipsCache[letraNormalizada] = clip;
-                            console.log(`✅ Cargada y en caché: ${letraNormalizada} (${clip.duration.toFixed(2)}s)`);
-                            await reproducirAnimacion(clip, 2.0);
+                            console.log(`✅ Cargada y en caché: ${letraNormalizada} (${clip.duration.toFixed(2)}s) - Caché: ${Object.keys(animationClipsCache).length}/${MAX_CACHE_SIZE}`);
+                            
+                            // Liberar memoria de geometrías del GLB
+                            if (gltf.scene) {
+                                gltf.scene.traverse((child) => {
+                                    if (child.geometry) child.geometry.dispose();
+                                    if (child.material) {
+                                        if (Array.isArray(child.material)) {
+                                            child.material.forEach(m => m.dispose());
+                                        } else {
+                                            child.material.dispose();
+                                        }
+                                    }
+                                });
+                            }
+                            
+                            await reproducirAnimacion(clip, speed);
                             return Promise.resolve();
                         }
                     } catch (error) {
@@ -518,11 +762,16 @@
         }
 
         async function reproducirAnimacion(clip, duracion) {
+            console.log(`🎬 Reproduciendo animación: duración objetivo=${duracion}s, duración original=${clip.duration.toFixed(2)}s`);
             return new Promise((resolve) => {
-                // Detener animación actual
+                // Detener animación actual completamente
                 if (currentAction) {
                     currentAction.stop();
+                    currentAction = null;
                 }
+                
+                // Limpiar el mixer para evitar conflictos
+                mixer.stopAllAction();
                 
                 // Reproducir nueva animación
                 const action = mixer.clipAction(clip);
@@ -531,25 +780,26 @@
                 action.clampWhenFinished = true;
                 
                 // Ajustar velocidad según duración deseada
+                let tiempoReal = duracion * 1000; // Convertir a milisegundos
                 if (duracion && duracion > 0) {
                     const duracionOriginal = clip.duration;
                     const timeScale = duracionOriginal / duracion;
                     action.timeScale = timeScale;
+                    // Calcular tiempo real de reproducción
+                    tiempoReal = (duracionOriginal / timeScale) * 1000;
                 }
                 
                 action.play();
                 currentAction = action;
                 
-                // Esperar a que termine
-                const checkFinished = () => {
-                    if (action.time >= clip.duration - 0.05 || !action.isRunning()) {
-                        resolve();
-                    } else {
-                        setTimeout(checkFinished, 50);
-                    }
-                };
+                console.log(`⏱️ Esperando ${(tiempoReal / 1000).toFixed(2)}s para completar animación`);
                 
-                checkFinished();
+                // Esperar el tiempo exacto que debe durar la animación
+                setTimeout(() => {
+                    currentAction = null; // Limpiar acción cuando termine
+                    console.log(`✔️ Animación completada`);
+                    resolve();
+                }, tiempoReal);
             });
         }
 
@@ -575,10 +825,16 @@
                 if (data.type === 'startNewWord' && data.word) {
                     // Nueva palabra sin recargar avatar
                     palabraActual = data.word;
+                    currentSpeed = data.speed || 3.0;
+                    currentLevel = data.level || 1;
+                    console.log(`🎯 Configurado: palabra="${palabraActual}", speed=${currentSpeed}s, level=${currentLevel}`);
                     await precargarLetras(palabraActual);
                     await deletrearPalabra(palabraActual);
                 } else if (data.type === 'replayWord' && data.word) {
                     // Repetir palabra actual
+                    palabraActual = data.word;
+                    currentSpeed = data.speed || 3.0;
+                    currentLevel = data.level || 1;
                     await deletrearPalabra(data.word);
                 }
             } catch (e) {
@@ -594,15 +850,113 @@
                 
                 if (data.type === 'startNewWord' && data.word) {
                     palabraActual = data.word;
+                    currentSpeed = data.speed || 3.0;
+                    currentLevel = data.level || 1;
                     await precargarLetras(palabraActual);
                     await deletrearPalabra(palabraActual);
                 } else if (data.type === 'replayWord' && data.word) {
+                    palabraActual = data.word;
+                    currentSpeed = data.speed || 3.0;
+                    currentLevel = data.level || 1;
                     await deletrearPalabra(data.word);
                 }
             } catch (e) {
                 console.error('❌ Error procesando mensaje:', e);
             }
         });
+
+        // Nueva función: Precargar letras más comunes del alfabeto
+        async function precargarLetrasComunes() {
+            // En móvil, precargar solo vocales
+            const letrasComunes = isMobile 
+                ? ['a', 'e', 'i', 'o', 'u'] 
+                : ['a', 'e', 'i', 'o', 'u', 'h', 'l', 's', 'n', 'r'];
+            
+            console.log('🔄 Iniciando precarga de letras comunes...');
+            
+            for (const letra of letrasComunes) {
+                if (animationClipsCache[letra]) continue;
+                
+                try {
+                    const loader = loaderInstance || new GLTFLoader();
+                    const avatarCapitalizado = avatarActual.charAt(0).toUpperCase() + avatarActual.slice(1);
+                    
+                    const patronesNombre = [
+                        `${avatarCapitalizado}_resultado_${letra}`,
+                        `${avatarActual}_resultado_${letra}`,
+                    ];
+                    
+                    let cargada = false;
+                    for (const patron of patronesNombre) {
+                        if (cargada) break;
+                        
+                        const rutasCompletas = [
+                            `../output/glb/${avatarCapitalizado}/alfabeto/${patron}.glb`,
+                            `../output/glb/${avatarActual}/alfabeto/${patron}.glb`
+                        ];
+                        
+                        for (const rutaCompleta of rutasCompletas) {
+                            if (cargada) break;
+                            
+                            try {
+                                const gltf = await new Promise((resolve, reject) => {
+                                    const timeout = isMobile ? 8000 : 12000;
+                                    const timeoutId = setTimeout(() => reject(new Error('Timeout')), timeout);
+                                    loader.load(
+                                        rutaCompleta, 
+                                        (result) => { clearTimeout(timeoutId); resolve(result); },
+                                        undefined, 
+                                        (error) => { clearTimeout(timeoutId); reject(error); }
+                                    );
+                                });
+                                
+                                if (gltf.animations && gltf.animations.length > 0) {
+                                    const clip = gltf.animations[0];
+                                    if (avatarModel.userData.nodeNameMap) {
+                                        clip.tracks = clip.tracks.map(track => {
+                                            const trackNodeName = track.name.split('.')[0];
+                                            const mappedName = avatarModel.userData.nodeNameMap[trackNodeName];
+                                            if (mappedName) {
+                                                track.name = track.name.replace(trackNodeName, mappedName);
+                                            }
+                                            return track;
+                                        });
+                                    }
+                                    animationClipsCache[letra] = clip;
+                                    console.log(`✅ Precargada: ${letra}`);
+                                    
+                                    // Liberar recursos del GLB
+                                    if (gltf.scene) {
+                                        gltf.scene.traverse((child) => {
+                                            if (child.geometry) child.geometry.dispose();
+                                            if (child.material) {
+                                                if (Array.isArray(child.material)) {
+                                                    child.material.forEach(m => m.dispose());
+                                                } else {
+                                                    child.material.dispose();
+                                                }
+                                            }
+                                        });
+                                    }
+                                    
+                                    cargada = true;
+                                }
+                            } catch (error) {
+                                // Continuar con siguiente ruta
+                            }
+                        }
+                    }
+                    
+                    // Pausa adaptativa según dispositivo
+                    await new Promise(r => setTimeout(r, LOAD_DELAY));
+                    
+                } catch (error) {
+                    console.log(`⚠️ No se pudo precargar: ${letra}`);
+                }
+            }
+            
+            console.log(`✅ Precarga completada: ${Object.keys(animationClipsCache).length} letras en caché`);
+        }
 
         window.addEventListener('DOMContentLoaded', init);
     </script>

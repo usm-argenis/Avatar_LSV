@@ -16,11 +16,25 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { WebView } from 'react-native-webview';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// Palabras para el juego del alfabeto (usar solo 8 por ronda)
-const ALPHABET_WORDS = [
-  'hola', 'adios', 'yo', 'tu', 'casa', 'mesa', 'sol', 'luna',
-  'agua', 'pan', 'vida', 'amor', 'todo', 'nada', 'bien', 'mal',
-  'gato', 'perro', 'libro', 'flor', 'auto', 'tren', 'avion', 'barco'
+// Palabras organizadas por nivel de dificultad
+const NIVEL_1_PALABRAS = [
+  'yo', 'tu', 'el', 'si', 'no',
+  'sol', 'mar', 'pan', 'luz', 'paz',
+  'oso', 'pie', 'rey', 'sed', 'sal'
+];
+
+const NIVEL_2_PALABRAS = [
+  'casa', 'mesa', 'hola', 'luna', 'agua',
+  'vida', 'amor', 'todo', 'nada', 'gato',
+  'rosa', 'cafe', 'pelo', 'mano', 'pies',
+  'ojos', 'boca', 'cara', 'ropa', 'sopa'
+];
+
+const NIVEL_3_PALABRAS = [
+  'perro', 'libro', 'flor', 'auto', 'tren',
+  'avion', 'barco', 'cielo', 'tierra', 'fuego',
+  'viento', 'amigo', 'familia', 'escuela', 'persona',
+  'ciudad', 'trabajo', 'tiempo', 'mundo', 'nombre'
 ];
 
 const AvatarToTextGame = ({ route, navigation }) => {
@@ -35,19 +49,52 @@ const AvatarToTextGame = ({ route, navigation }) => {
   const [currentLetter, setCurrentLetter] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
   const [wordsCompleted, setWordsCompleted] = useState(0);
+  const [wordsCompletedInLevel, setWordsCompletedInLevel] = useState(0); // Palabras completadas en nivel actual
   const webViewRef = useRef(null); // Ref para comunicarse con el WebView SIN recargarlo
   const [failedWords, setFailedWords] = useState([]); // Palabras fallidas
   const [isReviewMode, setIsReviewMode] = useState(false);
   const [availableWords, setAvailableWords] = useState([]);
+  
+  // Configuración de palabras necesarias por nivel
+  const WORDS_NEEDED_PER_LEVEL = {
+    1: 1, // 1 palabra correcta para pasar de nivel 1 a nivel 2
+    2: 1, // 1 palabra correcta para pasar de nivel 2 a nivel 3
+    3: 1  // 1 palabra correcta para completar el juego
+  };
   const [roundWords, setRoundWords] = useState([]); // Palabras para esta ronda
   const [currentWordIndex, setCurrentWordIndex] = useState(0); // Índice en la ronda actual
   const [selectedAvatar, setSelectedAvatar] = useState('luis'); // Avatar seleccionado
   const [webViewKey, setWebViewKey] = useState(0); // Key para forzar recarga solo cuando sea necesario
+  const [webViewReady, setWebViewReady] = useState(false); // Saber cuando WebView está listo
+  const [pendingWord, setPendingWord] = useState(null); // Palabra pendiente de enviar
+  const [hasFailedCurrentWord, setHasFailedCurrentWord] = useState(false); // Si falló en la palabra actual
 
   useEffect(() => {
-    loadSelectedAvatar();
-    startNewRound();
+    const init = async () => {
+      console.log('🚀 [AvatarToTextGame] Iniciando juego en nivel 1...');
+      await loadSelectedAvatar();
+      // Siempre iniciar en nivel 1
+      setLevel(1);
+      setWordsCompletedInLevel(0);
+      console.log(`🎮 [AvatarToTextGame] Nivel inicial: 1`);
+      
+      // Esperar a que el WebView se cargue completamente antes de enviar mensaje
+      setTimeout(() => {
+        console.log('📤 [AvatarToTextGame] Iniciando primera palabra...');
+        startNewRound();
+      }, 500); // Optimizado: reducido de 1000ms a 500ms
+    };
+    init();
   }, []);
+
+  // Enviar mensaje pendiente cuando WebView esté listo
+  useEffect(() => {
+    if (webViewReady && pendingWord && webViewRef.current) {
+      console.log('✅ WebView ahora listo, enviando mensaje pendiente:', pendingWord);
+      webViewRef.current.postMessage(JSON.stringify(pendingWord));
+      setPendingWord(null);
+    }
+  }, [webViewReady, pendingWord]);
 
   // Detectar cambio de avatar desde AsyncStorage (cuando el usuario lo cambia en configuración)
   useEffect(() => {
@@ -78,29 +125,127 @@ const AvatarToTextGame = ({ route, navigation }) => {
     }
   };
 
-  const startNewRound = () => {
-    // Seleccionar 3 palabras aleatorias (reducido de 8)
-    const shuffled = [...ALPHABET_WORDS].sort(() => Math.random() - 0.5);
-    const selected = shuffled.slice(0, 3);
+  const loadCurrentLevel = async () => {
+    try {
+      const userId = await AsyncStorage.getItem('userId');
+      if (userId) {
+        const levelKey = `currentLevel_${userId}`;
+        const savedLevel = await AsyncStorage.getItem(levelKey);
+        if (savedLevel) {
+          const parsedLevel = parseInt(savedLevel, 10);
+          console.log(`🎮 [AvatarToTextGame] Nivel cargado: ${parsedLevel}`);
+          
+          // VALIDACIÓN: Si el nivel es inválido, resetear a 1
+          if (parsedLevel < 1 || parsedLevel > 3 || isNaN(parsedLevel)) {
+            console.warn(`⚠️ Nivel inválido (${parsedLevel}), reseteando a 1`);
+            setLevel(1);
+            await AsyncStorage.setItem(levelKey, '1');
+          } else {
+            setLevel(parsedLevel);
+          }
+        } else {
+          // No hay nivel guardado, usar nivel 1
+          console.log(`🎮 [AvatarToTextGame] Sin nivel guardado, iniciando en nivel 1`);
+          setLevel(1);
+        }
+      }
+    } catch (error) {
+      console.error('Error cargando nivel:', error);
+      setLevel(1); // En caso de error, usar nivel 1
+    }
+  };
+
+  // Función para resetear el progreso (útil para depuración)
+  const resetProgress = async () => {
+    try {
+      const userId = await AsyncStorage.getItem('userId');
+      if (userId) {
+        await AsyncStorage.setItem(`currentLevel_${userId}`, '1');
+        setLevel(1);
+        setWordsCompletedInLevel(0);
+        setWordsCompleted(0);
+        setTotalStarsEarned(0);
+        setLives(3);
+        console.log(`🔄 [AvatarToTextGame] Progreso reseteado a nivel 1`);
+        Alert.alert('✅ Progreso Reseteado', 'Has vuelto al Nivel 1');
+        startNewRound();
+      }
+    } catch (error) {
+      console.error('Error reseteando progreso:', error);
+    }
+  };
+
+  const startNewRound = (currentLevel = null, keepFailedFlag = false) => {
+    // Usar nivel pasado como parámetro o el estado actual
+    const levelToUse = currentLevel !== null ? currentLevel : level;
+    console.log(`🎮 [AvatarToTextGame] startNewRound con nivel: ${levelToUse}, keepFailedFlag: ${keepFailedFlag}`);
+    
+    // Seleccionar palabras según el nivel
+    let levelWords;
+    if (levelToUse === 1) {
+      levelWords = NIVEL_1_PALABRAS;
+    } else if (levelToUse === 2) {
+      levelWords = NIVEL_2_PALABRAS;
+    } else {
+      levelWords = NIVEL_3_PALABRAS;
+    }
+    
+    // Seleccionar 1 palabra aleatoria del nivel
+    const shuffled = [...levelWords].sort(() => Math.random() - 0.5);
+    const selected = shuffled.slice(0, 1);
     setRoundWords(selected);
     setCurrentWordIndex(0);
     setFailedWords([]);
-    startNewWord(selected[0]);
+    startNewWord(selected[0], levelToUse, keepFailedFlag);
   };
 
-  const startNewWord = (word = null) => {
-    const wordToUse = word || (roundWords[currentWordIndex] || ALPHABET_WORDS[Math.floor(Math.random() * ALPHABET_WORDS.length)]);
+  const startNewWord = (word = null, currentLevel = null, keepFailedFlag = false) => {
+    // Usar nivel pasado como parámetro o el estado actual
+    const levelToUse = currentLevel !== null ? currentLevel : level;
+    
+    const wordToUse = word || (roundWords[currentWordIndex] || NIVEL_1_PALABRAS[Math.floor(Math.random() * NIVEL_1_PALABRAS.length)]);
+    
+    console.log(`📝 [startNewWord] Configurando nueva palabra: "${wordToUse}" (nivel ${levelToUse}, keepFailedFlag: ${keepFailedFlag})`);
+    console.log(`   ├─ Parámetro 'word': ${word || 'null'}`);
+    console.log(`   ├─ roundWords[${currentWordIndex}]: ${roundWords[currentWordIndex] || 'undefined'}`);
+    console.log(`   └─ Palabra seleccionada: "${wordToUse}"`);
+    
     setTargetWord(wordToUse);
     setUserInput('');
     setCurrentLetter(0);
     setIsAnimating(true);
     
-    // Enviar nueva palabra al HTML sin recargar el avatar
-    if (webViewRef.current) {
-      webViewRef.current.postMessage(JSON.stringify({
-        type: 'startNewWord',
-        word: wordToUse
-      }));
+    // Solo resetear flag si NO viene de un fallo
+    if (!keepFailedFlag) {
+      setHasFailedCurrentWord(false);
+      console.log(`   └─ Flag de fallo reseteado`);
+    } else {
+      console.log(`   └─ Flag de fallo MANTENIDO (usuario falló antes)`);
+    }
+    
+    // Determinar velocidad según nivel (duración en segundos)
+    let speed = 3.0; // Nivel 1: 3 segundos (más lento)
+    if (levelToUse === 2) speed = 2; // Nivel 2: 1.4 segundos (medio)
+    if (levelToUse >= 3) speed = 1.5; // Nivel 3: 1.0 segundo (más rápido)
+    
+    console.log(`📤 Enviando a HTML: palabra="${wordToUse}", speed=${speed}s, level=${levelToUse}, webViewReady=${webViewReady}`);
+    
+    // Crear mensaje
+    const message = {
+      type: 'startNewWord',
+      word: wordToUse,
+      speed: speed,
+      level: levelToUse
+    };
+    
+    // Si el WebView está listo, enviar inmediatamente
+    if (webViewReady && webViewRef.current) {
+      console.log('✅ WebView listo, enviando mensaje ahora');
+      webViewRef.current.postMessage(JSON.stringify(message));
+    } else {
+      // Si no, guardar para enviar cuando esté listo
+      console.log('⏳ WebView no listo, guardando mensaje pendiente');
+      setPendingWord(message);
     }
   };
 
@@ -109,83 +254,111 @@ const AvatarToTextGame = ({ route, navigation }) => {
     const correctAnswer = targetWord.toLowerCase().trim();
 
     if (userAnswer === correctAnswer) {
-      // ¡Correcto! Dar 50 estrellas inmediatamente
-      const starsForWord = 50;
+      // ¡Correcto! Dar 50 estrellas por completar nivel
+      const starsForWord = 50; // Siempre 50 estrellas por pasar de nivel
       setTotalStarsEarned(totalStarsEarned + starsForWord);
       setWordsCompleted(wordsCompleted + 1);
+      const newWordsInLevel = wordsCompletedInLevel + 1;
+      setWordsCompletedInLevel(newWordsInLevel);
       
-      // Dar estrellas a AsyncStorage inmediatamente
-      if (onComplete) {
-        onComplete(starsForWord);
+      if (hasFailedCurrentWord) {
+        console.log(`⭐ [AvatarToTextGame] Respuesta correcta (después de fallar)! +${starsForWord} estrellas (Total: ${totalStarsEarned + starsForWord})`);
+      } else {
+        console.log(`⭐ [AvatarToTextGame] Respuesta correcta (primer intento)! +${starsForWord} estrellas (Total: ${totalStarsEarned + starsForWord})`);
       }
       
-      // Verificar si completamos la ronda
-      if (currentWordIndex + 1 >= roundWords.length) {
-        // Ronda completada
-        if (failedWords.length > 0 && !isReviewMode) {
-          // Hay palabras fallidas, ofrecer repaso
+      const wordsNeeded = WORDS_NEEDED_PER_LEVEL[level];
+      
+      // Verificar si completó todas las palabras necesarias en este nivel
+      if (newWordsInLevel >= wordsNeeded) {
+        // Completó las palabras necesarias en este nivel
+        if (level === 3) {
+          // ¡Ganó el juego! Completó el nivel 3
+          const finalStars = totalStarsEarned + starsForWord;
           Alert.alert(
-            '📚 Repaso de palabras fallidas',
-            `Tuviste errores en ${failedWords.length} palabra(s). ¿Quieres repasarlas?\n\nPalabras: ${failedWords.join(', ').toUpperCase()}`,
+            '🏆 ¡Felicitaciones!',
+            `¡Completaste todos los niveles!\n\nPalabras totales: ${wordsCompleted + 1}\n⭐ Total estrellas: ${finalStars}`,
             [
               {
-                text: 'Repasar',
-                onPress: () => startReviewMode()
+                text: 'Jugar de Nuevo',
+                onPress: () => restartGame()
               },
               {
-                text: 'Nueva Ronda',
-                onPress: () => {
-                  setLevel(level + 1);
-                  startNewRound();
+                text: 'Salir',
+                onPress: async () => {
+                  // Guardar todas las estrellas ganadas antes de salir
+                  console.log(`💾 [AvatarToTextGame] Guardando ${finalStars} estrellas antes de salir`);
+                  if (onComplete) {
+                    await onComplete(finalStars); // Enviar el total de estrellas ganadas
+                  }
+                  navigation.goBack();
                 }
               }
             ]
           );
         } else {
-          // Ronda perfecta o ya estábamos en modo repaso
+          // Avanzar al siguiente nivel
           Alert.alert(
-            '🎉 ¡Ronda completada!',
-            `¡Excelente trabajo!\nPalabras completadas: ${wordsCompleted}\n\n⭐ Total estrellas ganadas: ${totalStarsEarned}`,
+            '🎉 ¡Correcto!',
+            `¡Excelente! Pasaste al Nivel ${level + 1}\n\n⭐ +${starsForWord} estrellas`,
             [
               {
-                text: 'Siguiente Ronda',
-                onPress: () => {
-                  setLevel(level + 1);
-                  startNewRound();
+                text: 'Continuar',
+                onPress: async () => {
+                  const newLevel = level + 1;
+                  console.log(`🎯 [AvatarToTextGame] Pasando de nivel ${level} a ${newLevel}...`);
+                  setLevel(newLevel);
+                  setWordsCompletedInLevel(0); // Reiniciar contador para nuevo nivel
+                  
+                  // Guardar nivel en AsyncStorage (sin await para no bloquear)
+                  const userId = await AsyncStorage.getItem('userId');
+                  if (userId) {
+                    AsyncStorage.setItem(`currentLevel_${userId}`, newLevel.toString())
+                      .then(() => console.log(`📊 [AvatarToTextGame] Nivel guardado: ${newLevel}`))
+                      .catch(error => console.error('Error guardando nivel:', error));
+                  }
+                  
+                  // Delay aumentado para nivel 3 para dar más tiempo de procesamiento
+                  const delay = newLevel === 3 ? 500 : 300;
+                  console.log(`🔄 [AvatarToTextGame] Iniciando nivel ${newLevel} en ${delay}ms...`);
+                  setTimeout(() => {
+                    console.log(`▶️ [AvatarToTextGame] Ejecutando startNewRound(${newLevel})...`);
+                    startNewRound(newLevel);
+                  }, delay);
                 }
               }
             ]
           );
         }
       } else {
-        // Continuar con la siguiente palabra
+        // Aún faltan palabras en este nivel (NO DEBERÍA LLEGAR AQUÍ con 1 palabra por nivel)
+        const remaining = wordsNeeded - newWordsInLevel;
         Alert.alert(
-          '🎉 ¡Correcto!',
-          `¡Excelente! La palabra era "${correctAnswer.toUpperCase()}"\n\n⭐ +50 estrellas ganadas`,
+          '✅ ¡Correcto!',
+          `¡Muy bien! Nivel ${level}\nProgreso: ${newWordsInLevel}/${wordsNeeded}\n${remaining} palabra${remaining > 1 ? 's' : ''} más para avanzar\n\n⭐ +${starsForWord} estrellas`,
           [
             {
               text: 'Continuar',
               onPress: () => {
-                const nextIndex = currentWordIndex + 1;
-                setCurrentWordIndex(nextIndex);
-                startNewWord(roundWords[nextIndex]);
+                // Llamar directamente sin setTimeout
+                startNewRound();
               }
             }
           ]
         );
       }
     } else {
-      // Incorrecto - guardar palabra fallida
-      if (!failedWords.includes(targetWord)) {
-        setFailedWords([...failedWords, targetWord]);
-      }
+      // Incorrecto - perder vida y marcar que falló
       setLives(lives - 1);
+      setHasFailedCurrentWord(true); // Marcar que falló esta palabra
+      
+      console.log(`❌ [AvatarToTextGame] Respuesta incorrecta. Vidas restantes: ${lives - 1}`);
       
       if (lives - 1 === 0) {
         setGameOver(true);
         Alert.alert(
           '💔 Game Over',
-          `La palabra era: "${correctAnswer.toUpperCase()}"\n\nPalabras completadas: ${wordsCompleted}\n⭐ Estrellas ganadas: ${totalStarsEarned}`,
+          `La palabra era: "${correctAnswer.toUpperCase()}"\n\nNivel alcanzado: ${level}\nPalabras completadas: ${wordsCompleted}\n⭐ Estrellas ganadas: ${totalStarsEarned}`,
           [
             {
               text: 'Reintentar',
@@ -193,26 +366,29 @@ const AvatarToTextGame = ({ route, navigation }) => {
             },
             {
               text: 'Salir',
-              onPress: () => navigation.goBack()
+              onPress: async () => {
+                // Guardar estrellas antes de salir
+                console.log(`💾 [AvatarToTextGame] Guardando ${totalStarsEarned} estrellas al salir (Game Over)`);
+                if (onComplete && totalStarsEarned > 0) {
+                  await onComplete(totalStarsEarned);
+                }
+                navigation.goBack();
+              }
             }
           ]
         );
       } else {
         Alert.alert(
           '❌ Incorrecto',
-          `La palabra era: "${correctAnswer.toUpperCase()}"\nInténtalo con la siguiente`,
+          `La palabra era: "${correctAnswer.toUpperCase()}"`,
           [
             {
               text: 'Continuar',
               onPress: () => {
-                if (currentWordIndex + 1 < roundWords.length) {
-                  const nextIndex = currentWordIndex + 1;
-                  setCurrentWordIndex(nextIndex);
-                  startNewWord(roundWords[nextIndex]);
-                } else {
-                  // Fin de ronda con error
-                  startNewRound();
-                }
+                // Mostrar una palabra NUEVA (no la misma) pero mantener el flag de fallo
+                console.log(`🔄 [Incorrecto] Generando nueva palabra (nivel ${level}) manteniendo flag de fallo`);
+                // Generar nueva ronda con nueva palabra PERO mantener flag de fallo
+                startNewRound(level, true); // keepFailedFlag = true
               }
             }
           ]
@@ -230,15 +406,20 @@ const AvatarToTextGame = ({ route, navigation }) => {
   };
 
   const restartGame = () => {
+    console.log('🔄 [AvatarToTextGame] Reiniciando juego desde nivel 1');
     setTotalStarsEarned(0);
     setLives(3); // 3 vidas con guacamaya 🦜 - REINICIAR VIDAS AQUÍ
     setLevel(1);
+    setWordsCompletedInLevel(0); // Reiniciar contador de palabras por nivel
     setGameOver(false);
     setWordsCompleted(0);
     setIsReviewMode(false);
     setFailedWords([]);
     setCurrentWordIndex(0);
-    startNewRound();
+    setRoundWords([]); // Limpiar palabras previas
+    setHasFailedCurrentWord(false); // Resetear flag de fallo
+    // Iniciar nueva ronda explícitamente en nivel 1
+    startNewRound(1);
   };
 
   const handleAnimationProgress = (event) => {
@@ -259,19 +440,47 @@ const AvatarToTextGame = ({ route, navigation }) => {
     setCurrentLetter(0);
     setIsAnimating(true);
     
-    // Solicitar repetición sin recargar el avatar
+    // IMPORTANTE: Usar level del estado actual
+    const currentLevel = level;
+    
+    // Determinar velocidad según nivel (duración en segundos) - IGUAL que startNewWord
+    let speed = 3.0; // Nivel 1: 3 segundos (más lento)
+    if (currentLevel === 2) speed = 2; // Nivel 2: 2 segundos (medio)
+    if (currentLevel >= 3) speed = 1.5; // Nivel 3: 1.5 segundos (más rápido)
+    
+    console.log(`🔄 [Replay] Repitiendo palabra "${targetWord}" con nivel=${currentLevel}, speed=${speed}s`);
+    
+    // Solicitar repetición sin recargar el avatar - usar la palabra ACTUAL (targetWord)
     if (webViewRef.current && targetWord) {
+      console.log(`🔄 [Replay] Enviando comando de repetición para "${targetWord}"`);
       webViewRef.current.postMessage(JSON.stringify({
         type: 'replayWord',
-        word: targetWord
+        word: targetWord, // Siempre usar la palabra que se está mostrando actualmente
+        speed: speed,
+        level: currentLevel
       }));
+    } else {
+      console.error('❌ [Replay] No se puede repetir: webViewRef o targetWord no disponible');
     }
+  };
+
+  // Función para manejar el cierre del juego guardando las estrellas
+  const handleExit = async () => {
+    if (totalStarsEarned > 0) {
+      console.log(`💾 [AvatarToTextGame] Guardando ${totalStarsEarned} estrellas antes de salir (botón cerrar)`);
+      if (onComplete) {
+        await onComplete(totalStarsEarned);
+      }
+    }
+    navigation.goBack();
   };
 
   // Construir URL para el avatar con deletreo letra por letra
   const getAnimationUrl = () => {
-    // Removido &v=${Date.now()} para evitar recargas constantes
-    return `http://192.168.10.93:8000/avatar_spelling_optimized.html?word=${encodeURIComponent(targetWord)}&avatar=${selectedAvatar}&autoplay=true`;
+    // Agregar timestamp para forzar actualización de caché
+    const cacheVersion = '20260126c'; // Actualizar esta fecha cuando cambies el HTML
+    // NO incluir autoplay para que espere el mensaje de React Native con la velocidad correcta
+    return `http://192.168.10.93:8000/avatar_spelling_optimized.html?avatar=${selectedAvatar}&v=${cacheVersion}`;
   };
 
   return (
@@ -285,7 +494,7 @@ const AvatarToTextGame = ({ route, navigation }) => {
         start={{ x: 0.5, y: 0 }}
         end={{ x: 0.5, y: 1 }}
       >
-        <TouchableOpacity onPress={() => navigation.goBack()}>
+        <TouchableOpacity onPress={handleExit}>
           <Ionicons name="close" size={28} color="#000000" />
         </TouchableOpacity>
         
@@ -311,46 +520,38 @@ const AvatarToTextGame = ({ route, navigation }) => {
             <Text style={styles.reviewBannerText}>📚 Modo Repaso - Palabras Fallidas</Text>
           </View>
         )}
-        <View style={styles.roundProgressContainer}>
-          <Text style={styles.roundProgressText}>
-            Palabra {currentWordIndex + 1} de {roundWords.length}
-          </Text>
-        </View>
       </View>
 
       {/* Avatar Animation Area */}
       <View style={styles.animationContainer}>
-        {targetWord ? (
-          <WebView
-            key={`webview-${selectedAvatar}-${webViewKey}`}
-            ref={webViewRef}
-            source={{ uri: getAnimationUrl() }}
-            originWhitelist={['*']}
-            javaScriptEnabled={true}
-            domStorageEnabled={true}
-            allowsInlineMediaPlayback={true}
-            mediaPlaybackRequiresUserAction={false}
-            style={styles.webview}
-            onMessage={handleAnimationProgress}
-            startInLoadingState={false}
-            useWebKit={true}
-            sharedCookiesEnabled={true}
-            thirdPartyCookiesEnabled={true}
-          />
-        ) : (
-          <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color="#667eea" />
-          </View>
-        )}
+        <WebView
+          key={`webview-${selectedAvatar}-${webViewKey}`}
+          ref={webViewRef}
+          source={{ uri: getAnimationUrl() }}
+          originWhitelist={['*']}
+          javaScriptEnabled={true}
+          domStorageEnabled={true}
+          allowsInlineMediaPlayback={true}
+          mediaPlaybackRequiresUserAction={false}
+          style={styles.webview}
+          onMessage={handleAnimationProgress}
+          onLoad={() => {
+            console.log('✅ WebView cargado completamente');
+            setWebViewReady(true);
+          }}
+          startInLoadingState={true}
+          renderLoading={() => (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="large" color="#667eea" />
+              <Text style={styles.loadingText}>Cargando avatar...</Text>
+            </View>
+          )}
+          useWebKit={true}
+          sharedCookiesEnabled={true}
+          thirdPartyCookiesEnabled={true}
+        />
 
-        {/* Replay Button */}
-        <TouchableOpacity 
-          style={styles.replayButton}
-          onPress={replayAnimation}
-        >
-          <Ionicons name="refresh" size={24} color="#fff" />
-          <Text style={styles.replayButtonText}>Repetir</Text>
-        </TouchableOpacity>
+        
 
         {/* Progress Indicator */}
         {isAnimating && (
@@ -485,6 +686,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#1a1a2e',
+  },
+  loadingText: {
+    color: '#fff',
+    marginTop: 10,
+    fontSize: 14,
   },
   loadingText: {
     marginTop: 10,

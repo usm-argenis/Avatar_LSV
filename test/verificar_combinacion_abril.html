@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verificar Combinación Abril - Brazos del FBX</title>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.150.0/build/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.150.0/examples/js/loaders/GLTFLoader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.150.0/examples/js/controls/OrbitControls.js"></script>
+    <style>
+        body { 
+            margin: 0; 
+            font-family: Arial, sans-serif;
+            overflow: hidden;
+        }
+        #container { 
+            width: 100vw; 
+            height: 100vh;
+        }
+        #info {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 15px;
+            border-radius: 5px;
+            font-size: 14px;
+            max-width: 400px;
+            z-index: 100;
+        }
+        #controls {
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 15px;
+            border-radius: 5px;
+            z-index: 100;
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 5px;
+            cursor: pointer;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        button:disabled {
+            background: #cccccc;
+            cursor: not-allowed;
+        }
+        .status {
+            margin-top: 10px;
+            padding: 10px;
+            background: rgba(76, 175, 80, 0.3);
+            border-radius: 5px;
+        }
+        .error {
+            background: rgba(244, 67, 54, 0.3);
+        }
+        #boneInfo {
+            margin-top: 10px;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .bone-arm {
+            color: #4CAF50;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div id="container"></div>
+    
+    <div id="info">
+        <h2>🎭 Verificación de Combinación Abril</h2>
+        <p><strong>FBX:</strong> Brazos del FBX "abril_BoyFBX.fbx"</p>
+        <p><strong>GLB:</strong> Cuerpo original "Duvall_resultado_abril.glb"</p>
+        <div id="status" class="status">Cargando...</div>
+        <div id="boneInfo"></div>
+    </div>
+    
+    <div id="controls">
+        <button id="playBtn">▶️ Play</button>
+        <button id="pauseBtn">⏸️ Pause</button>
+        <button id="restartBtn">🔄 Reiniciar</button>
+        <span id="frameInfo" style="margin-left: 20px;">Frame: 0 / 0</span>
+    </div>
+
+    <script>
+        let scene, camera, renderer, mixer, model, clock;
+        let armBones = [];
+        let animationAction;
+
+        // Nombres de huesos de brazos que fueron mapeados
+        const ARM_BONE_NAMES = [
+            'LeftShoulder', 'LeftArm', 'LeftForeArm', 'LeftHand',
+            'RightShoulder', 'RightArm', 'RightForeArm', 'RightHand'
+        ];
+
+        init();
+        animate();
+
+        function init() {
+            // Escena
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x1a1a2e);
+
+            // Cámara
+            camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.set(0, 1.5, 3);
+
+            // Renderer
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.shadowMap.enabled = true;
+            document.getElementById('container').appendChild(renderer.domElement);
+
+            // Controles
+            const controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.target.set(0, 1, 0);
+            controls.update();
+
+            // Luces
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+            scene.add(ambientLight);
+
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            directionalLight.position.set(5, 10, 5);
+            directionalLight.castShadow = true;
+            scene.add(directionalLight);
+
+            // Luz frontal adicional
+            const frontLight = new THREE.DirectionalLight(0xffffff, 0.5);
+            frontLight.position.set(0, 5, 10);
+            scene.add(frontLight);
+
+            // Grid
+            const gridHelper = new THREE.GridHelper(10, 10);
+            scene.add(gridHelper);
+
+            // Clock para animaciones
+            clock = new THREE.Clock();
+
+            // Cargar GLB
+            loadModel();
+
+            // Event listeners para botones
+            document.getElementById('playBtn').addEventListener('click', playAnimation);
+            document.getElementById('pauseBtn').addEventListener('click', pauseAnimation);
+            document.getElementById('restartBtn').addEventListener('click', restartAnimation);
+
+            // Resize
+            window.addEventListener('resize', onWindowResize);
+        }
+
+        function loadModel() {
+            updateStatus('Cargando modelo combinado...', false);
+            
+            const loader = new THREE.GLTFLoader();
+            loader.load(
+                'output/Duvall_abril_brazos_combinado.glb',
+                function(gltf) {
+                    model = gltf.scene;
+                    scene.add(model);
+
+                    // Analizar el armature
+                    let armature = null;
+                    model.traverse((child) => {
+                        if (child.isBone && child.parent && child.parent.isSkinnedMesh === false) {
+                            if (!armature) armature = child.parent;
+                        }
+                    });
+
+                    // Identificar huesos de brazos
+                    if (armature) {
+                        armature.traverse((bone) => {
+                            if (bone.isBone && ARM_BONE_NAMES.includes(bone.name)) {
+                                armBones.push(bone);
+                            }
+                        });
+                    }
+
+                    // Configurar animaciones
+                    if (gltf.animations && gltf.animations.length > 0) {
+                        mixer = new THREE.AnimationMixer(model);
+                        animationAction = mixer.clipAction(gltf.animations[0]);
+                        
+                        const duration = gltf.animations[0].duration;
+                        const fps = 30;
+                        const totalFrames = Math.round(duration * fps);
+
+                        document.getElementById('frameInfo').textContent = 
+                            `Frame: 0 / ${totalFrames} (${duration.toFixed(2)}s)`;
+
+                        updateStatus(
+                            `✅ Modelo cargado exitosamente<br>` +
+                            `📊 Animación: ${gltf.animations[0].name}<br>` +
+                            `⏱️ Duración: ${duration.toFixed(2)}s (${totalFrames} frames)<br>` +
+                            `🦴 Huesos de brazos encontrados: ${armBones.length}`,
+                            false
+                        );
+
+                        displayBoneInfo();
+                    } else {
+                        updateStatus('⚠️ No se encontraron animaciones en el GLB', true);
+                    }
+                },
+                function(xhr) {
+                    const percent = (xhr.loaded / xhr.total * 100).toFixed(0);
+                    updateStatus(`Cargando modelo: ${percent}%`, false);
+                },
+                function(error) {
+                    console.error('Error cargando GLB:', error);
+                    updateStatus(`❌ Error: ${error.message}`, true);
+                }
+            );
+        }
+
+        function displayBoneInfo() {
+            let html = '<strong>Huesos de brazos animados:</strong><ul style="margin: 5px 0; padding-left: 20px;">';
+            
+            // Ordenar huesos por lado (izquierdo primero)
+            const leftBones = armBones.filter(b => b.name.startsWith('Left'));
+            const rightBones = armBones.filter(b => b.name.startsWith('Right'));
+            
+            html += '<li style="color: #4CAF50;"><strong>Brazo Izquierdo:</strong></li>';
+            leftBones.forEach(bone => {
+                html += `<li class="bone-arm"> └ ${bone.name}</li>`;
+            });
+            
+            html += '<li style="color: #2196F3;"><strong>Brazo Derecho:</strong></li>';
+            rightBones.forEach(bone => {
+                html += `<li class="bone-arm"> └ ${bone.name}</li>`;
+            });
+            
+            html += '</ul>';
+            document.getElementById('boneInfo').innerHTML = html;
+        }
+
+        function playAnimation() {
+            if (animationAction) {
+                animationAction.paused = false;
+                animationAction.play();
+            }
+        }
+
+        function pauseAnimation() {
+            if (animationAction) {
+                animationAction.paused = true;
+            }
+        }
+
+        function restartAnimation() {
+            if (animationAction) {
+                animationAction.stop();
+                animationAction.play();
+            }
+        }
+
+        function updateStatus(message, isError) {
+            const statusDiv = document.getElementById('status');
+            statusDiv.innerHTML = message;
+            statusDiv.className = isError ? 'status error' : 'status';
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+
+            const delta = clock.getDelta();
+            if (mixer) {
+                mixer.update(delta);
+                
+                // Actualizar información de frame
+                if (animationAction) {
+                    const time = animationAction.time;
+                    const duration = animationAction.getClip().duration;
+                    const fps = 30;
+                    const currentFrame = Math.round(time * fps);
+                    const totalFrames = Math.round(duration * fps);
+                    
+                    document.getElementById('frameInfo').textContent = 
+                        `Frame: ${currentFrame} / ${totalFrames} (${time.toFixed(2)}s)`;
+                }
+            }
+
+            renderer.render(scene, camera);
+        }
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+    </script>
+</body>
+</html>

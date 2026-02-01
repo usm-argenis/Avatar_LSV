@@ -105,12 +105,32 @@ export default function LoginScreen({ navigation }) {
       if (response.success) {
         // Login exitoso - Guardar credenciales para biometría
         console.log('✅ Login exitoso:', response.data);
-        
+
         // Guardar email para futuras autenticaciones biométricas
         await AsyncStorage.setItem('userEmail', email.trim());
         await AsyncStorage.setItem('hasLoggedInBefore', 'true');
         setHasSavedCredentials(true);
-        
+
+        // Esperar a que userId esté realmente disponible en AsyncStorage
+        let userId = null;
+        let retries = 0;
+        while (!userId && retries < 10) {
+          userId = await AsyncStorage.getItem('userId');
+          if (!userId) {
+            console.log(`[LoginScreen] Esperando userId en AsyncStorage... intento ${retries+1}`);
+            await new Promise(res => setTimeout(res, 100));
+            retries++;
+          }
+        }
+        if (!userId) {
+          console.error('[LoginScreen] userId NO DISPONIBLE tras login.');
+          Alert.alert('Error', 'No se pudo obtener el usuario. Intenta de nuevo.');
+          setLoading(false);
+          return;
+        } else {
+          console.log('[LoginScreen] userId confirmado en AsyncStorage:', userId);
+        }
+
         Alert.alert('¡Bienvenido!', `Hola ${response.data.user.full_name}`, [
           {
             text: 'Continuar',

@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comparar Expresiones Faciales</title>
+    <style>
+        body {
+            margin: 0;
+            background: #1a1a2e;
+            font-family: Arial, sans-serif;
+            color: white;
+        }
+        #container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            height: 100vh;
+        }
+        .viewer {
+            position: relative;
+            border-right: 2px solid #667eea;
+        }
+        .viewer:last-child {
+            border-right: none;
+        }
+        canvas {
+            width: 100%;
+            height: 100%;
+        }
+        .info {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(0,0,0,0.8);
+            padding: 15px;
+            border-radius: 8px;
+            z-index: 100;
+            max-width: 300px;
+        }
+        .title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #667eea;
+        }
+        .morphs {
+            font-size: 11px;
+            max-height: 150px;
+            overflow-y: auto;
+        }
+        .morph-value {
+            display: flex;
+            justify-content: space-between;
+            margin: 2px 0;
+        }
+        .morph-value.active {
+            color: #4ade80;
+            font-weight: bold;
+        }
+        .controls {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.9);
+            padding: 15px;
+            border-radius: 10px;
+            display: flex;
+            gap: 10px;
+        }
+        button {
+            padding: 10px 20px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        button:hover {
+            background: #5568d3;
+        }
+        .time {
+            color: #888;
+            font-size: 12px;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <div class="viewer" id="viewer1">
+            <div class="info">
+                <div class="title">HOLA (friendly)</div>
+                <div id="status1">Cargando...</div>
+                <div class="time" id="time1">0.0s</div>
+                <div class="morphs" id="morphs1"></div>
+            </div>
+        </div>
+        <div class="viewer" id="viewer2">
+            <div class="info">
+                <div class="title">ADIÓS (sad)</div>
+                <div id="status2">Cargando...</div>
+                <div class="time" id="time2">0.0s</div>
+                <div class="morphs" id="morphs2"></div>
+            </div>
+            <div class="controls">
+                <button id="btn-play">▶️ Reproducir</button>
+                <button id="btn-pause">⏸️ Pausar</button>
+                <button id="btn-reset">🔄 Reiniciar</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://cdn.jsdelivr.net/npm/three@0.152.0/build/three.module.js",
+            "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.152.0/examples/jsm/"
+        }
+    }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+        const loader = new GLTFLoader();
+        
+        // Configurar visor 1 (HOLA)
+        const viewer1 = setupViewer('viewer1', 'output/glb/Duvall/saludos/Duvall_resultado_hola.glb');
+        
+        // Configurar visor 2 (ADIÓS)
+        const viewer2 = setupViewer('viewer2', 'output/glb/Duvall/saludos/Duvall_resultado_adios.glb');
+
+        function setupViewer(containerId, glbPath) {
+            const container = document.getElementById(containerId);
+            const statusEl = document.getElementById('status' + containerId.slice(-1));
+            const timeEl = document.getElementById('time' + containerId.slice(-1));
+            const morphsEl = document.getElementById('morphs' + containerId.slice(-1));
+            
+            // Scene
+            const scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x1a1a2e);
+
+            // Camera
+            const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 1000);
+            camera.position.set(0, 1.6, 2);
+
+            // Renderer
+            const renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(container.offsetWidth, container.offsetHeight);
+            renderer.outputEncoding = THREE.sRGBEncoding;
+            container.appendChild(renderer.domElement);
+
+            // Controls
+            const controls = new OrbitControls(camera, renderer.domElement);
+            controls.target.set(0, 1.4, 0);
+            controls.enableDamping = true;
+
+            // Lights
+            scene.add(new THREE.AmbientLight(0xffffff, 0.6));
+            const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            dirLight.position.set(5, 10, 7.5);
+            scene.add(dirLight);
+
+            let mixer = null;
+            let actions = [];
+            let morphTargetMeshes = [];
+            let model = null;
+
+            // Load model
+            loader.load(glbPath, (gltf) => {
+                model = gltf.scene;
+                scene.add(model);
+
+                // Find morph target meshes
+                model.traverse((child) => {
+                    if (child.isMesh && child.morphTargetInfluences) {
+                        morphTargetMeshes.push(child);
+                        console.log(`[${containerId}] Mesh:`, child.name, 'Morphs:', child.morphTargetInfluences.length);
+                    }
+                });
+
+                // Setup animations
+                if (gltf.animations.length > 0) {
+                    mixer = new THREE.AnimationMixer(model);
+                    
+                    gltf.animations.forEach(clip => {
+                        const morphTracks = clip.tracks.filter(t => t.name.includes('morphTargetInfluences'));
+                        console.log(`[${containerId}] Animation:`, clip.name, 'Morph tracks:', morphTracks.length);
+                        
+                        const action = mixer.clipAction(clip);
+                        actions.push(action);
+                    });
+                    
+                    statusEl.textContent = `✅ ${gltf.animations.length} animaciones`;
+                } else {
+                    statusEl.textContent = '⚠️ Sin animaciones';
+                }
+            });
+
+            // Animation loop
+            const clock = new THREE.Clock();
+            function animate() {
+                requestAnimationFrame(animate);
+                
+                const delta = clock.getDelta();
+                if (mixer) {
+                    mixer.update(delta);
+                    
+                    if (actions.length > 0) {
+                        const time = actions[0].time;
+                        timeEl.textContent = `${time.toFixed(2)}s`;
+                    }
+                }
+
+                controls.update();
+                renderer.render(scene, camera);
+            }
+            animate();
+
+            // Update morph values display (every 100ms)
+            setInterval(() => {
+                if (morphTargetMeshes.length === 0) return;
+                
+                const head = morphTargetMeshes.find(m => m.name.includes('Wolf3D_Head'));
+                if (!head || !head.morphTargetDictionary) return;
+                
+                // Track shape keys we care about
+                const trackedKeys = [
+                    'mouthSmileLeft', 'mouthSmileRight',
+                    'eyeSquintLeft', 'eyeSquintRight',
+                    'eyeBlinkLeft', 'eyeBlinkRight',
+                    'mouthFrownLeft', 'mouthFrownRight',
+                    'browInnerUp',
+                    'browDownLeft', 'browDownRight',
+                    'mouthPressLeft', 'mouthPressRight',
+                    'jawOpen', 'jawForward'
+                ];
+                
+                let html = '';
+                trackedKeys.forEach(key => {
+                    const idx = head.morphTargetDictionary[key];
+                    if (idx !== undefined) {
+                        const value = head.morphTargetInfluences[idx];
+                        const isActive = value > 0.01;
+                        const className = isActive ? 'morph-value active' : 'morph-value';
+                        html += `<div class="${className}">
+                            <span>${key}</span>
+                            <span>${value.toFixed(3)}</span>
+                        </div>`;
+                    }
+                });
+                
+                morphsEl.innerHTML = html;
+            }, 100);
+
+            return { mixer, actions, scene, camera, renderer };
+        }
+
+        // Global controls
+        const btnPlay = document.getElementById('btn-play');
+        const btnPause = document.getElementById('btn-pause');
+        const btnReset = document.getElementById('btn-reset');
+
+        btnPlay.addEventListener('click', () => {
+            [viewer1, viewer2].forEach(v => {
+                v.actions.forEach(action => {
+                    action.paused = false;
+                    action.play();
+                });
+            });
+        });
+
+        btnPause.addEventListener('click', () => {
+            [viewer1, viewer2].forEach(v => {
+                v.actions.forEach(action => {
+                    action.paused = true;
+                });
+            });
+        });
+
+        btnReset.addEventListener('click', () => {
+            [viewer1, viewer2].forEach(v => {
+                v.actions.forEach(action => {
+                    action.reset();
+                    action.play();
+                });
+            });
+        });
+
+        // Resize
+        window.addEventListener('resize', () => {
+            [viewer1, viewer2].forEach(v => {
+                const container = v.renderer.domElement.parentElement;
+                v.camera.aspect = container.offsetWidth / container.offsetHeight;
+                v.camera.updateProjectionMatrix();
+                v.renderer.setSize(container.offsetWidth, container.offsetHeight);
+            });
+        });
+    </script>
+</body>
+</html>

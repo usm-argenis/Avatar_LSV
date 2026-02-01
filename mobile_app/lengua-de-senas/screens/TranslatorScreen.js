@@ -88,6 +88,16 @@ export default function TranslatorScreen({ navigation }) {
           console.error('WebView error:', error);
           setLoading(false);
         }}
+        onMessage={(event) => {
+          try {
+            const msg = JSON.parse(event.nativeEvent.data);
+            if (msg.type === 'LOG') {
+              console.log(`[WebView] ${msg.message}`, msg.data || '');
+            }
+          } catch (e) {
+            console.log('[WebView]', event.nativeEvent.data);
+          }
+        }}
         javaScriptEnabled={true}
         domStorageEnabled={true}
         startInLoadingState={true}

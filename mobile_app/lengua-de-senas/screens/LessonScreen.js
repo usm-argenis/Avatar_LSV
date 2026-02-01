@@ -459,18 +459,20 @@ const LessonScreen = ({ route, navigation }) => {
       <Modal
         visible={showAnimation}
         animationType="slide"
+        transparent={false}
         onRequestClose={() => setShowAnimation(false)}
       >
-        <SafeAreaView style={styles.modalContainer}>
+        <View style={styles.modalContainer}>
+          <StatusBar barStyle="light-content" backgroundColor="#1a1a20" translucent={true} />
+
+          {/* Header del Modal */}
           <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>
-              🤟 Seña: {currentSign.toUpperCase()}
-            </Text>
+            <Text style={styles.modalTitle}>🤟 Seña: {currentSign.toUpperCase()}</Text>
             <TouchableOpacity onPress={() => {
               setShowAnimation(false);
               nextQuestion();
             }}>
-              <Ionicons name="close" size={28} color="#000000" />
+              <Ionicons name="close" size={40} color="#fff" />
             </TouchableOpacity>
           </View>
           
@@ -484,18 +486,9 @@ const LessonScreen = ({ route, navigation }) => {
             allowsInlineMediaPlayback={true}
             mediaPlaybackRequiresUserAction={false}
             style={styles.webview}
-            startInLoadingState={true}
-            renderLoading={() => (
-              <View style={styles.loadingWebview}>
-                <Text style={styles.loadingText}>Cargando avatar...</Text>
-              </View>
-            )}
             onError={(syntheticEvent) => {
               const { nativeEvent } = syntheticEvent;
               console.warn('WebView error: ', nativeEvent);
-            }}
-            onMessage={(event) => {
-              console.log('WebView message:', event.nativeEvent.data);
             }}
             useWebKit={true}
             sharedCookiesEnabled={true}
@@ -511,7 +504,7 @@ const LessonScreen = ({ route, navigation }) => {
           >
             <Text style={styles.closeModalButtonText}>Continuar</Text>
           </TouchableOpacity>
-        </SafeAreaView>
+        </View>
       </Modal>
     </SafeAreaView>
     </LinearGradient>
@@ -601,7 +594,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 5,
     elevation: 5,
-    backgroundColor: '#fff',
+    backgroundColor: '#000000',
   },
   optionButton: {
     flex: 1,
@@ -652,36 +645,38 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   continueButton: {
-    backgroundColor: '#fff',
+    backgroundColor: '#ffffff00',
     paddingVertical: 15,
     paddingHorizontal: 40,
     borderRadius: 25,
     alignSelf: 'center',
-  },
+    },
   continueButtonText: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#667eea',
+    background: 'linear-gradient(135deg, #2196F3 0%, #53a5f8 100%)',
+  boxShadow: '0 4px 15px rgba(33, 150, 243, 0.4)', // camelCase aquí tambié
+  
   },
   modalContainer: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#1a1a2e',
   },
   modalHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#000000',
+    padding: 15,
+    paddingTop: 45,
+    backgroundColor: '#1a1a2e',
   },
   modalTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#000000',
+    color: '#fff',
   },
   webview: {
-    flex: 1,
+    flex: 0.99,
   },
   loadingWebview: {
     flex: 1,
@@ -694,7 +689,7 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   closeModalButton: {
-    backgroundColor: '#667eea',
+    backgroundColor: 'rgba(102, 126, 234, 0.9)',
     margin: 20,
     padding: 15,
     borderRadius: 25,

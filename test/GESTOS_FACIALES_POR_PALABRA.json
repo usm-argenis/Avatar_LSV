@@ -1,0 +1,1757 @@
+{
+  "resumen": {
+    "total_palabras": 256,
+    "palabras_con_gestos": 30,
+    "palabras_neutrales": 226,
+    "expresiones_usadas": [
+      "neutral",
+      "sad",
+      "happy",
+      "lsv_negation",
+      "friendly",
+      "tired",
+      "lsv_question"
+    ]
+  },
+  "expresiones": {
+    "friendly": {
+      "descripcion": "Sonrisa sutil (mouthSmile, eyeSquint)",
+      "total_palabras": 5,
+      "palabras": [
+        "buenas noches",
+        "buenas tardes",
+        "buenos dias",
+        "hola",
+        "saludar"
+      ]
+    },
+    "happy": {
+      "descripcion": "Sonrisa amplia (mouthSmile alto, cheekSquint)",
+      "total_palabras": 2,
+      "palabras": [
+        "amar",
+        "bienvenido"
+      ]
+    },
+    "lsv_negation": {
+      "descripcion": "Desconocido",
+      "total_palabras": 14,
+      "palabras": [
+        "anciano",
+        "canoa",
+        "concubino",
+        "conocer",
+        "de nada",
+        "economista",
+        "menor de edad",
+        "nada",
+        "nadie",
+        "ningun",
+        "no",
+        "nosotros",
+        "noviembre",
+        "novio"
+      ]
+    },
+    "lsv_question": {
+      "descripcion": "Pregunta LSV (browInnerUp, eyeWide)",
+      "total_palabras": 5,
+      "palabras": [
+        "como estas",
+        "cual es tu nombre",
+        "cual es tu sena",
+        "preguntar",
+        "que tal"
+      ]
+    },
+    "neutral": {
+      "descripcion": "Sin gestos faciales",
+      "total_palabras": 226,
+      "palabras": [
+        "0",
+        "1",
+        "10",
+        "10_o",
+        "1_o",
+        "1M",
+        "2",
+        "2_o",
+        "3",
+        "3_o",
+        "4",
+        "4_o",
+        "5",
+        "5_o",
+        "6",
+        "6_o",
+        "7",
+        "7_o",
+        "8",
+        "8_o",
+        "9",
+        "9_o",
+        "a la orden",
+        "abogado",
+        "abril",
+        "administrador",
+        "adulto",
+        "adverbios",
+        "aeropuerto",
+        "agosto",
+        "al lado",
+        "albañil",
+        "algo",
+        "alguien",
+        "algun",
+        "amigo",
+        "analista",
+        "anteayer",
+        "apartamento",
+        "aterrizar",
+        "atras",
+        "autobus",
+        "auxiliar",
+        "avion",
+        "avioneta",
+        "ayer",
+        "ayudar",
+        "barbero",
+        "barco",
+        "bastante",
+        "baño",
+        "bebe",
+        "bicicleta",
+        "bien",
+        "boleto",
+        "buen provecho",
+        "cabletren",
+        "calendario",
+        "camioneta",
+        "carrera",
+        "carro",
+        "casa",
+        "casado",
+        "cerca",
+        "chef",
+        "ciego",
+        "cocina",
+        "cocinero",
+        "comedor",
+        "comer",
+        "como",
+        "compañero",
+        "conductor",
+        "constructor",
+        "contador",
+        "cortesia",
+        "cual",
+        "cualquier",
+        "cuando",
+        "cuantos",
+        "cuarto",
+        "decir",
+        "deletrear",
+        "demasiado",
+        "dentista",
+        "derecha",
+        "despegar",
+        "detective",
+        "dibujante tecnico",
+        "dibujante",
+        "diciembre",
+        "director",
+        "divorciado",
+        "domingo",
+        "donde (especifico)",
+        "donde",
+        "dormir",
+        "Duvall",
+        "edificio",
+        "el",
+        "ella",
+        "ellas",
+        "ellos",
+        "enero",
+        "enfermera",
+        "escritor",
+        "estacion",
+        "estar",
+        "estudiar",
+        "expresiones",
+        "febrero",
+        "ferri",
+        "ferrocarril",
+        "fin de semana",
+        "fotografo",
+        "frente",
+        "gerente",
+        "gracias",
+        "helicoptero",
+        "hombre",
+        "hoy",
+        "hoy_modif",
+        "informatica",
+        "ingeniero",
+        "inspector",
+        "instructor",
+        "interprete",
+        "interrogantes",
+        "invitar",
+        "izquierda",
+        "jefe",
+        "joven",
+        "jueves",
+        "julio",
+        "junio",
+        "lancha",
+        "lejos",
+        "licenciado",
+        "lugares",
+        "lunes",
+        "maestro",
+        "martes",
+        "marzo",
+        "mas",
+        "mayo",
+        "mayor de edad",
+        "mayor",
+        "mañana",
+        "mañana_modif",
+        "medico",
+        "mensajero",
+        "mes",
+        "mesonero",
+        "metro",
+        "metrobus",
+        "miercoles",
+        "miercoles_modif",
+        "mio",
+        "moto",
+        "muchas gracias",
+        "mucho gusto",
+        "mucho",
+        "mujer",
+        "niño",
+        "nuestro",
+        "octubre",
+        "otro",
+        "oyente",
+        "parada",
+        "pasado mañana",
+        "pasante",
+        "peluquera",
+        "permiso",
+        "persona",
+        "personas",
+        "piloto",
+        "pintor",
+        "piso",
+        "poco",
+        "policia",
+        "porque",
+        "presentar",
+        "profesion",
+        "profesor",
+        "psicologo",
+        "que",
+        "querer",
+        "quien",
+        "quienquiera",
+        "rancho",
+        "regular",
+        "responder",
+        "sabado",
+        "sala",
+        "saludas a",
+        "secretaria",
+        "semana",
+        "sentir",
+        "separado",
+        "septiembre",
+        "señor",
+        "señorita",
+        "si",
+        "sistema",
+        "soltero",
+        "sordo",
+        "sordociego",
+        "supervisor",
+        "suyo",
+        "taxi",
+        "tecnico",
+        "todo",
+        "trabajar",
+        "traductor",
+        "tren",
+        "tu",
+        "tuyo",
+        "ustedes",
+        "vendedor",
+        "ver",
+        "viejo",
+        "viernes",
+        "vigilante",
+        "viudo",
+        "vivir",
+        "yo"
+      ]
+    },
+    "sad": {
+      "descripcion": "Tristeza (mouthFrown, browInner, eyeBlink)",
+      "total_palabras": 3,
+      "palabras": [
+        "adios",
+        "chao",
+        "mal"
+      ]
+    },
+    "tired": {
+      "descripcion": "Cansado (eyeBlink, browDown)",
+      "total_palabras": 1,
+      "palabras": [
+        "cansar"
+      ]
+    }
+  },
+  "palabras": {
+    "0": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "1": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "10": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "10_o": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "1_o": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "1M": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "2": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "2_o": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "3": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "3_o": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "4": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "4_o": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "5": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "5_o": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "6": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "6_o": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "7": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "7_o": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "8": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "8_o": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "9": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "9_o": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "a la orden": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "abogado": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "abril": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "adios": {
+      "expresion": "sad",
+      "total_shape_keys": 5,
+      "shape_keys_activos": [
+        "eyeBlinkLeft",
+        "eyeBlinkRight",
+        "mouthFrownLeft",
+        "mouthFrownRight",
+        "browInnerUp"
+      ]
+    },
+    "administrador": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "adulto": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "adverbios": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "aeropuerto": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "agosto": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "al lado": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "albañil": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "algo": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "alguien": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "algun": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "amar": {
+      "expresion": "happy",
+      "total_shape_keys": 6,
+      "shape_keys_activos": [
+        "eyeSquintLeft",
+        "eyeSquintRight",
+        "mouthSmileLeft",
+        "mouthSmileRight",
+        "cheekSquintLeft",
+        "cheekSquintRight"
+      ]
+    },
+    "amigo": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "analista": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "anciano": {
+      "expresion": "lsv_negation",
+      "total_shape_keys": 4,
+      "shape_keys_activos": [
+        "mouthFrownLeft",
+        "mouthFrownRight",
+        "browDownLeft",
+        "browDownRight"
+      ]
+    },
+    "anteayer": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "apartamento": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "aterrizar": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "atras": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "autobus": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "auxiliar": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "avion": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "avioneta": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "ayer": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "ayudar": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "barbero": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "barco": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "bastante": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "baño": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "bebe": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "bicicleta": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "bien": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "bienvenido": {
+      "expresion": "happy",
+      "total_shape_keys": 6,
+      "shape_keys_activos": [
+        "eyeSquintLeft",
+        "eyeSquintRight",
+        "mouthSmileLeft",
+        "mouthSmileRight",
+        "cheekSquintLeft",
+        "cheekSquintRight"
+      ]
+    },
+    "boleto": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "buen provecho": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "buenas noches": {
+      "expresion": "friendly",
+      "total_shape_keys": 4,
+      "shape_keys_activos": [
+        "eyeSquintLeft",
+        "eyeSquintRight",
+        "mouthSmileLeft",
+        "mouthSmileRight"
+      ]
+    },
+    "buenas tardes": {
+      "expresion": "friendly",
+      "total_shape_keys": 4,
+      "shape_keys_activos": [
+        "eyeSquintLeft",
+        "eyeSquintRight",
+        "mouthSmileLeft",
+        "mouthSmileRight"
+      ]
+    },
+    "buenos dias": {
+      "expresion": "friendly",
+      "total_shape_keys": 4,
+      "shape_keys_activos": [
+        "eyeSquintLeft",
+        "eyeSquintRight",
+        "mouthSmileLeft",
+        "mouthSmileRight"
+      ]
+    },
+    "cabletren": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "calendario": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "camioneta": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "canoa": {
+      "expresion": "lsv_negation",
+      "total_shape_keys": 4,
+      "shape_keys_activos": [
+        "mouthFrownLeft",
+        "mouthFrownRight",
+        "browDownLeft",
+        "browDownRight"
+      ]
+    },
+    "cansar": {
+      "expresion": "tired",
+      "total_shape_keys": 6,
+      "shape_keys_activos": [
+        "eyeBlinkLeft",
+        "eyeBlinkRight",
+        "mouthFrownLeft",
+        "mouthFrownRight",
+        "browDownLeft",
+        "browDownRight"
+      ]
+    },
+    "carrera": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "carro": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "casa": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "casado": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "cerca": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "chao": {
+      "expresion": "sad",
+      "total_shape_keys": 5,
+      "shape_keys_activos": [
+        "eyeBlinkLeft",
+        "eyeBlinkRight",
+        "mouthFrownLeft",
+        "mouthFrownRight",
+        "browInnerUp"
+      ]
+    },
+    "chef": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "ciego": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "cocina": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "cocinero": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "comedor": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "comer": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "como estas": {
+      "expresion": "lsv_question",
+      "total_shape_keys": 4,
+      "shape_keys_activos": [
+        "eyeWideLeft",
+        "eyeWideRight",
+        "browInnerUp",
+        "mouthOpen"
+      ]
+    },
+    "como": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "compañero": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "concubino": {
+      "expresion": "lsv_negation",
+      "total_shape_keys": 4,
+      "shape_keys_activos": [
+        "mouthFrownLeft",
+        "mouthFrownRight",
+        "browDownLeft",
+        "browDownRight"
+      ]
+    },
+    "conductor": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "conocer": {
+      "expresion": "lsv_negation",
+      "total_shape_keys": 4,
+      "shape_keys_activos": [
+        "mouthFrownLeft",
+        "mouthFrownRight",
+        "browDownLeft",
+        "browDownRight"
+      ]
+    },
+    "constructor": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "contador": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "cortesia": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "cual es tu nombre": {
+      "expresion": "lsv_question",
+      "total_shape_keys": 4,
+      "shape_keys_activos": [
+        "eyeWideLeft",
+        "eyeWideRight",
+        "browInnerUp",
+        "mouthOpen"
+      ]
+    },
+    "cual es tu sena": {
+      "expresion": "lsv_question",
+      "total_shape_keys": 4,
+      "shape_keys_activos": [
+        "eyeWideLeft",
+        "eyeWideRight",
+        "browInnerUp",
+        "mouthOpen"
+      ]
+    },
+    "cual": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "cualquier": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "cuando": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "cuantos": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "cuarto": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "de nada": {
+      "expresion": "lsv_negation",
+      "total_shape_keys": 4,
+      "shape_keys_activos": [
+        "mouthFrownLeft",
+        "mouthFrownRight",
+        "browDownLeft",
+        "browDownRight"
+      ]
+    },
+    "decir": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "deletrear": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "demasiado": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "dentista": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "derecha": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "despegar": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "detective": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "dibujante tecnico": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "dibujante": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "diciembre": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "director": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "divorciado": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "domingo": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "donde (especifico)": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "donde": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "dormir": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "Duvall": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "economista": {
+      "expresion": "lsv_negation",
+      "total_shape_keys": 4,
+      "shape_keys_activos": [
+        "mouthFrownLeft",
+        "mouthFrownRight",
+        "browDownLeft",
+        "browDownRight"
+      ]
+    },
+    "edificio": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "el": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "ella": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "ellas": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "ellos": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "enero": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "enfermera": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "escritor": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "estacion": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "estar": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "estudiar": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "expresiones": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "febrero": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "ferri": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "ferrocarril": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "fin de semana": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "fotografo": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "frente": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "gerente": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "gracias": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "helicoptero": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "hola": {
+      "expresion": "friendly",
+      "total_shape_keys": 4,
+      "shape_keys_activos": [
+        "eyeSquintLeft",
+        "eyeSquintRight",
+        "mouthSmileLeft",
+        "mouthSmileRight"
+      ]
+    },
+    "hombre": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "hoy": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "hoy_modif": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "informatica": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "ingeniero": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "inspector": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "instructor": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "interprete": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "interrogantes": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "invitar": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "izquierda": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "jefe": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "joven": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "jueves": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "julio": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "junio": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "lancha": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "lejos": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "licenciado": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "lugares": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "lunes": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "maestro": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "mal": {
+      "expresion": "sad",
+      "total_shape_keys": 5,
+      "shape_keys_activos": [
+        "eyeBlinkLeft",
+        "eyeBlinkRight",
+        "mouthFrownLeft",
+        "mouthFrownRight",
+        "browInnerUp"
+      ]
+    },
+    "martes": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "marzo": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "mas": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "mayo": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "mayor de edad": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "mayor": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "mañana": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "mañana_modif": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "medico": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "menor de edad": {
+      "expresion": "lsv_negation",
+      "total_shape_keys": 4,
+      "shape_keys_activos": [
+        "mouthFrownLeft",
+        "mouthFrownRight",
+        "browDownLeft",
+        "browDownRight"
+      ]
+    },
+    "mensajero": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "mes": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "mesonero": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "metro": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "metrobus": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "miercoles": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "miercoles_modif": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "mio": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "moto": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "muchas gracias": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "mucho gusto": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "mucho": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "mujer": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "nada": {
+      "expresion": "lsv_negation",
+      "total_shape_keys": 4,
+      "shape_keys_activos": [
+        "mouthFrownLeft",
+        "mouthFrownRight",
+        "browDownLeft",
+        "browDownRight"
+      ]
+    },
+    "nadie": {
+      "expresion": "lsv_negation",
+      "total_shape_keys": 4,
+      "shape_keys_activos": [
+        "mouthFrownLeft",
+        "mouthFrownRight",
+        "browDownLeft",
+        "browDownRight"
+      ]
+    },
+    "ningun": {
+      "expresion": "lsv_negation",
+      "total_shape_keys": 4,
+      "shape_keys_activos": [
+        "mouthFrownLeft",
+        "mouthFrownRight",
+        "browDownLeft",
+        "browDownRight"
+      ]
+    },
+    "niño": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "no": {
+      "expresion": "lsv_negation",
+      "total_shape_keys": 4,
+      "shape_keys_activos": [
+        "mouthFrownLeft",
+        "mouthFrownRight",
+        "browDownLeft",
+        "browDownRight"
+      ]
+    },
+    "nosotros": {
+      "expresion": "lsv_negation",
+      "total_shape_keys": 4,
+      "shape_keys_activos": [
+        "mouthFrownLeft",
+        "mouthFrownRight",
+        "browDownLeft",
+        "browDownRight"
+      ]
+    },
+    "noviembre": {
+      "expresion": "lsv_negation",
+      "total_shape_keys": 4,
+      "shape_keys_activos": [
+        "mouthFrownLeft",
+        "mouthFrownRight",
+        "browDownLeft",
+        "browDownRight"
+      ]
+    },
+    "novio": {
+      "expresion": "lsv_negation",
+      "total_shape_keys": 4,
+      "shape_keys_activos": [
+        "mouthFrownLeft",
+        "mouthFrownRight",
+        "browDownLeft",
+        "browDownRight"
+      ]
+    },
+    "nuestro": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "octubre": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "otro": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "oyente": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "parada": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "pasado mañana": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "pasante": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "peluquera": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "permiso": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "persona": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "personas": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "piloto": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "pintor": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "piso": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "poco": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "policia": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "porque": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "preguntar": {
+      "expresion": "lsv_question",
+      "total_shape_keys": 4,
+      "shape_keys_activos": [
+        "eyeWideLeft",
+        "eyeWideRight",
+        "browInnerUp",
+        "mouthOpen"
+      ]
+    },
+    "presentar": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "profesion": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "profesor": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "psicologo": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "que tal": {
+      "expresion": "lsv_question",
+      "total_shape_keys": 4,
+      "shape_keys_activos": [
+        "eyeWideLeft",
+        "eyeWideRight",
+        "browInnerUp",
+        "mouthOpen"
+      ]
+    },
+    "que": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "querer": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "quien": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "quienquiera": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "rancho": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "regular": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "responder": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "sabado": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "sala": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "saludar": {
+      "expresion": "friendly",
+      "total_shape_keys": 4,
+      "shape_keys_activos": [
+        "eyeSquintLeft",
+        "eyeSquintRight",
+        "mouthSmileLeft",
+        "mouthSmileRight"
+      ]
+    },
+    "saludas a": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "secretaria": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "semana": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "sentir": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "separado": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "septiembre": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "señor": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "señorita": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "si": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "sistema": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "soltero": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "sordo": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "sordociego": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "supervisor": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "suyo": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "taxi": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "tecnico": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "todo": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "trabajar": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "traductor": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "tren": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "tu": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "tuyo": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "ustedes": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "vendedor": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "ver": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "viejo": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "viernes": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "vigilante": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "viudo": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "vivir": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    },
+    "yo": {
+      "expresion": "neutral",
+      "total_shape_keys": 0,
+      "shape_keys_activos": []
+    }
+  }
+}

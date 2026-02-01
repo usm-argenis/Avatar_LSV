@@ -189,7 +189,6 @@ def procesar_animacion(animacion_nombre):
     print(f"{'='*80}")
     
     carla_file = CARLA_DIR / f"Carla_resultado_{animacion_nombre}.glb"
-    carla_backup = CARLA_DIR / f"Carla_resultado_{animacion_nombre}_SIN_CONGELAR.glb.backup"
     nancy_glb_temp = Path(f"/tmp/nancy_temp_{animacion_nombre}.glb")
     nancy_glb_final = NANCY_OUTPUT_DIR / f"Nancy_resultado_{animacion_nombre}.glb"
     
@@ -400,10 +399,6 @@ def procesar_animacion(animacion_nombre):
         
         # === PASO 7: CONGELAR CARLA ORIGINAL ===
         print(f"❄️ [EXTRA] Congelando Carla original...")
-        
-        # Crear backup del Carla sin congelar
-        if not carla_backup.exists():
-            shutil.copy2(carla_file, carla_backup)
         
         # Limpiar y cargar Carla original
         bpy.ops.wm.read_factory_settings(use_empty=True)

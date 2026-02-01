@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comparar Versiones - Brazos Abril</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .viewers-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .viewer-card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .viewer-title {
+            font-size: 1.5em;
+            margin-bottom: 15px;
+            text-align: center;
+            font-weight: bold;
+        }
+        
+        .version-label {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            margin-left: 10px;
+        }
+        
+        .version-old {
+            background: #e74c3c;
+        }
+        
+        .version-new {
+            background: #2ecc71;
+        }
+        
+        canvas {
+            width: 100% !important;
+            height: 500px !important;
+            border-radius: 10px;
+            display: block;
+        }
+        
+        .controls {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            margin-top: 20px;
+        }
+        
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .control-group label {
+            font-weight: bold;
+            min-width: 120px;
+        }
+        
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: bold;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        .slider-container {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        input[type="range"] {
+            flex: 1;
+            height: 6px;
+            border-radius: 5px;
+            background: rgba(255,255,255,0.3);
+            outline: none;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #fff;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        }
+        
+        .frame-display {
+            background: rgba(0,0,0,0.3);
+            padding: 8px 15px;
+            border-radius: 10px;
+            font-weight: bold;
+            min-width: 80px;
+            text-align: center;
+        }
+        
+        .info-box {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            margin-top: 20px;
+        }
+        
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .info-item {
+            background: rgba(0,0,0,0.2);
+            padding: 15px;
+            border-radius: 10px;
+        }
+        
+        .info-item h3 {
+            margin-bottom: 8px;
+            color: #ffd700;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Comparación de Versiones - Brazos Abril</h1>
+        
+        <div class="viewers-grid">
+            <div class="viewer-card">
+                <div class="viewer-title">
+                    COPY_ROTATION
+                    <span class="version-label version-old">Sin Compensación</span>
+                </div>
+                <canvas id="canvas1"></canvas>
+            </div>
+            
+            <div class="viewer-card">
+                <div class="viewer-title">
+                    REST POSE COMPENSADO
+                    <span class="version-label version-new">Con Compensación</span>
+                </div>
+                <canvas id="canvas2"></canvas>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <div class="control-group">
+                <label>Control de Animación:</label>
+                <button id="playBtn">▶️ Reproducir</button>
+                <button id="pauseBtn">⏸️ Pausar</button>
+                <button id="resetBtn">⏮️ Reiniciar</button>
+            </div>
+            
+            <div class="control-group">
+                <label>Frame:</label>
+                <div class="slider-container">
+                    <input type="range" id="frameSlider" min="0" max="72" value="0" step="1">
+                    <span class="frame-display" id="frameDisplay">0 / 72</span>
+                </div>
+            </div>
+            
+            <div class="control-group">
+                <label>Velocidad:</label>
+                <button onclick="setSpeed(0.5)">0.5x</button>
+                <button onclick="setSpeed(1)">1x</button>
+                <button onclick="setSpeed(2)">2x</button>
+            </div>
+        </div>
+        
+        <div class="info-box">
+            <h2>📊 Información de las Versiones</h2>
+            <div class="info-grid">
+                <div class="info-item">
+                    <h3>COPY_ROTATION (Izquierda)</h3>
+                    <p>✓ Rotaciones copiadas en WORLD space</p>
+                    <p>✓ Locations preservadas</p>
+                    <p>❌ Brazos parecen invertidos</p>
+                    <p>❌ Direcciones de rest pose opuestas (170.8°)</p>
+                </div>
+                <div class="info-item">
+                    <h3>REST POSE COMPENSADO (Derecha)</h3>
+                    <p>✓ Rotaciones compensadas por diferencias de rest pose</p>
+                    <p>✓ Conversión de espacio FBX → GLB</p>
+                    <p>✓ Matemática: conversion_quat @ fbx_quat @ conversion_quat^-1</p>
+                    <p>✓ Debe verse correctamente</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/three@0.157.0/build/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.157.0/examples/js/loaders/GLTFLoader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.157.0/examples/js/controls/OrbitControls.js"></script>
+
+    <script>
+        let viewers = [];
+        let isPlaying = false;
+        let currentFrame = 0;
+        let animationSpeed = 1;
+
+        function setupViewer(canvasId, modelPath) {
+            const canvas = document.getElementById(canvasId);
+            const scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x1a1a2e);
+            
+            const camera = new THREE.PerspectiveCamera(50, canvas.clientWidth / canvas.clientHeight, 0.1, 1000);
+            camera.position.set(0, 1.6, 3);
+            
+            const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+            renderer.setSize(canvas.clientWidth, canvas.clientHeight);
+            renderer.shadowMap.enabled = true;
+            
+            // Iluminación
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+            scene.add(ambientLight);
+            
+            const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            dirLight.position.set(5, 10, 7.5);
+            dirLight.castShadow = true;
+            scene.add(dirLight);
+            
+            const controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.target.set(0, 1, 0);
+            controls.update();
+            
+            // Grid
+            const gridHelper = new THREE.GridHelper(10, 10, 0x444444, 0x222222);
+            scene.add(gridHelper);
+            
+            const viewer = {
+                scene,
+                camera,
+                renderer,
+                controls,
+                mixer: null,
+                action: null,
+                model: null
+            };
+            
+            // Cargar modelo
+            const loader = new THREE.GLTFLoader();
+            loader.load(modelPath, (gltf) => {
+                viewer.model = gltf.scene;
+                scene.add(gltf.scene);
+                
+                if (gltf.animations && gltf.animations.length > 0) {
+                    viewer.mixer = new THREE.AnimationMixer(gltf.scene);
+                    viewer.action = viewer.mixer.clipAction(gltf.animations[0]);
+                    viewer.action.play();
+                    viewer.action.paused = true;
+                }
+                
+                console.log(`Modelo cargado: ${modelPath}`, {
+                    animations: gltf.animations.length,
+                    duration: gltf.animations[0]?.duration
+                });
+            }, undefined, (error) => {
+                console.error(`Error cargando ${modelPath}:`, error);
+            });
+            
+            function animate() {
+                requestAnimationFrame(animate);
+                controls.update();
+                renderer.render(scene, camera);
+            }
+            animate();
+            
+            return viewer;
+        }
+
+        // Inicializar visualizadores
+        viewers.push(setupViewer('canvas1', 'output/Duvall_abril_BRAZOS_FINAL.glb'));
+        viewers.push(setupViewer('canvas2', 'output/Duvall_abril_BRAZOS_COMPENSADO.glb'));
+
+        // Controles
+        document.getElementById('playBtn').addEventListener('click', () => {
+            isPlaying = true;
+            viewers.forEach(v => {
+                if (v.action) v.action.paused = false;
+            });
+        });
+
+        document.getElementById('pauseBtn').addEventListener('click', () => {
+            isPlaying = false;
+            viewers.forEach(v => {
+                if (v.action) v.action.paused = true;
+            });
+        });
+
+        document.getElementById('resetBtn').addEventListener('click', () => {
+            currentFrame = 0;
+            setFrame(0);
+        });
+
+        const frameSlider = document.getElementById('frameSlider');
+        const frameDisplay = document.getElementById('frameDisplay');
+
+        frameSlider.addEventListener('input', (e) => {
+            currentFrame = parseInt(e.target.value);
+            setFrame(currentFrame);
+            frameDisplay.textContent = `${currentFrame} / 72`;
+        });
+
+        function setFrame(frame) {
+            const normalizedTime = frame / 72; // Normalizar a 0-1
+            
+            viewers.forEach(v => {
+                if (v.mixer && v.action) {
+                    const duration = v.action.getClip().duration;
+                    v.action.time = normalizedTime * duration;
+                    v.mixer.update(0);
+                }
+            });
+        }
+
+        function setSpeed(speed) {
+            animationSpeed = speed;
+            viewers.forEach(v => {
+                if (v.action) {
+                    v.action.timeScale = speed;
+                }
+            });
+        }
+
+        // Loop de actualización
+        const clock = new THREE.Clock();
+        function updateAnimation() {
+            if (isPlaying) {
+                const delta = clock.getDelta() * animationSpeed;
+                viewers.forEach(v => {
+                    if (v.mixer) {
+                        v.mixer.update(delta);
+                        
+                        // Actualizar frame display
+                        if (v.action) {
+                            const duration = v.action.getClip().duration;
+                            const currentTime = v.action.time;
+                            currentFrame = Math.floor((currentTime / duration) * 72);
+                            frameSlider.value = currentFrame;
+                            frameDisplay.textContent = `${currentFrame} / 72`;
+                        }
+                    }
+                });
+            }
+            requestAnimationFrame(updateAnimation);
+        }
+        updateAnimation();
+
+        // Responsive
+        window.addEventListener('resize', () => {
+            viewers.forEach((v, index) => {
+                const canvas = document.getElementById(`canvas${index + 1}`);
+                v.camera.aspect = canvas.clientWidth / canvas.clientHeight;
+                v.camera.updateProjectionMatrix();
+                v.renderer.setSize(canvas.clientWidth, canvas.clientHeight);
+            });
+        });
+    </script>
+</body>
+</html>

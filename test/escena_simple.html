@@ -197,50 +197,77 @@
                 ? 'https://usm-argenis.github.io/STT_LSV/test/'
                 : '';
             
-            const rutaEscena = `${baseUrl}output/glb/Cultura/escena_${avatarActual}.glb`;
-            const rutaAnimacion = `${baseUrl}output/glb/Cultura/${avatarActual}_luz.glb`;
+            const rutaEscena = `${baseUrl}output/glb/Cultura/escena.glb`;
+            const rutaModeloConAnimacion = `${baseUrl}output/glb/Cultura/${avatarActual}_luz.glb`;
             
             try {
-                // Cargar escena y animación en paralelo
-                loadingText.textContent = `Cargando ${avatarActual}...`;
+                console.log(`📦 Cargando escenario y modelo...`);
+                console.log(`   ├─ Escenario: escena.glb`);
+                console.log(`   └─ Modelo: ${avatarActual}_luz.glb`);
                 
-                const [gltfEscena, gltfAnimacion] = await Promise.all([
+                // Cargar escenario y modelo en paralelo
+                const [gltfEscena, gltfModelo] = await Promise.all([
                     new Promise((resolve, reject) => {
                         loader.load(
                             rutaEscena,
-                            (result) => resolve(result),
-                            (progress) => {
-                                const percent = (progress.loaded / progress.total) * 50;
-                                loadingText.textContent = `Cargando ${avatarActual}... ${percent.toFixed(0)}%`;
+                            (result) => {
+                                console.log('✅ Escenario cargado');
+                                resolve(result);
                             },
-                            (error) => reject(error)
+                            (progress) => {
+                                if (progress.total > 0) {
+                                    const percent = (progress.loaded / progress.total) * 50;
+                                    loadingText.textContent = `Cargando escenario... ${percent.toFixed(0)}%`;
+                                }
+                            },
+                            (error) => {
+                                console.error('❌ Error cargando escenario:', error);
+                                reject(error);
+                            }
                         );
                     }),
                     new Promise((resolve, reject) => {
                         loader.load(
-                            rutaAnimacion,
-                            (result) => resolve(result),
-                            (progress) => {
-                                const percent = 50 + (progress.loaded / progress.total) * 50;
-                                loadingText.textContent = `Cargando ${avatarActual}... ${percent.toFixed(0)}%`;
+                            rutaModeloConAnimacion,
+                            (result) => {
+                                console.log('✅ Modelo con animación cargado');
+                                resolve(result);
                             },
-                            (error) => reject(error)
+                            (progress) => {
+                                if (progress.total > 0) {
+                                    const percent = 50 + (progress.loaded / progress.total) * 50;
+                                    loadingText.textContent = `Cargando ${avatarActual}... ${percent.toFixed(0)}%`;
+                                }
+                            },
+                            (error) => {
+                                console.error('❌ Error cargando modelo:', error);
+                                reject(error);
+                            }
                         );
                     })
                 ]);
                 
-                // Configurar escena
-                escenaModel = gltfEscena.scene;
-                scene.add(escenaModel);
+                // Agregar escenario a la escena
+                const escenarioModel = gltfEscena.scene;
+                scene.add(escenarioModel);
+                console.log('✅ Escenario agregado a la escena');
                 
-                // Rotar Armature para orientación correcta y estantes de biblioteca
-                escenaModel.traverse((child) => {
-                    if (child.name === 'Armature' || child.name === 'RootNode') {
-                        child.rotation.y = Math.PI;
-                        console.log(`🔄 Rotando ${child.name} a 180°`);
-                    }
-                    
-                });
+                // Agregar modelo del avatar a la escena
+                escenaModel = gltfModelo.scene;
+                scene.add(escenaModel);
+                console.log('✅ Modelo del avatar agregado a la escena');
+                
+                // Rotar Armature para orientación correcta (ahora Carla SÍ rota, los demás NO)
+                if (avatarActual === 'Carla') {
+                    escenaModel.traverse((child) => {
+                        if (child.name === 'Armature' || child.name === 'RootNode') {
+                            child.rotation.y = Math.PI;
+                            console.log(`🔄 Rotando ${child.name} a 180° (${avatarActual})`);
+                        }
+                    });
+                } else {
+                    console.log(`ℹ️ ${avatarActual} mantiene orientación original (sin rotación)`);
+                }
                 
                 // Habilitar morph targets si existen
                 const nodeNameMap = {};
@@ -258,39 +285,51 @@
                 });
                 escenaModel.userData.nodeNameMap = nodeNameMap;
                 
-                // Crear mixer y cargar animación
+                // Crear mixer para las animaciones
                 mixer = new THREE.AnimationMixer(escenaModel);
+                console.log('🎬 Mixer creado');
                 
-                if (gltfAnimacion.animations && gltfAnimacion.animations.length > 0) {
-                    animacionLuzCargada = gltfAnimacion.animations[0];
+                // Verificar si hay animaciones en el modelo
+                if (gltfModelo.animations && gltfModelo.animations.length > 0) {
+                    console.log(`📊 Encontradas ${gltfModelo.animations.length} animaciones`);
+                    animacionLuzCargada = gltfModelo.animations[0];
                     
-                    // Corregir nombres de tracks
+                    // Corregir nombres de tracks si es necesario
                     if (escenaModel.userData.nodeNameMap) {
                         animacionLuzCargada.tracks = animacionLuzCargada.tracks.map(track => {
                             const trackNodeName = track.name.split('.')[0];
                             const mappedName = escenaModel.userData.nodeNameMap[trackNodeName];
                             if (mappedName) {
+                                const originalName = track.name;
                                 track.name = track.name.replace(trackNodeName, mappedName);
+                                console.log(`🔧 Track renombrado: ${originalName} → ${track.name}`);
                             }
                             return track;
                         });
                     }
                     
-                    // Iniciar animación pero pausarla en frame 1
+                    // Crear acción de animación y PAUSARLA en frame 1
                     accionLuz = mixer.clipAction(animacionLuzCargada);
                     accionLuz.setLoop(THREE.LoopOnce);
                     accionLuz.clampWhenFinished = true;
                     accionLuz.play();
-                    accionLuz.paused = true; // Pausar en frame 1
-                    mixer.update(0); // Actualizar mixer para que tome el frame 1
+                    accionLuz.paused = true; // ⏸️ PAUSAR en frame 1
+                    mixer.update(0); // Actualizar para que se aplique el frame 1
                     
-                    console.log('✅ Escena y animación cargadas (pausada en frame 1)');
+                    console.log('⏸️ Animación PAUSADA en frame 1');
+                    console.log(`   ├─ Duración: ${animacionLuzCargada.duration.toFixed(2)}s`);
+                    console.log(`   ├─ Tracks: ${animacionLuzCargada.tracks.length}`);
+                    console.log(`   └─ Estado: LISTA para despausar`);
                 } else {
-                    console.warn(`⚠️ No se encontró animación en ${avatarActual}_luzT.glb`);
+                    console.warn(`⚠️ No se encontraron animaciones en ${avatarActual}_luz.glb`);
+                    console.warn('   └─ Verifique que el archivo GLB contiene animaciones embebidas');
                 }
                 
+                console.log('✅ Modelo completo cargado y configurado');
+                
             } catch (error) {
-                console.error(`❌ Error cargando:`, error);
+                console.error(`❌ Error cargando modelo:`, error);
+                console.error(`   Ruta intentada: ${rutaModeloConAnimacion}`);
                 alert(`Error cargando ${avatarActual}\n${error.message}`);
             }
         }

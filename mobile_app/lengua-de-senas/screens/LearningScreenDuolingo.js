@@ -187,6 +187,38 @@ const LearningScreenDuolingo = ({ navigation }) => {
     }
   }, [stars, userId]);
 
+  // Estado para módulos desbloqueables
+  const [modulesUnlocked, setModulesUnlocked] = useState({
+    alfabeto: false,
+    numeros: false
+  });
+
+  // Verificar módulos desbloqueados al cargar
+  useEffect(() => {
+    checkUnlockedModules();
+  }, [userId]);
+
+  const checkUnlockedModules = async () => {
+    try {
+      if (!userId) return;
+      
+      const alfabetoUnlocked = await AsyncStorage.getItem(`module_alfabeto_unlocked_${userId}`);
+      const numerosUnlocked = await AsyncStorage.getItem(`module_numeros_unlocked_${userId}`);
+      
+      setModulesUnlocked({
+        alfabeto: alfabetoUnlocked === 'true',
+        numeros: numerosUnlocked === 'true'
+      });
+      
+      console.log('🔓 [LearningScreen] Módulos desbloqueados:', {
+        alfabeto: alfabetoUnlocked === 'true',
+        numeros: numerosUnlocked === 'true'
+      });
+    } catch (error) {
+      console.error('❌ [LearningScreen] Error verificando módulos desbloqueados:', error);
+    }
+  };
+
   // TUS MÓDULOS (Sin modificaciones)
   const modules = [
     {
@@ -204,6 +236,7 @@ const LearningScreenDuolingo = ({ navigation }) => {
       rewardFalling: 200,
       rewardAvatar: 200,
       subtitle: 'Módulo 1: Aprende sobre la Cultura Sorda',
+      maxStars: 50, // Máximo de estrellas posibles en este módulo
       sections: [
         {
           type: 'narrativa',
@@ -252,8 +285,8 @@ const LearningScreenDuolingo = ({ navigation }) => {
         }
       ]
     },
-    { id: 2, title: 'Alfabeto LSV', description: 'Aprende las letras A-Z', icon: '🔤', color: '#58CC02', completed: 0, total: 27, unlocked: stars >= 0, category: 'alfabeto', cost: 0, rewardClassic: 100, rewardFalling: 150, rewardAvatar: 150 },
-    { id: 3, title: 'Números', description: 'Números del 1 al 10', icon: '🔢', color: '#00B5E2', completed: 0, total: 20, unlocked: stars >= 100, category: 'numeros', cost: 100, rewardClassic: 100, rewardFalling: 150, rewardAvatar: 150 },
+    { id: 2, title: 'Alfabeto LSV', description: 'Aprende las letras A-Z', icon: '🔤', color: '#58CC02', completed: 0, total: 27, unlocked: modulesUnlocked.alfabeto, category: 'alfabeto', cost: 0, rewardClassic: 100, rewardFalling: 150, rewardAvatar: 150 },
+    { id: 3, title: 'Números', description: 'Números del 1 al 10', icon: '🔢', color: '#00B5E2', completed: 0, total: 20, unlocked: modulesUnlocked.numeros, category: 'numeros', cost: 0, rewardClassic: 100, rewardFalling: 150, rewardAvatar: 150 },
     { id: 4, title: 'Saludos', description: 'Hola, adiós, buenos días', icon: '👋', color: '#FF9600', completed: 0, total: 15, unlocked: stars >= 4000, category: 'saludos', cost: 4000, rewardClassic: 100, rewardFalling: 150, rewardAvatar: 150 },
     { id: 5, title: 'Pronombres', description: 'Yo, tú, él, ella', icon: '👤', color: '#CE82FF', completed: 0, total: 12, unlocked: stars >= 6000, category: 'pronombres', cost: 6000, rewardClassic: 100, rewardFalling: 150, rewardAvatar: 150 },
     { id: 6, title: 'Días de la Semana', description: 'Lunes a domingo', icon: '📅', color: '#FF4B4B', completed: 0, total: 10, unlocked: stars >= 8000, category: 'dias_semana', cost: 8000, rewardClassic: 100, rewardFalling: 150, rewardAvatar: 150 },
@@ -289,6 +322,11 @@ const LearningScreenDuolingo = ({ navigation }) => {
             console.log('✅ [LearningScreen] Estrellas guardadas en el backend exitosamente');
           } else {
             console.error('❌ [LearningScreen] Error al guardar en backend:', result.mensaje);
+          }
+          
+          // Recargar módulos desbloqueados si se completó el módulo cultural
+          if (module.category === 'cultura_mitos') {
+            await checkUnlockedModules();
           }
         } catch (error) {
           console.error('❌ [LearningScreen] Error al guardar estrellas:', error);
