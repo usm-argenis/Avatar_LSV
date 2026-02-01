@@ -1,0 +1,87 @@
+{
+  "api": {
+    "development": {
+      "backendUrl": "http://localhost:3000",
+      "baseUrl": ""
+    },
+    "production": {
+      "backendUrl": "https://api-lsv.tu-dominio.com",
+      "baseUrl": "https://usm-argenis.github.io/Avatar_LSV/"
+    },
+    "githubPages": {
+      "backendUrl": "https://api-lsv.tu-dominio.com",
+      "baseUrl": "https://usm-argenis.github.io/Avatar_LSV/"
+    }
+  },
+  "features": {
+    "useBackendAPI": true,
+    "enablePrecaching": true,
+    "enableMorphTargets": true,
+    "enableOrbitControls": true
+  },
+  "performance": {
+    "maxCacheSize": {
+      "mobile": 15,
+      "desktop": 50
+    },
+    "loadDelay": {
+      "mobile": 300,
+      "desktop": 100
+    },
+    "lookahead": {
+      "mobile": 2,
+      "desktop": 3
+    },
+    "timeouts": {
+      "glbLoad": 10000,
+      "apiCall": 10000,
+      "avatarLoad": 15000
+    }
+  },
+  "avatars": [
+    {
+      "id": "Nancy",
+      "name": "Nancy",
+      "emoji": "👩",
+      "enabled": true
+    },
+    {
+      "id": "Duvall",
+      "name": "Duvall",
+      "emoji": "👨",
+      "enabled": true
+    },
+    {
+      "id": "Carla",
+      "name": "Carla",
+      "emoji": "👱",
+      "enabled": true
+    },
+    {
+      "id": "Remy",
+      "name": "Remy",
+      "emoji": "🤖",
+      "enabled": true
+    }
+  ],
+  "diccionarioDefecto": {
+    "frases_basicas": [
+      "hola",
+      "buenos dias",
+      "buenas noches",
+      "buenas tardes",
+      "gracias",
+      "de nada",
+      "adios",
+      "permiso",
+      "mucho gusto"
+    ],
+    "respuestas": [
+      "si",
+      "no",
+      "bien",
+      "mal"
+    ],
+    "alfabeto": "abcdefgijiosy"
+  }
+}
