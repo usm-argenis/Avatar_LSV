@@ -373,12 +373,12 @@
 
         // Configuración de API adaptable
         const API_CONFIG = {
-            useBackend: true,
+            useBackend: false, // Desactivado por defecto para que funcione en GitHub Pages
             backendUrl: (() => {
                 const isDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
                 // Para desarrollo local usa localhost:3000
-                // Para GitHub Pages cambia a tu URL de API remota
-                return isDev ? 'http://localhost:3000' : 'https://api-lsv.tu-dominio.com';
+                // Para GitHub Pages cambia a tu URL de API remota cuando la tengas
+                return isDev ? 'http://localhost:3000' : '';
             })(),
             // URL base para los GLB (desde GitHub Pages o servidor local)
             baseUrl: (() => {
@@ -416,6 +416,10 @@
             const loadingText = document.getElementById('loading-text');
 
             try {
+                console.log('🚀 Iniciando aplicación LSV...');
+                console.log('📍 Hostname:', window.location.hostname);
+                console.log('🔧 Config:', API_CONFIG);
+                
                 loadingText.textContent = 'Inicializando Three.js...';
                 
                 const container = document.getElementById('canvas-3d');
@@ -428,6 +432,20 @@
                 renderer.setSize(window.innerWidth, window.innerHeight);
                 renderer.setClearColor(0x1a1a2e);
                 container.parentElement.replaceChild(renderer.domElement, container);
+                
+                // Agregar luces a la escena
+                const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+                scene.add(ambientLight);
+                
+                const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+                directionalLight.position.set(5, 10, 7.5);
+                scene.add(directionalLight);
+                
+                const directionalLight2 = new THREE.DirectionalLight(0xffffff, 0.4);
+                directionalLight2.position.set(-5, 5, -5);
+                scene.add(directionalLight2);
+                
+                console.log('✅ Escena 3D configurada con luces');
                 
                 clock = new THREE.Clock();
                 controls = new OrbitControls(camera, renderer.domElement);
@@ -489,20 +507,44 @@
         }
 
         function obtenerDiccionarioLocal() {
+            // Diccionario básico embebido para funcionar sin backend
             return {
-                'hola': { categoria: 'alfabeto', archivo: 'hola' },
-                'buenos dias': { categoria: 'frases', archivo: 'buenos dias' },
-                'buenas noches': { categoria: 'frases', archivo: 'buenas noches' },
-                'buenas tardes': { categoria: 'frases', archivo: 'buenas tardes' },
-                'gracias': { categoria: 'frases', archivo: 'gracias' },
-                'de nada': { categoria: 'frases', archivo: 'de nada' },
-                'si': { categoria: 'frases', archivo: 'si' },
-                'no': { categoria: 'frases', archivo: 'no' },
-                'bien': { categoria: 'adjetivos', archivo: 'bien' },
-                'mal': { categoria: 'adjetivos', archivo: 'mal' },
-                'adios': { categoria: 'frases', archivo: 'adios' },
-                'mucho gusto': { categoria: 'frases', archivo: 'mucho gusto' },
-                'permiso': { categoria: 'frases', archivo: 'permiso' },
+                // Saludos y despedidas
+                'hola': { categoria: 'cortesia', archivo: 'hola' },
+                'buenos dias': { categoria: 'cortesia', archivo: 'buenos dias' },
+                'buenas noches': { categoria: 'cortesia', archivo: 'buenas noches' },
+                'buenas tardes': { categoria: 'cortesia', archivo: 'buenas tardes' },
+                'adios': { categoria: 'cortesia', archivo: 'adios' },
+                'chao': { categoria: 'cortesia', archivo: 'chao' },
+                
+                // Cortesía
+                'gracias': { categoria: 'cortesia', archivo: 'gracias' },
+                'muchas gracias': { categoria: 'cortesia', archivo: 'muchas gracias' },
+                'de nada': { categoria: 'cortesia', archivo: 'de nada' },
+                'permiso': { categoria: 'cortesia', archivo: 'permiso' },
+                'mucho gusto': { categoria: 'cortesia', archivo: 'mucho gusto' },
+                'bienvenido': { categoria: 'cortesia', archivo: 'bienvenido' },
+                
+                // Respuestas básicas
+                'si': { categoria: 'interrogantes', archivo: 'si' },
+                'no': { categoria: 'interrogantes', archivo: 'no' },
+                'bien': { categoria: 'expresiones', archivo: 'bien' },
+                'mal': { categoria: 'expresiones', archivo: 'mal' },
+                'regular': { categoria: 'expresiones', archivo: 'regular' },
+                
+                // Preguntas comunes
+                'como estas': { categoria: 'preguntas', archivo: 'como estas' },
+                'que tal': { categoria: 'preguntas', archivo: 'que tal' },
+                'cual es tu nombre': { categoria: 'preguntas', archivo: 'cual es tu nombre' },
+                
+                // Pronombres
+                'yo': { categoria: 'personas', archivo: 'yo' },
+                'tu': { categoria: 'personas', archivo: 'tu' },
+                'el': { categoria: 'personas', archivo: 'el' },
+                'ella': { categoria: 'personas', archivo: 'ella' },
+                'nosotros': { categoria: 'personas', archivo: 'nosotros' },
+                
+                // Alfabeto
                 'a': { categoria: 'alfabeto', archivo: 'a' },
                 'b': { categoria: 'alfabeto', archivo: 'b' },
                 'c': { categoria: 'alfabeto', archivo: 'c' },
