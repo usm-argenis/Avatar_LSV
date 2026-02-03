@@ -329,6 +329,9 @@
         }
     </script>
 
+    <!-- Traductor LSV Standalone para GitHub Pages -->
+    <script src="./lsv-translator.js"></script>
+
     <script type="module">
         import * as THREE from 'three';
         import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
@@ -360,8 +363,8 @@
         let isAnimating = false;
         
         // Control de API backend
-        let useBackendAPI = true;  // Activado por defecto
-        const BACKEND_URL = 'http://localhost:3000';
+        let useBackendAPI = false;  // DESACTIVADO para GitHub Pages (usar traductor local)
+        const BACKEND_URL = 'http://localhost:5000';
         
         // Control de teclado virtual y viewport
         let initialViewportHeight = window.innerHeight;
@@ -1581,9 +1584,38 @@
                 }
                 // Si falló el backend, continuar con modo local
                 console.log('⚡ Procesando localmente...');
+            } else {
+                // Usar traductor LSV local (GitHub Pages)
+                console.log('📚 Usando traductor LSV local...');
+                
+                if (typeof window.LSV_TRANSLATOR !== 'undefined') {
+                    const resultado = window.LSV_TRANSLATOR.translate(texto, {
+                        deletrearDesconocidas: true,
+                        velocidadDeletreo: 1.2
+                    });
+                    
+                    if (resultado.palabrasDeletreadas.length > 0) {
+                        console.log(`✏️ Palabras deletreadas: ${resultado.palabrasDeletreadas.join(', ')}`);
+                    }
+                    
+                    animacionesValidas = resultado.animaciones.map(anim => ({
+                        texto: anim.nombre,
+                        palabra: anim.nombre.toLowerCase()
+                    }));
+                    
+                    console.log(`🎯 LSV: ${resultado.totalAnimaciones} animaciones generadas`);
+                    console.log(`📋 Secuencia: ${animacionesValidas.map(a => a.texto).join(' → ')}`);
+                    
+                    if (animacionesValidas.length > 0) {
+                        await reproducirSecuencia(animacionesValidas);
+                        return;
+                    }
+                } else {
+                    console.error('❌ Traductor LSV no disponible');
+                }
             }
             
-            // Modo local (o fallback si API falló)
+            // Modo local antiguo (fallback si LSV falló)
             const palabras = texto.toLowerCase().trim().split(/\s+/);
             
             let i = 0;
