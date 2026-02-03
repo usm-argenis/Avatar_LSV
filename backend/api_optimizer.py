@@ -1,6 +1,6 @@
 """
-LSV Optimizer - Traductor de Español a Lengua de Señas Venezolana
-Implementa todas las reglas lingüísticas de LSV + corrección ortográfica
+LSV Optimizer COMPLETO - Traductor de Español a Lengua de Señas Venezolana
+Versión optimizada con todas las reglas lingüísticas de LSV
 """
 
 import re
@@ -20,7 +20,6 @@ def distancia_levenshtein(s1: str, s2: str) -> int:
     for i, c1 in enumerate(s1):
         current_row = [i + 1]
         for j, c2 in enumerate(s2):
-            # Costo de inserción, eliminación o sustitución
             insertions = previous_row[j + 1] + 1
             deletions = current_row[j] + 1
             substitutions = previous_row[j] + (c1 != c2)
@@ -30,73 +29,115 @@ def distancia_levenshtein(s1: str, s2: str) -> int:
     return previous_row[-1]
 
 class LSVOptimizer:
+    """
+    Optimizador LSV con conocimiento completo de:
+    - 311 palabras en diccionario
+    - 18 categorías semánticas
+    - Reglas gramaticales venezolanas
+    - Orden temporal (TIEMPO-SUJETO-VERBO-OBJETO)
+    - Sistema de género (HOMBRE/MUJER después de profesiones/personas)
+    """
+    
     def __init__(self):
-        """Inicializar el optimizador con todas las reglas LSV"""
+        """Inicializar con reglas completas LSV"""
         
-        # Cargar diccionario de glosas
+        # Cargar diccionario actualizado
         self.diccionario = self._cargar_diccionario()
+        print(f"📚 Diccionario LSV cargado: {len(self.diccionario)} palabras")
         
-        # Palabras que se omiten en LSV
+        # ==========================================
+        # REGLA 1: PALABRAS QUE SE OMITEN EN LSV
+        # ==========================================
         self.palabras_omitidas = {
+            # Artículos (no existen en LSV)
             'el', 'la', 'los', 'las',
             'un', 'una', 'unos', 'unas',
-            'de', 'del', 'al',
+            
+            # Preposiciones que se omiten
+            'de', 'del', 'al', 'a',
+            
+            # Conjunciones
             'y', 'e', 'o', 'u',
+            
+            # Pronombres reflexivos/átonos
             'se', 'me', 'te', 'le', 'les', 'nos',
+            
+            # Verbos ser/estar en presente (se infieren por contexto)
+            'es', 'son', 'esta', 'están',
         }
         
-        # Palabras de TIEMPO (van al inicio)
+        # ==========================================
+        # REGLA 2: PALABRAS DE TIEMPO (van al INICIO)
+        # ==========================================
         self.palabras_tiempo = {
+            # Tiempo relativo
             'ayer', 'hoy', 'mañana', 'anteayer', 'pasado mañana',
-            'hace rato', 'hace años', 'había una vez', 'antes',
-            'ahora', 'despues', 'luego', 'pronto', 'tarde', 'temprano',
-            'lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado', 'domingo',
+            'ahora', 'ahorita', 'despues', 'luego', 'pronto',
+            'tarde', 'temprano', 'madrugada', 'mediodia',
+            
+            # Días de la semana
+            'lunes', 'martes', 'miercoles', 'jueves', 
+            'viernes', 'sabado', 'domingo',
+            
+            # Meses
             'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
             'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre',
+            
+            # Períodos
+            'mes', 'semana', 'año', 'dia',
+            'fin de semana', 'calendario',
         }
         
+        # ==========================================
+        # REGLA 3: GÉNERO EN LSV
+        # ==========================================
         # Palabras femeninas → masculino neutro + MUJER
-        # Solo personas, NO carreras ni objetos
         self.palabras_femeninas = {
-            # Familia
-            'mama': 'papa', 'madre': 'padre',
-            'madrastra': 'padrastro', 'madrina': 'padrino',
-            'abuela': 'abuelo', 'nieta': 'nieto',
-            'tia': 'tio', 'prima': 'primo',
-            'sobrina': 'sobrino', 'suegra': 'suegro',
-            'cuñada': 'cuñado', 'hermana': 'hermano',
-            'hija': 'hijo', 'hijastra': 'hijastro',
-            'hermanastra': 'hermanastro',
+            # PROFESIONES (la más importante en Venezuela)
+            'maestra': 'maestro',
+            'profesora': 'profesor',
+            'doctora': 'medico',
+            'ingeniera': 'ingeniero',
+            'abogada': 'abogado',
+            'administradora': 'administrador',
+            'contadora': 'contador',
+            'directora': 'director',
+            'gerenta': 'gerente',
+            'vendedora': 'vendedor',
+            'cocinera': 'cocinero',
+            'psicologa': 'psicologo',
+            'inspectora': 'inspector',
+            'instructora': 'instructor',
+            'jefa': 'jefe',
+            'mensajera': 'mensajero',
+            'mesonera': 'mesonero',
+            'pintora': 'pintor',
+            'supervisora': 'supervisor',
+            'traductora': 'traductor',
+            'escritora': 'escritor',
+            'fotografa': 'fotografo',
+            'policia': 'policia',  # neutro en venezolano
+            'medica': 'medico',
+            'economista': 'economista',  # neutro
+            'analista': 'analista',  # neutro
+            'pasante': 'pasante',  # neutro
+            'detective': 'detective',  # neutro
             
-            # Profesiones (personas)
-            'maestra': 'maestro', 'profesora': 'profesor',
-            'doctora': 'medico', 'ingeniera': 'ingeniero',
-            'abogada': 'abogado', 'administradora': 'administrador',
-            'contadora': 'contador', 'directora': 'director',
-            'gerenta': 'gerente', 'vendedora': 'vendedor',
-            'cocinera': 'cocinero', 'psicologa': 'psicologo',
-            'inspectora': 'inspector', 'instructora': 'instructor',
-            'jefa': 'jefe', 'mensajera': 'mensajero',
-            'mesonera': 'mesonero', 'pintora': 'pintor',
-            'supervisora': 'supervisor', 'traductora': 'traductor',
-            'vigilanta': 'vigilante', 'escritora': 'escritor',
-            'fotografa': 'fotografo', 'auxiliar': 'auxiliar',  # neutro
-            
-            # Personas
-            'señora': 'señor', 'señorita': 'señor',
-            'novia': 'novio', 'amiga': 'amigo',
+            # PERSONAS
+            'señora': 'señor',
+            'señorita': 'señor',
+            'novia': 'novio',
+            'amiga': 'amigo',
             'compañera': 'compañero',
-            'vieja': 'viejo', 'niña': 'niño',
-            'joven': 'joven',  # neutro
+            'vieja': 'viejo',
+            'niña': 'niño',
             'anciana': 'anciano',
             'adulta': 'adulto',
-            'mayor': 'mayor',  # neutro
             'ciega': 'ciego',
             'sorda': 'sordo',
             'sordociega': 'sordociego',
-            'oyente': 'oyente',  # neutro
             
-            # Estado civil
+            # ESTADO CIVIL
             'casada': 'casado',
             'soltera': 'soltero',
             'divorciada': 'divorciado',
@@ -105,126 +146,133 @@ class LSVOptimizer:
             'concubina': 'concubino',
         }
         
-        # Normalizaciones LSV
+        # Palabras masculinas → femenino neutro + HOMBRE (menos común)
+        self.palabras_masculinas = {}  # En LSV venezolano, neutro es masculino
+        
+        # ==========================================
+        # REGLA 4: NORMALIZACIÓN LSV
+        # ==========================================
         self.normalizacion_lsv = {
-            'todos': 'todo', 'todas': 'todo',
-            'muchos': 'mucho', 'muchas': 'mucho',
-            'pocos': 'poco', 'pocas': 'poco',
-            'algunos': 'algun', 'algunas': 'algun',
-            'ningunos': 'ningun', 'ningunas': 'ningun',
-            'otros': 'otro', 'otras': 'otro',
-            'demasiados': 'demasiado', 'demasiadas': 'demasiado',
+            # Plurales → Singular (LSV no marca plural morfológicamente)
+            'todos': 'todo',
+            'todas': 'todo',
+            'muchos': 'mucho',
+            'muchas': 'mucho',
+            'pocos': 'poco',
+            'pocas': 'poco',
+            'algunos': 'algun',
+            'algunas': 'algun',
+            'ningunos': 'ningun',
+            'ningunas': 'ningun',
+            'otros': 'otro',
+            'otras': 'otro',
+            'demasiados': 'demasiado',
+            'demasiadas': 'demasiado',
             'bastantes': 'bastante',
-            'dias': 'dia', 'años': 'año', 'meses': 'mes',
-            'semanas': 'semana', 'horas': 'hora',
-            'minutos': 'minuto', 'segundos': 'segundo',
+            
+            # Tiempos → normalizar
+            'dias': 'dia',
+            'años': 'año',
+            'meses': 'mes',
+            'semanas': 'semana',
+            
+            # Pronombres
             'nosotras': 'nosotros',
-            'vosotros': 'ustedes', 'vosotras': 'ustedes',
-            'mi': 'mio', 'mis': 'mio',
-            'tu': 'tuyo', 'tus': 'tuyo',
-            'su': 'suyo', 'sus': 'suyo',
-            'nuestro': 'nuestro', 'nuestra': 'nuestro',
-            'nuestros': 'nuestro', 'nuestras': 'nuestro',
+            'vosotros': 'ustedes',
+            'vosotras': 'ustedes',
+            
+            # Posesivos → forma base
+            'mi': 'mio',
+            'mis': 'mio',
+            'tus': 'tuyo',
+            'su': 'suyo',
+            'sus': 'suyo',
+            'nuestro': 'nuestro',
+            'nuestra': 'nuestro',
+            'nuestros': 'nuestro',
+            'nuestras': 'nuestro',
         }
         
-        # Normalización de verbos
+        # ==========================================
+        # REGLA 5: VERBOS - Infinitivo siempre
+        # ==========================================
         self.normalizacion_verbos = {
-            # Trabajar
+            # TRABAJAR
             'trabajo': 'trabajar', 'trabajas': 'trabajar', 'trabaja': 'trabajar',
-            'trabajamos': 'trabajar', 'trabajan': 'trabajar', 'trabajé': 'trabajar',
-            'trabajaste': 'trabajar', 'trabajó': 'trabajar', 'trabajaron': 'trabajar',
-            'trabajaba': 'trabajar', 'trabajando': 'trabajar',
-            # Estudiar
+            'trabajamos': 'trabajar', 'trabajan': 'trabajar',
+            'trabajé': 'trabajar', 'trabajaste': 'trabajar', 'trabajó': 'trabajar',
+            'trabajaron': 'trabajar', 'trabajaba': 'trabajar', 'trabajando': 'trabajar',
+            
+            # ESTUDIAR
             'estudio': 'estudiar', 'estudias': 'estudiar', 'estudia': 'estudiar',
-            'estudiamos': 'estudiar', 'estudian': 'estudiar', 'estudié': 'estudiar',
-            'estudiaste': 'estudiar', 'estudió': 'estudiar', 'estudiaron': 'estudiar',
-            'estudiaba': 'estudiar', 'estudiando': 'estudiar',
-            # Comer
+            'estudiamos': 'estudiar', 'estudian': 'estudiar',
+            'estudié': 'estudiar', 'estudió': 'estudiar', 'estudiando': 'estudiar',
+            
+            # COMER
             'como': 'comer', 'comes': 'comer', 'come': 'comer',
-            'comemos': 'comer', 'comen': 'comer', 'comí': 'comer',
-            'comiste': 'comer', 'comió': 'comer', 'comieron': 'comer',
-            'comía': 'comer', 'comiendo': 'comer',
-            # Vivir
+            'comemos': 'comer', 'comen': 'comer',
+            'comí': 'comer', 'comió': 'comer', 'comiendo': 'comer',
+            
+            # VIVIR
             'vivo': 'vivir', 'vives': 'vivir', 'vive': 'vivir',
-            'vivimos': 'vivir', 'viven': 'vivir', 'viví': 'vivir',
-            'viviste': 'vivir', 'vivió': 'vivir', 'vivieron': 'vivir',
-            'vivía': 'vivir', 'viviendo': 'vivir',
-            # Dormir
+            'vivimos': 'vivir', 'viven': 'vivir', 'viviendo': 'vivir',
+            
+            # DORMIR
             'duermo': 'dormir', 'duermes': 'dormir', 'duerme': 'dormir',
-            'dormimos': 'dormir', 'duermen': 'dormir', 'dormí': 'dormir',
-            'dormiste': 'dormir', 'durmió': 'dormir', 'durmieron': 'dormir',
-            'dormía': 'dormir', 'durmiendo': 'dormir',
-            # Ver
+            'durmiendo': 'dormir',
+            
+            # VER
             'veo': 'ver', 'ves': 'ver', 've': 'ver',
-            'vemos': 'ver', 'ven': 'ver', 'vi': 'ver',
-            'viste': 'ver', 'vio': 'ver', 'vieron': 'ver',
-            'veía': 'ver', 'viendo': 'ver',
-            # Estar
+            'vemos': 'ver', 'ven': 'ver', 'viendo': 'ver',
+            
+            # ESTAR
             'estoy': 'estar', 'estás': 'estar', 'está': 'estar',
-            'estamos': 'estar', 'están': 'estar', 'estuve': 'estar',
-            'estuviste': 'estar', 'estuvo': 'estar', 'estuvieron': 'estar',
-            'estaba': 'estar', 'estando': 'estar',
-            # Ser
-            'soy': 'ser', 'eres': 'ser', 'es': 'ser',
-            'somos': 'ser', 'son': 'ser', 'fui': 'ser',
-            'fuiste': 'ser', 'fue': 'ser', 'fueron': 'ser',
-            'era': 'ser', 'siendo': 'ser',
+            'estamos': 'estar', 'están': 'estar', 'estando': 'estar',
+            
             # Otros verbos comunes
-            'ayudo': 'ayudar', 'ayudas': 'ayudar', 'ayuda': 'ayudar',
             'amo': 'amar', 'amas': 'amar', 'ama': 'amar',
-            'canso': 'cansar', 'cansas': 'cansar', 'cansa': 'cansar',
-            'conozco': 'conocer', 'conoces': 'conocer', 'conoce': 'conocer',
-            'digo': 'decir', 'dices': 'decir', 'dice': 'decir',
-            'invito': 'invitar', 'invitas': 'invitar', 'invita': 'invitar',
-            'pregunto': 'preguntar', 'preguntas': 'preguntar', 'pregunta': 'preguntar',
-            'presento': 'presentar', 'presentas': 'presentar', 'presenta': 'presentar',
-            'quiero': 'querer', 'quieres': 'querer', 'quiere': 'querer',
-            'respondo': 'responder', 'respondes': 'responder', 'responde': 'responder',
-            'saludo': 'saludar', 'saludas': 'saludar', 'saluda': 'saludar',
-            'siento': 'sentir', 'sientes': 'sentir', 'siente': 'sentir',
-            'corro': 'correr', 'corres': 'correr', 'corre': 'correr',
-            'entro': 'entrar', 'entras': 'entrar', 'entra': 'entrar',
-            'viajo': 'viajar', 'viajas': 'viajar', 'viaja': 'viajar',
+            'ayudo': 'ayudar', 'ayuda': 'ayudar',
+            'canso': 'cansar', 'cansa': 'cansar',
+            'conozco': 'conocer', 'conoce': 'conocer',
+            'digo': 'decir', 'dice': 'decir',
+            'invito': 'invitar', 'invita': 'invitar',
+            'pregunto': 'preguntar', 'pregunta': 'preguntar',
+            'presento': 'presentar', 'presenta': 'presentar',
+            'quiero': 'querer', 'quiere': 'querer',
+            'respondo': 'responder', 'responde': 'responder',
+            'saludo': 'saludar', 'saluda': 'saludar',
+            'siento': 'sentir', 'siente': 'sentir',
         }
         
     def _cargar_diccionario(self) -> Dict[str, Dict[str, str]]:
-        """Cargar diccionario de glosas desde archivo JSON"""
+        """Cargar diccionario actualizado de glosas LSV"""
         diccionario_path = Path(__file__).parent / 'scripts' / 'data.json'
         
-        # Si existe el archivo, cargarlo
         if diccionario_path.exists():
             with open(diccionario_path, 'r', encoding='utf-8') as f:
                 return json.load(f)
         
-        # Diccionario básico de respaldo
-        print("⚠️ Usando diccionario básico de respaldo")
-        diccionario_basico = {
-            'deletrear': {'categoria': 'verbos', 'archivo': 'deletrear'},
+        # Diccionario de respaldo básico
+        print("⚠️ Usando diccionario de respaldo")
+        return {
+            'hola': {'categoria': 'saludos', 'archivo': 'hola'},
             'mujer': {'categoria': 'personas', 'archivo': 'mujer'},
+            'hombre': {'categoria': 'personas', 'archivo': 'hombre'},
+            'deletrear': {'categoria': 'verbos', 'archivo': 'deletrear'},
         }
-        
-        # Agregar números
-        for i in range(11):
-            diccionario_basico[str(i)] = {'categoria': 'numero', 'archivo': str(i)}
-        
-        # Agregar alfabeto
-        for letra in 'abcdefghijklmnopqrstuvwxyzñ':
-            diccionario_basico[letra] = {'categoria': 'alfabeto', 'archivo': letra}
-        
-        return diccionario_basico
     
     def encontrar_palabra_similar(self, palabra: str, max_distancia: int = 2) -> Optional[Tuple[str, int]]:
         """
-        Encontrar la palabra más similar en el diccionario
+        Encontrar palabra más similar en diccionario
         Retorna: (palabra_similar, distancia) o None
         """
         palabra_lower = palabra.lower()
         
-        # Si la palabra ya existe, retornarla directamente
+        # Si existe directamente
         if palabra_lower in self.diccionario:
             return (palabra_lower, 0)
         
-        # Buscar en todas las normalizaciones y verbos también
+        # Buscar en todas las fuentes
         todas_palabras = set(self.diccionario.keys())
         todas_palabras.update(self.normalizacion_lsv.keys())
         todas_palabras.update(self.normalizacion_verbos.keys())
@@ -233,7 +281,6 @@ class LSVOptimizer:
         candidatos = []
         
         for palabra_dict in todas_palabras:
-            # Priorizar palabras de longitud similar
             diff_longitud = abs(len(palabra_dict) - len(palabra_lower))
             if diff_longitud > 3:
                 continue
@@ -241,12 +288,10 @@ class LSVOptimizer:
             distancia = distancia_levenshtein(palabra_lower, palabra_dict)
             
             if distancia <= max_distancia:
-                # Priorizar por: 1) menor distancia, 2) menor diferencia de longitud
                 prioridad = (distancia * 10) + diff_longitud
                 candidatos.append((palabra_dict, distancia, prioridad))
         
         if candidatos:
-            # Ordenar por prioridad y retornar el mejor
             candidatos.sort(key=lambda x: x[2])
             return (candidatos[0][0], candidatos[0][1])
         
@@ -254,36 +299,37 @@ class LSVOptimizer:
     
     def corregir_texto(self, texto: str) -> Tuple[str, List[Dict]]:
         """
-        Corregir errores ortográficos en el texto
-        Retorna: (texto_corregido, lista_de_correcciones)
+        Corregir errores ortográficos del texto
+        Retorna: (texto_corregido, lista_correcciones)
         """
-        # Limpiar signos
-        texto = re.sub(r'[¿?¡!]', '', texto)
+        # Limpiar TODOS los signos de puntuación y caracteres especiales
+        texto = re.sub(r'[¿?¡!,.;:"\'\(\)\[\]{}]', ' ', texto)
+        # Limpiar espacios múltiples
+        texto = re.sub(r'\s+', ' ', texto)
         palabras = texto.lower().strip().split()
         
         palabras_corregidas = []
         correcciones = []
         
         for palabra in palabras:
-            # Omitir palabras que se eliminan
+            # Omitir palabras eliminadas
             if palabra in self.palabras_omitidas:
                 palabras_corregidas.append(palabra)
                 continue
             
-            # Verificar si es número
+            # Números directos
             if palabra.isdigit():
                 palabras_corregidas.append(palabra)
                 continue
             
-            # PRIMERO: Verificar si la palabra ya existe tal cual en el diccionario
+            # 1. Verificar si existe tal cual
             if palabra in self.diccionario:
                 palabras_corregidas.append(palabra)
                 continue
             
-            # SEGUNDO: Intentar normalizar
+            # 2. Normalizar
             palabra_normalizada = self.normalizar_palabra(palabra)
             
-            # Si existe después de normalizar, usar esa
             if palabra_normalizada and palabra_normalizada in self.diccionario:
                 if palabra != palabra_normalizada:
                     correcciones.append({
@@ -295,14 +341,13 @@ class LSVOptimizer:
                 palabras_corregidas.append(palabra_normalizada)
                 continue
             
-            # TERCERO: Si no existe, buscar palabra similar (solo si confianza > 50%)
+            # 3. Buscar palabra similar
             resultado = self.encontrar_palabra_similar(palabra, max_distancia=2)
             
             if resultado:
                 palabra_similar, distancia = resultado
-                confianza = 100 - (distancia * 30)  # 1 char = 70%, 2 chars = 40%
+                confianza = 100 - (distancia * 30)
                 
-                # Solo aplicar corrección si confianza >= 50%
                 if confianza >= 50:
                     correcciones.append({
                         'original': palabra,
@@ -313,10 +358,8 @@ class LSVOptimizer:
                     })
                     palabras_corregidas.append(palabra_similar)
                 else:
-                    # Confianza muy baja, mantener original
                     palabras_corregidas.append(palabra)
             else:
-                # No se encontró similar, mantener original
                 palabras_corregidas.append(palabra)
         
         texto_corregido = ' '.join(palabras_corregidas)
@@ -330,60 +373,58 @@ class LSVOptimizer:
         if 0 <= num <= 10:
             return [str(num)]
         
-        # 11-19: 10 + segundo dígito
+        # 11-19: 10 + dígito
         if 11 <= num <= 19:
             return ['10', str(num % 10)]
         
-        # 20+: separar dígitos
+        # 20+: dígitos separados
         return list(numero)
     
     def normalizar_palabra(self, palabra: str) -> Optional[str]:
-        """Normalizar palabra según reglas LSV con expansión automática de plurales"""
+        """
+        Normalizar palabra según reglas LSV completas
+        """
         palabra_lower = palabra.lower()
         
-        # Verificar si es número
+        # Números
         if palabra_lower.isdigit():
             return palabra_lower
         
-        # Verificar si se omite
+        # Omitir
         if palabra_lower in self.palabras_omitidas:
             return None
         
-        # Verificar normalizaciones LSV explícitas
+        # Normalizaciones explícitas
         if palabra_lower in self.normalizacion_lsv:
             return self.normalizacion_lsv[palabra_lower]
         
-        # Verificar normalizaciones de verbos
+        # Verbos
         if palabra_lower in self.normalizacion_verbos:
             return self.normalizacion_verbos[palabra_lower]
         
-        # Si está en diccionario directamente, retornar
+        # Ya existe
         if palabra_lower in self.diccionario:
             return palabra_lower
         
-        # NORMALIZACIÓN AUTOMÁTICA DE PLURALES
-        # Regla 1: palabras terminadas en -s (plurales)
+        # PLURALES AUTOMÁTICOS
+        # -s final
         if palabra_lower.endswith('s') and len(palabra_lower) > 3:
             singular = palabra_lower[:-1]
             if singular in self.diccionario:
                 return singular
         
-        # Regla 2: palabras terminadas en -es
+        # -es final
         if palabra_lower.endswith('es') and len(palabra_lower) > 4:
             singular = palabra_lower[:-2]
             if singular in self.diccionario:
                 return singular
-            # También probar agregando vocal final
+            # Probar con vocales
             for vocal in ['a', 'e', 'i', 'o', 'u']:
                 candidato = singular + vocal
                 if candidato in self.diccionario:
                     return candidato
         
-        # Si está en diccionario después de normalizar, retornar
-        if palabra_lower in self.diccionario:
-            return palabra_lower
-        
-        # Reglas genéricas para verbos
+        # Verbos con gerundio/participio
         if palabra_lower.endswith(('ando', 'iendo')):
             raiz = palabra_lower[:-4]
             for sufijo in ('ar', 'er', 'ir'):
@@ -393,20 +434,23 @@ class LSVOptimizer:
         return palabra_lower
     
     def translate_to_animations(
-        self, 
-        texto: str, 
+        self,
+        texto: str,
         deletrear_desconocidas: bool = True,
         velocidad_deletreo: float = 1.2,
         corregir_ortografia: bool = True
     ) -> Dict:
         """
-        Traduce texto a secuencia de animaciones LSV
-        Retorna: {
+        Traducir texto español a secuencia de animaciones LSV
+        Aplica TODAS las reglas lingüísticas de LSV venezolano
+        
+        Retorna:
+        {
             texto_original: str,
             texto_corregido: str,
             correcciones: [...],
-            animaciones: [...], 
-            total_animaciones: int, 
+            animaciones: [...],
+            total_animaciones: int,
             palabras_deletreadas: [...]
         }
         """
@@ -414,40 +458,36 @@ class LSVOptimizer:
         texto_original = texto
         correcciones = []
         
-        # Corregir ortografía si está habilitado
+        # 1. CORRECCIÓN ORTOGRÁFICA
         if corregir_ortografia:
             texto, correcciones = self.corregir_texto(texto)
-            print(f"📝 Texto original: {texto_original}")
-            print(f"✅ Texto corregido: {texto}")
             if correcciones:
-                for corr in correcciones:
-                    print(f"   🔧 {corr['original']} → {corr['corregida']} ({corr['tipo']}, {corr['confianza']}%)")
+                print(f"📝 Correcciones aplicadas: {len(correcciones)}")
         
-        # Limpiar texto
-        texto = re.sub(r'[¿?¡!]', '', texto)
+        # 2. LIMPIAR Y TOKENIZAR
+        # Eliminar TODOS los signos de puntuación y caracteres especiales
+        texto = re.sub(r'[¿?¡!,.;:"\'\(\)\[\]{}]', ' ', texto)
+        # Limpiar espacios múltiples
+        texto = re.sub(r'\s+', ' ', texto)
         palabras = texto.lower().strip().split()
         
         animaciones = []
         palabras_deletreadas = []
         palabras_procesadas = []
         
-        # Procesar palabras
+        # 3. PROCESAMIENTO DE PALABRAS (frases compuestas primero)
         i = 0
         while i < len(palabras):
             encontrada = False
             
-            # Frases de 4 palabras (para "cual es tu nombre", etc.)
+            # Frases de 4 palabras
             if i + 3 < len(palabras):
                 frase4 = ' '.join(palabras[i:i+4])
-                frase4_norm = self.normalizar_palabra(frase4)
-                
-                # Buscar tanto la frase normalizada como la original
-                if (frase4_norm and frase4_norm in self.diccionario) or (frase4 in self.diccionario):
-                    frase_final = frase4_norm if frase4_norm in self.diccionario else frase4
+                if frase4 in self.diccionario:
                     palabras_procesadas.append({
                         'original': frase4,
-                        'normalizada': frase_final,
-                        'es_tiempo': frase_final in self.palabras_tiempo,
+                        'normalizada': frase4,
+                        'es_tiempo': frase4 in self.palabras_tiempo,
                         'es_femenino': False,
                         'tipo': 'frase'
                     })
@@ -457,15 +497,11 @@ class LSVOptimizer:
             # Frases de 3 palabras
             if not encontrada and i + 2 < len(palabras):
                 frase3 = ' '.join(palabras[i:i+3])
-                frase3_norm = self.normalizar_palabra(frase3)
-                
-                # Buscar tanto la frase normalizada como la original
-                if (frase3_norm and frase3_norm in self.diccionario) or (frase3 in self.diccionario):
-                    frase_final = frase3_norm if frase3_norm in self.diccionario else frase3
+                if frase3 in self.diccionario:
                     palabras_procesadas.append({
                         'original': frase3,
-                        'normalizada': frase_final,
-                        'es_tiempo': frase_final in self.palabras_tiempo,
+                        'normalizada': frase3,
+                        'es_tiempo': frase3 in self.palabras_tiempo,
                         'es_femenino': False,
                         'tipo': 'frase'
                     })
@@ -475,15 +511,11 @@ class LSVOptimizer:
             # Frases de 2 palabras
             if not encontrada and i + 1 < len(palabras):
                 frase2 = ' '.join(palabras[i:i+2])
-                frase2_norm = self.normalizar_palabra(frase2)
-                
-                # Buscar tanto la frase normalizada como la original
-                if (frase2_norm and frase2_norm in self.diccionario) or (frase2 in self.diccionario):
-                    frase_final = frase2_norm if frase2_norm in self.diccionario else frase2
+                if frase2 in self.diccionario:
                     palabras_procesadas.append({
                         'original': frase2,
-                        'normalizada': frase_final,
-                        'es_tiempo': frase_final in self.palabras_tiempo,
+                        'normalizada': frase2,
+                        'es_tiempo': frase2 in self.palabras_tiempo,
                         'es_femenino': False,
                         'tipo': 'frase'
                     })
@@ -494,16 +526,15 @@ class LSVOptimizer:
             if not encontrada:
                 palabra_norm = self.normalizar_palabra(palabras[i])
                 
-                # Omitir si es None
                 if palabra_norm is None:
                     i += 1
                     continue
                 
-                # Verificar si es femenino
+                # Verificar género
                 es_femenino = palabras[i] in self.palabras_femeninas
                 palabra_base = self.palabras_femeninas.get(palabras[i], palabra_norm)
                 
-                # Verificar si es número
+                # Número
                 if palabra_base.isdigit():
                     palabras_procesadas.append({
                         'original': palabras[i],
@@ -523,12 +554,12 @@ class LSVOptimizer:
                     })
                 i += 1
         
-        # Reordenar: TIEMPO al inicio
+        # 4. REORDENAR: TIEMPO AL INICIO (regla fundamental LSV)
         palabras_tiempo = [p for p in palabras_procesadas if p.get('es_tiempo')]
         palabras_resto = [p for p in palabras_procesadas if not p.get('es_tiempo')]
         secuencia_final = palabras_tiempo + palabras_resto
         
-        # Convertir a animaciones
+        # 5. CONVERTIR A ANIMACIONES
         for palabra in secuencia_final:
             # Números
             if palabra.get('es_numero'):
@@ -548,28 +579,28 @@ class LSVOptimizer:
                 if palabra['normalizada'] in self.diccionario:
                     info = self.diccionario[palabra['normalizada']]
                     animaciones.append({
-                        'nombre': palabra['normalizada'],  # USAR NORMALIZADA para que frontend pueda buscar en diccionario
+                        'nombre': palabra['normalizada'],
                         'categoria': info['categoria'],
                         'archivo': info['archivo'],
                         'es_deletreo': False
                     })
                     
-                    # Agregar MUJER si es femenino
+                    # GÉNERO: Agregar MUJER después de profesiones/personas femeninas
                     if palabra['es_femenino'] and 'mujer' in self.diccionario:
                         info_mujer = self.diccionario['mujer']
                         animaciones.append({
-                            'nombre': 'mujer',  # USAR 'mujer' como nombre
+                            'nombre': 'mujer',
                             'categoria': info_mujer['categoria'],
                             'archivo': info_mujer['archivo'],
                             'es_deletreo': False
                         })
                 continue
             
-            # Palabras desconocidas - deletrear
+            # Palabras desconocidas → deletrear
             if deletrear_desconocidas:
                 palabras_deletreadas.append(palabra['original'])
                 
-                # Agregar DELETREAR
+                # Señal DELETREAR
                 if 'deletrear' in self.diccionario:
                     info = self.diccionario['deletrear']
                     animaciones.append({
