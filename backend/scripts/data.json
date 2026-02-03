@@ -131,6 +131,10 @@
     "categoria": "adverbios",
     "archivo": "adverbios"
   },
+  "agarrar": {
+    "categoria": "verbos",
+    "archivo": "agarrar"
+  },
   "agosto": {
     "categoria": "expresiones",
     "archivo": "agosto"
@@ -186,6 +190,10 @@
   "apartamento": {
     "categoria": "viviendas",
     "archivo": "apartamento"
+  },
+  "atraer": {
+    "categoria": "verbos",
+    "archivo": "atraer"
   },
   "atras": {
     "categoria": "adverbios",
@@ -267,6 +275,10 @@
     "categoria": "saludos",
     "archivo": "buenos dias"
   },
+  "burlar": {
+    "categoria": "verbos",
+    "archivo": "burlar"
+  },
   "c": {
     "categoria": "alfabeto",
     "archivo": "c"
@@ -274,6 +286,10 @@
   "calendario": {
     "categoria": "tiempo",
     "archivo": "calendario"
+  },
+  "calmar": {
+    "categoria": "verbos",
+    "archivo": "calmar"
   },
   "cansar": {
     "categoria": "verbos",
@@ -451,6 +467,10 @@
     "categoria": "profesiones",
     "archivo": "detective"
   },
+  "dia": {
+    "categoria": "tiempo",
+    "archivo": "dia"
+  },
   "dibujante": {
     "categoria": "profesiones",
     "archivo": "dibujante"
@@ -535,6 +555,10 @@
     "categoria": "pronombres",
     "archivo": "ellos"
   },
+  "en punto": {
+    "categoria": "general",
+    "archivo": "en punto"
+  },
   "enero": {
     "categoria": "expresiones",
     "archivo": "enero"
@@ -546,6 +570,10 @@
   "enfermeras": {
     "categoria": "profesiones",
     "archivo": "enfermera"
+  },
+  "enganar": {
+    "categoria": "verbos",
+    "archivo": "enganar"
   },
   "escritor": {
     "categoria": "profesiones",
@@ -607,6 +635,10 @@
     "categoria": "cortesia",
     "archivo": "gracias"
   },
+  "guardar": {
+    "categoria": "verbos",
+    "archivo": "guardar"
+  },
   "h": {
     "categoria": "alfabeto",
     "archivo": "h"
@@ -626,6 +658,14 @@
   "hombre": {
     "categoria": "personas",
     "archivo": "hombre"
+  },
+  "hora": {
+    "categoria": "general",
+    "archivo": "hora"
+  },
+  "horario": {
+    "categoria": "general",
+    "archivo": "horario"
   },
   "horita": {
     "categoria": "tiempo",
@@ -743,6 +783,10 @@
     "categoria": "profesiones",
     "archivo": "licenciado"
   },
+  "llevar": {
+    "categoria": "verbos",
+    "archivo": "llevar"
+  },
   "lugares": {
     "categoria": "adverbios",
     "archivo": "lugares"
@@ -798,6 +842,10 @@
   "mañanita": {
     "categoria": "tiempo",
     "archivo": "mañana"
+  },
+  "media hora": {
+    "categoria": "general",
+    "archivo": "media hora"
   },
   "medico": {
     "categoria": "profesiones",
@@ -927,6 +975,10 @@
     "categoria": "profesiones",
     "archivo": "pasante"
   },
+  "pelear": {
+    "categoria": "verbos",
+    "archivo": "pelear"
+  },
   "peluquera": {
     "categoria": "profesiones",
     "archivo": "peluquera"
@@ -1043,6 +1095,10 @@
     "categoria": "viviendas",
     "archivo": "rancho"
   },
+  "regalar": {
+    "categoria": "verbos",
+    "archivo": "regalar"
+  },
   "regular": {
     "categoria": "expresiones",
     "archivo": "regular"
@@ -1050,6 +1106,10 @@
   "responder": {
     "categoria": "verbos",
     "archivo": "responder"
+  },
+  "s": {
+    "categoria": "alfabeto",
+    "archivo": "s"
   },
   "sabado": {
     "categoria": "tiempo",
@@ -1091,6 +1151,10 @@
     "categoria": "expresiones",
     "archivo": "septiembre"
   },
+  "ser": {
+    "categoria": "verbos",
+    "archivo": "ser"
+  },
   "señor": {
     "categoria": "personas",
     "archivo": "señor"
@@ -1122,6 +1186,10 @@
   "sordociego": {
     "categoria": "personas",
     "archivo": "sordociego"
+  },
+  "sufrir": {
+    "categoria": "verbos",
+    "archivo": "sufrir"
   },
   "supervisor": {
     "categoria": "profesiones",
@@ -1163,6 +1231,10 @@
     "categoria": "profesiones",
     "archivo": "traductor"
   },
+  "traer": {
+    "categoria": "verbos",
+    "archivo": "traer"
+  },
   "tu": {
     "categoria": "pronombres",
     "archivo": "tu"
@@ -1174,6 +1246,26 @@
   "u": {
     "categoria": "alfabeto",
     "archivo": "u"
+  },
+  "un cuarto": {
+    "categoria": "general",
+    "archivo": "un cuarto"
+  },
+  "un minuto": {
+    "categoria": "general",
+    "archivo": "un minuto"
+  },
+  "un segundo": {
+    "categoria": "general",
+    "archivo": "un segundo"
+  },
+  "una hora": {
+    "categoria": "general",
+    "archivo": "una hora"
+  },
+  "usar": {
+    "categoria": "verbos",
+    "archivo": "usar"
   },
   "ustedes": {
     "categoria": "pronombres",
@@ -1194,6 +1286,14 @@
   "ver": {
     "categoria": "verbos",
     "archivo": "ver"
+  },
+  "verbo": {
+    "categoria": "verbos",
+    "archivo": "verbo"
+  },
+  "vestir": {
+    "categoria": "verbos",
+    "archivo": "vestir"
   },
   "viejo": {
     "categoria": "personas",
