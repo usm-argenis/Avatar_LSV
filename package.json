@@ -1,0 +1,13 @@
+{
+  "name": "lsv-avatar-project",
+  "version": "1.0.0",
+  "description": "Traductor de Lengua de Señas Venezolana con avatares 3D",
+  "main": "index.html",
+  "scripts": {
+    "upload-github": "node upload-github-releases.js"
+  },
+  "keywords": ["lsv", "sign-language", "3d", "avatar"],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {}
+}
