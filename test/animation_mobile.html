@@ -2158,9 +2158,6 @@
                 try {
                     const loader = loaderInstance || new GLTFLoader();
                     const { categoria, archivo } = DICCIONARIO[palabraNormalizada];
-                    const baseUrl = window.location.hostname.includes('github.io') 
-                        ? 'https://usm-argenis.github.io/STT_LSV/test/'
-                        : '';
                     
                     let nombreArchivo = avatarActual === 'Remy' 
                         ? archivo.replace(/ /g, '_') 
