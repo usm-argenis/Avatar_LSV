@@ -1,0 +1,1013 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <title>Lección Simple - LSV</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: rgb(255, 252, 252);
+            overflow: hidden;
+            color: black;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #viewer-container {
+            flex: 1;
+            position: relative;
+            background: rgb(0, 0, 0);
+            opacity: 0;
+            transition: opacity 0.3s ease-in;
+        }
+        
+        #viewer-container.ready {
+            opacity: 1;
+        }
+
+        #canvas-3d {
+            width: 100%;
+            height: 100%;
+        }
+
+        .status {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.9);
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: 600;
+            color: white;
+            z-index: 50;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+        }
+
+        #loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000000;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        #loading.hidden {
+            display: none;
+        }
+
+        .spinner {
+            width: 70px;
+            height: 70px;
+            border: 5px solid rgba(255, 255, 255, 0.2);
+            border-top: 5px solid #ffffff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 25px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            font-size: 20px;
+            color: #ffffff;
+            font-weight: 600;
+        }
+        
+        /* Botones de control */
+        .top-bar {
+            position: absolute;
+            top: 15px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            z-index: 100;
+            width: max-content;
+        }
+
+        .control-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: 2px solid rgba(255, 255, 255, 0.4);
+            color: white;
+            padding: 8px 14px;
+            border-radius: 20px;
+            font-size: 10px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 3px;
+            min-width: 70px;
+            height: auto;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        .control-btn .btn-icon {
+            font-size: 18px;
+            line-height: 1;
+        }
+
+        .control-btn .btn-text {
+            font-size: 9px;
+            line-height: 1;
+            margin-top: 2px;
+        }
+
+        .control-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .control-btn:active {
+            transform: translateY(0) scale(0.95);
+        }
+
+        .control-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .control-btn.reset-camera {
+            background: linear-gradient(135deg, #ff3300 0%, #ff3838cb 100%);
+            box-shadow: 0 4px 15px rgba(255, 81, 0, 0.4);
+        }
+
+        .control-btn.reset-camera:hover {
+            box-shadow: 0 6px 20px rgba(156, 39, 176, 0.6);
+        }
+
+        .control-btn.replay {
+            background: linear-gradient(135deg, #2196F3 0%, #53a5f8 100%);
+            box-shadow: 0 4px 15px rgba(33, 150, 243, 0.4);
+        }
+
+        .control-btn.replay:hover {
+            box-shadow: 0 6px 20px rgba(33, 150, 243, 0.6);
+        }
+    </style>
+</head>
+<body>
+    <div id="viewer-container">
+        <canvas id="canvas-3d"></canvas>
+        
+        <!-- Botones superiores -->
+        <div class="top-bar">
+            <button class="control-btn reset-camera" id="resetCameraBtn" title="Resetear Cámara">
+                <span class="btn-icon">🎯</span>
+                <span class="btn-text">Resetear</span>
+            </button>
+            <button class="control-btn pause" id="pauseBtn" disabled title="Pausar/Reanudar">
+                <span class="btn-icon" id="pauseIcon">⏸️</span>
+                <span class="btn-text" id="pauseText">Pausar</span>
+            </button>
+        </div>
+        
+        <div class="status" id="status">Cargando...</div>
+    </div>
+
+    <div id="loading">
+        <div class="spinner"></div>
+        <div class="loading-text" id="loading-text">Cargando avatar...</div>
+    </div>
+
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+                "three/examples/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+            }
+        }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { GLTFLoader } from 'three/examples/loaders/GLTFLoader.js';
+        import { OrbitControls } from 'three/examples/controls/OrbitControls.js';
+
+        let scene, camera, renderer, controls, clock;
+        let avatarModel, mixer, currentAction;
+        let isPaused = false;
+        
+        // Caché de animaciones - OPTIMIZACIÓN
+        const animationCache = new Map();
+        
+        // Control de teclado virtual y viewport
+        let initialViewportHeight = window.innerHeight;
+        let isKeyboardOpen = false;
+        let savedCameraState = null;
+        
+        // Optimizaciones de rendimiento
+        let loaderInstance = null; // Reutilizar loader
+        
+        // Detección de dispositivo móvil
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        const MAX_CACHE_SIZE = isMobile ? 10 : 30; // Menos caché en móvil
+        const PRELOAD_COUNT = isMobile ? 5 : 10; // Menos precarga en móvil
+        const LOAD_DELAY = isMobile ? 300 : 100; // Mayor delay entre cargas en móvil
+        
+        console.log(`📱 Dispositivo: ${isMobile ? 'Móvil' : 'PC'} | Caché: ${MAX_CACHE_SIZE} | Precarga: ${PRELOAD_COUNT}`);
+        
+        // Posición inicial de la cámara (para reset)
+        const INITIAL_CAMERA_POSITION = { x: 0, y: 1.6, z: 3 };
+        const INITIAL_CAMERA_TARGET = { x: 0, y: 1.2, z: 0 };
+        
+        // Obtener parámetros desde URL
+        const params = new URLSearchParams(window.location.search);
+        const avatarName = params.get('avatar') || 'luis';
+        const letraParam = params.get('letra') || params.get('text') || 'a';
+        const autoplay = params.get('autoplay') !== 'false';
+        let lastAnimationLetra = letraParam; // Guardar última letra para repetir
+
+        async function init() {
+            setupScene();
+            setupControls(); // Configurar botones
+            
+            // Crear instancia única de loader para reutilizar
+            loaderInstance = new GLTFLoader();
+            
+            const loadingText = document.getElementById('loading-text');
+            const loadingDiv = document.getElementById('loading');
+            
+            // Mostrar loading
+            loadingDiv.classList.remove('hidden');
+            loadingText.textContent = 'Cargando avatar...';
+            
+            await cargarAvatar(avatarName);
+            
+            // Precargar letras comunes en background (no bloqueante)
+            precargarLetrasComunes();
+            
+            // Cargar animación si autoplay está habilitado (sin mostrar loading)
+            if (autoplay && avatarModel) {
+                console.log('🎯 INIT: Llamando cargarSiguienteAnimacionSilenciosa con:', letraParam);
+                await cargarSiguienteAnimacionSilenciosa(letraParam);
+            }
+            
+            // OCULTAR loading solo cuando TODO esté listo
+            loadingDiv.classList.add('hidden');
+            document.getElementById('viewer-container').classList.add('ready');
+            
+            animate();
+        }
+        
+        function setupControls() {
+            const resetCameraBtn = document.getElementById('resetCameraBtn');
+            const pauseBtn = document.getElementById('pauseBtn');
+            
+            // Botón Resetear Cámara
+            resetCameraBtn.addEventListener('click', () => {
+                resetCamera();
+            });
+            
+            // Botón Pausar/Reanudar
+            pauseBtn.addEventListener('click', () => {
+                if (!currentAction) return;
+
+                isPaused = !isPaused;
+                
+                if (isPaused) {
+                    currentAction.paused = true;
+                    pauseBtn.classList.add('paused');
+                    document.getElementById('pauseIcon').textContent = '▶️';
+                    document.getElementById('pauseText').textContent = 'Reanudar';
+                    document.getElementById('status').textContent = '⏸️ Pausado';
+                } else {
+                    currentAction.paused = false;
+                    pauseBtn.classList.remove('paused');
+                    document.getElementById('pauseIcon').textContent = '⏸️';
+                    document.getElementById('pauseText').textContent = 'Pausar';
+                    document.getElementById('status').textContent = `▶️ ${lastAnimationLetra.toUpperCase()}`;
+                }
+            });
+        }
+        
+        function resetCamera() {
+            if (!camera || !controls) return;
+            
+            // SOLUCIÓN: Deshabilitar OrbitControls durante el reset para evitar interferencia
+            controls.enabled = false;
+            
+            const startPos = camera.position.clone();
+            const startTarget = controls.target.clone();
+            const duration = 800; // ms
+            const startTime = Date.now();
+            
+            // Valores objetivo fijos (nunca cambian)
+            const targetPosX = INITIAL_CAMERA_POSITION.x;
+            const targetPosY = INITIAL_CAMERA_POSITION.y;
+            const targetPosZ = INITIAL_CAMERA_POSITION.z;
+            const targetLookX = INITIAL_CAMERA_TARGET.x;
+            const targetLookY = INITIAL_CAMERA_TARGET.y;
+            const targetLookZ = INITIAL_CAMERA_TARGET.z;
+            
+            function animateCameraReset() {
+                const elapsed = Date.now() - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                
+                // Easing suave (ease-out)
+                const eased = 1 - Math.pow(1 - progress, 3);
+                
+                // Interpolar hacia valores ABSOLUTOS (no acumulativos)
+                camera.position.x = startPos.x + (targetPosX - startPos.x) * eased;
+                camera.position.y = startPos.y + (targetPosY - startPos.y) * eased;
+                camera.position.z = startPos.z + (targetPosZ - startPos.z) * eased;
+                
+                controls.target.x = startTarget.x + (targetLookX - startTarget.x) * eased;
+                controls.target.y = startTarget.y + (targetLookY - startTarget.y) * eased;
+                controls.target.z = startTarget.z + (targetLookZ - startTarget.z) * eased;
+                
+                if (progress < 1) {
+                    requestAnimationFrame(animateCameraReset);
+                } else {
+                    // Forzar valores exactos al final
+                    camera.position.set(targetPosX, targetPosY, targetPosZ);
+                    controls.target.set(targetLookX, targetLookY, targetLookZ);
+                    
+                    // Reactivar OrbitControls después del reset
+                    controls.enabled = true;
+                    controls.update();
+                    
+                    console.log('🎯 Cámara reseteada a posición inicial');
+                }
+            }
+            
+            animateCameraReset();
+        }
+
+        function setupScene() {
+            const container = document.getElementById('viewer-container');
+            const canvas = document.getElementById('canvas-3d');
+            
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x1a1a2e);
+            
+            camera = new THREE.PerspectiveCamera(
+                50,
+                container.clientWidth / container.clientHeight,
+                0.1,
+                1000
+            );
+            camera.position.set(0, 1.6, 2.2);
+            
+            renderer = new THREE.WebGLRenderer({ 
+                canvas: canvas,
+                antialias: true,
+                alpha: true
+            });
+            renderer.setSize(container.clientWidth, container.clientHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+            renderer.outputColorSpace = THREE.SRGBColorSpace;
+            renderer.toneMapping = THREE.ACESFilmicToneMapping;
+            renderer.toneMappingExposure = 1.2;
+            
+            controls = new OrbitControls(camera, canvas);
+            controls.target.set(0, 1.2, 0);
+            controls.update();
+            
+            // Sistema de iluminación igual que animation_mobile.html
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
+            scene.add(ambientLight);
+            
+            const directionalLight1 = new THREE.DirectionalLight(0xffffff, 1.2);
+            directionalLight1.position.set(5, 5, 5);
+            scene.add(directionalLight1);
+            
+            const directionalLight2 = new THREE.DirectionalLight(0xffffff, 0.6);
+            directionalLight2.position.set(-5, 3, -5);
+            scene.add(directionalLight2);
+            
+            const fillLight = new THREE.DirectionalLight(0xffffff, 0.4);
+            fillLight.position.set(0, -2, 5);
+            scene.add(fillLight);
+            
+            clock = new THREE.Clock();
+            
+            // LOGGING INICIAL - Posición al iniciar
+            console.log('🟢 CÁMARA INICIAL:', {
+                position: { x: camera.position.x, y: camera.position.y, z: camera.position.z },
+                target: { x: controls.target.x, y: controls.target.y, z: controls.target.z },
+                zoom: camera.zoom,
+                fov: camera.fov
+            });
+            
+            // Mejorado: Detectar teclado virtual y CONGELAR controles completamente
+            window.addEventListener('resize', () => {
+                const currentHeight = window.innerHeight;
+                const heightDifference = initialViewportHeight - currentHeight;
+                
+                console.log('📏 RESIZE DETECTADO:', {
+                    initialHeight: initialViewportHeight,
+                    currentHeight: currentHeight,
+                    difference: heightDifference,
+                    isKeyboardOpen: isKeyboardOpen
+                });
+                
+                // Detectar si el teclado virtual se abrió (altura reducida significativamente)
+                if (heightDifference > 150 && !isKeyboardOpen) {
+                    // Teclado abierto
+                    isKeyboardOpen = true;
+                    
+                    // Guardar estado actual de la cámara
+                    if (camera && controls) {
+                        savedCameraState = {
+                            position: camera.position.clone(),
+                            target: controls.target.clone(),
+                            zoom: camera.zoom,
+                            fov: camera.fov
+                        };
+                        
+                        console.log('🔴 TECLADO ABIERTO - Estado guardado:', {
+                            position: { x: savedCameraState.position.x, y: savedCameraState.position.y, z: savedCameraState.position.z },
+                            target: { x: savedCameraState.target.x, y: savedCameraState.target.y, z: savedCameraState.target.z },
+                            zoom: savedCameraState.zoom,
+                            fov: savedCameraState.fov
+                        });
+                        
+                        // CONGELAR OrbitControls completamente
+                        controls.enabled = false;
+                        console.log('⛔ OrbitControls DESHABILITADO');
+                    }
+                } else if (heightDifference < 100 && isKeyboardOpen) {
+                    // Teclado cerrado
+                    isKeyboardOpen = false;
+                    
+                    console.log('🟢 TECLADO CERRADO - Antes de restaurar:', {
+                        currentPosition: { x: camera.position.x, y: camera.position.y, z: camera.position.z },
+                        currentTarget: { x: controls.target.x, y: controls.target.y, z: controls.target.z },
+                        currentZoom: camera.zoom,
+                        currentFov: camera.fov
+                    });
+                    
+                    // Restaurar posición exacta de la cámara después de un breve delay
+                    setTimeout(() => {
+                        if (savedCameraState && camera && controls) {
+                            // Restaurar TODOS los valores guardados
+                            camera.position.set(
+                                savedCameraState.position.x,
+                                savedCameraState.position.y,
+                                savedCameraState.position.z
+                            );
+                            controls.target.set(
+                                savedCameraState.target.x,
+                                savedCameraState.target.y,
+                                savedCameraState.target.z
+                            );
+                            camera.zoom = savedCameraState.zoom;
+                            camera.fov = savedCameraState.fov;
+                            camera.updateProjectionMatrix();
+                            
+                            // Reactivar OrbitControls
+                            controls.enabled = true;
+                            controls.update();
+                            
+                            console.log('✅ Cámara RESTAURADA:', {
+                                restoredPosition: { x: camera.position.x, y: camera.position.y, z: camera.position.z },
+                                restoredTarget: { x: controls.target.x, y: controls.target.y, z: controls.target.z },
+                                restoredZoom: camera.zoom,
+                                restoredFov: camera.fov
+                            });
+                            console.log('✅ OrbitControls REACTIVADO');
+                        }
+                    }, 100);
+                }
+                
+                // Actualizar solo el aspect ratio y tamaño del renderer SI el teclado NO está abierto
+                if (camera && renderer && !isKeyboardOpen) {
+                    const newAspect = container.clientWidth / container.clientHeight;
+                    if (Math.abs(camera.aspect - newAspect) > 0.01) {
+                        camera.aspect = newAspect;
+                        camera.updateProjectionMatrix();
+                        console.log('🔄 Aspect ratio actualizado:', newAspect);
+                    }
+                    renderer.setSize(container.clientWidth, container.clientHeight);
+                }
+            });
+            
+            // Actualizar altura inicial cuando la página carga completamente
+            window.addEventListener('load', () => {
+                initialViewportHeight = window.innerHeight;
+                console.log('🟢 Altura inicial establecida:', initialViewportHeight);
+            });
+        }
+
+        async function cargarAvatar(nombreAvatar) {
+            // Reutilizar loader si existe, sino crear uno nuevo
+            const loader = loaderInstance || new GLTFLoader();
+            if (!loaderInstance) loaderInstance = loader;
+            
+            const loadingText = document.getElementById('loading-text');
+            const loadingDiv = document.getElementById('loading');
+            
+            loadingDiv.classList.remove('hidden');
+            loadingText.textContent = `Cargando ${nombreAvatar}...`;
+            
+            const genero = (nombreAvatar === 'nancy' || nombreAvatar === 'nina' || nombreAvatar === 'carla') ? 'Mujer' : 'Hombre';
+            const nombreCapitalizado = nombreAvatar.charAt(0).toUpperCase() + nombreAvatar.slice(1);
+            const rutasIntento = [
+                `../output/glb/${nombreCapitalizado}/${nombreCapitalizado}.glb`,
+                `../output/glb/${nombreAvatar}/${nombreAvatar}.glb`,
+                `../output/glb/${genero}/${nombreCapitalizado}.glb`,
+                `../output/glb/${genero}/${nombreAvatar}.glb`,
+                `output/glb/${nombreCapitalizado}/${nombreCapitalizado}.glb`,
+                `output/glb/${nombreAvatar}/${nombreAvatar}.glb`,
+                `output/glb/${genero}/${nombreCapitalizado}.glb`,
+                `output/glb/${genero}/${nombreAvatar}.glb`
+            ];
+            
+            for (const ruta of rutasIntento) {
+                try {
+                    const gltf = await new Promise((res, rej) => {
+                        loader.load(
+                            ruta,
+                            (result) => res(result),
+                            (progress) => {
+                                const percent = (progress.loaded / progress.total) * 100;
+                                loadingText.textContent = `Cargando ${nombreAvatar}... ${percent.toFixed(0)}%`;
+                            },
+                            (error) => rej(error)
+                        );
+                    });
+                    
+                    // Limpieza eficiente del avatar anterior
+                    if (avatarModel) {
+                        scene.remove(avatarModel);
+                        avatarModel.traverse((child) => {
+                            if (child.geometry) {
+                                child.geometry.dispose();
+                            }
+                            if (child.material) {
+                                if (Array.isArray(child.material)) {
+                                    child.material.forEach(m => m.dispose());
+                                } else {
+                                    child.material.dispose();
+                                }
+                            }
+                        });
+                    }
+                    
+                    avatarModel = gltf.scene;
+                    scene.add(avatarModel);
+                    
+                    const box = new THREE.Box3().setFromObject(avatarModel);
+                    const center = box.getCenter(new THREE.Vector3());
+                    avatarModel.position.sub(center);
+                    avatarModel.position.y = 0;
+                    
+                    // Habilitar morph targets y crear mapeo de nombres
+                    const nodeNameMap = {};
+                    avatarModel.traverse((child) => {
+                        if (child.isMesh && child.morphTargetInfluences && child.morphTargetInfluences.length > 0) {
+                            // Habilitar morph targets en el material
+                            if (child.material) {
+                                child.material.morphTargets = true;
+                                child.material.needsUpdate = true;
+                            }
+                            // Crear mapping de nombres (EyeLeft003 → EyeLeft)
+                            const baseName = child.name.replace(/\d+$/, '');
+                            if (baseName !== child.name) {
+                                nodeNameMap[baseName] = child.name;
+                            }
+                        }
+                    });
+                    avatarModel.userData.nodeNameMap = nodeNameMap;
+                    
+                    mixer = new THREE.AnimationMixer(avatarModel);
+                    
+                    // NO ocultar loading aquí, se oculta en init() cuando TODO esté listo
+                    document.getElementById('status').textContent = `✅ ${nombreAvatar} listo`;
+                    
+                    console.log(`✅ Avatar ${nombreAvatar} cargado`);
+                    return;
+                    
+                } catch (error) {
+                    console.log(`⚠️ No se pudo cargar desde: ${ruta}`);
+                }
+            }
+            
+            document.getElementById('status').textContent = `❌ Error al cargar ${nombreAvatar}`;
+        }
+
+        async function cargarYReproducirAnimacion(letra) {
+            // Verificar que el avatar y mixer estén listos
+            if (!avatarModel || !mixer) {
+                console.error('❌ Avatar o mixer no disponibles');
+                document.getElementById('status').textContent = '❌ Error: Avatar no cargado';
+                return;
+            }
+            
+            // Guardar para repetir
+            lastAnimationLetra = letra;
+            
+            console.log(`🔍 Cargando animación para letra: "${letra}"`);
+            document.getElementById('status').textContent = `🎬 Mostrando: ${letra.toUpperCase()}`;
+            
+            const loader = loaderInstance || new GLTFLoader();
+            const categoria = params.get('categoria') || params.get('category') || 'alfabeto';
+            const archivo = letra.toLowerCase();
+            const cacheKey = `${categoria}_${archivo}`;
+            const nombreCapitalizado = avatarName.charAt(0).toUpperCase() + avatarName.slice(1);
+            
+            console.log(`📋 Búsqueda: avatar="${avatarName}", capitalizado="${nombreCapitalizado}", categoria="${categoria}", archivo="${archivo}"`);
+            
+            // OPTIMIZACIÓN: Verificar caché primero
+            if (animationCache.has(cacheKey)) {
+                console.log(`⚡ Instantánea desde caché: ${letra}`);
+                const clip = animationCache.get(cacheKey);
+                reproducirClip(clip, letra);
+                return;
+            }
+            
+            console.log(`⏳ Cargando: ${letra}`);
+            
+            const rutasIntento = [
+                `../output/glb/${nombreCapitalizado}/${categoria}/${nombreCapitalizado}_resultado_${archivo}.glb`,
+                `../output/glb/${nombreCapitalizado}/${categoria}/${avatarName}_resultado_${archivo}.glb`,
+                `../output/glb/${nombreCapitalizado}/${categoria}/${categoria}_${nombreCapitalizado}_resultado_${archivo}.glb`,
+                `../output/glb/${nombreCapitalizado}/${categoria}/${categoria}_${avatarName}_resultado_${archivo}.glb`,
+                `output/glb/${nombreCapitalizado}/${categoria}/${nombreCapitalizado}_resultado_${archivo}.glb`,
+                `output/glb/${nombreCapitalizado}/${categoria}/${avatarName}_resultado_${archivo}.glb`,
+                `output/glb/${nombreCapitalizado}/${categoria}/${categoria}_${nombreCapitalizado}_resultado_${archivo}.glb`,
+                `output/glb/${nombreCapitalizado}/${categoria}/${categoria}_${avatarName}_resultado_${archivo}.glb`,
+            ];
+            
+            console.log(`🔍 Intentando ${rutasIntento.length} rutas para letra "${archivo}"...`);
+            
+            for (const ruta of rutasIntento) {
+                try {
+                    console.log(`⏳ Intentando: ${ruta}`);
+                    const gltf = await new Promise((resolve, reject) => {
+                        loader.load(ruta, resolve, undefined, reject);
+                    });
+                    
+                    console.log(`✅ Animación cargada: ${ruta}`);
+                    
+                    if (gltf.animations && gltf.animations.length > 0) {
+                        const clip = gltf.animations[0];
+                        
+                        console.log(`✅ Clip encontrado: ${clip.name}, duración: ${clip.duration}s`);
+                        
+                        // Corregir nombres de tracks si hay mapping
+                        if (avatarModel.userData.nodeNameMap) {
+                            clip.tracks = clip.tracks.map(track => {
+                                const trackNodeName = track.name.split('.')[0];
+                                const mappedName = avatarModel.userData.nodeNameMap[trackNodeName];
+                                if (mappedName) {
+                                    track.name = track.name.replace(trackNodeName, mappedName);
+                                }
+                                return track;
+                            });
+                        }
+                        
+                        // Gestión de caché con límite
+                        if (animationCache.size >= MAX_CACHE_SIZE) {
+                            const firstKey = animationCache.keys().next().value;
+                            animationCache.delete(firstKey);
+                            console.log(`🗑️ Caché lleno, eliminada: ${firstKey}`);
+                        }
+                        
+                        // OPTIMIZACIÓN: Guardar solo el clip de animación en caché
+                        animationCache.set(cacheKey, clip);
+                        console.log(`✅ En caché: ${letra} - Caché: ${animationCache.size}/${MAX_CACHE_SIZE}`);
+                        
+                        // Liberar memoria de geometrías del GLB
+                        if (gltf.scene) {
+                            gltf.scene.traverse((child) => {
+                                if (child.geometry) child.geometry.dispose();
+                                if (child.material) {
+                                    if (Array.isArray(child.material)) {
+                                        child.material.forEach(m => m.dispose());
+                                    } else {
+                                        child.material.dispose();
+                                    }
+                                }
+                            });
+                        }
+                        
+                        // Aplicar animación al avatar existente (NO reemplazar modelo)
+                        reproducirClip(clip, letra);
+                    } else {
+                        console.warn(`⚠️ No hay animación en el archivo`);
+                        document.getElementById('status').textContent = `⚠️ Sin animación: ${letra}`;
+                    }
+                    
+                    return;
+                } catch (error) {
+                    console.log(`❌ Error cargando ${ruta}: ${error.message}`);
+                }
+            }
+            
+            console.error(`❌ No se encontró animación "${letra}" en ninguna ruta`);
+            document.getElementById('status').textContent = `❌ No se encontró animación: ${letra}`;
+        }
+        
+        function reproducirClip(clip, letra) {
+            console.log(`🎭 REPRODUCIR CLIP INICIO: letra="${letra}"`);
+            
+            if (!mixer || !avatarModel) {
+                console.error('❌ Mixer o avatar no disponibles');
+                return;
+            }
+            
+            console.log(`🎭 REPRODUCIR: Deteniendo acción previa (si existe)...`);
+            if (currentAction) {
+                currentAction.stop();
+                currentAction = null;
+            }
+            
+            console.log(`🎭 REPRODUCIR: Creando nueva acción...`);
+            const action = mixer.clipAction(clip);
+            action.reset();
+            action.setLoop(THREE.LoopRepeat);
+            action.timeScale = 0.8; // Velocidad ligeramente más lenta para mejor visualización
+            action.play();
+            
+            currentAction = action;
+            isPaused = false;
+            
+            console.log(`🎭 REPRODUCIR: Habilitando botón de pausa...`);
+            // Habilitar botón de pausa
+            document.getElementById('pauseBtn').disabled = false;
+            
+            // Resetear botón de pausa a estado inicial
+            const pauseBtn = document.getElementById('pauseBtn');
+            pauseBtn.classList.remove('paused');
+            document.getElementById('pauseIcon').textContent = '⏸️';
+            document.getElementById('pauseText').textContent = 'Pausar';
+            
+            console.log(`🎭 REPRODUCIR: Actualizando status...`);
+            document.getElementById('status').textContent = `▶️ ${letra.toUpperCase()}`;
+            
+            console.log(`✅ REPRODUCIR COMPLETO: ${letra.toUpperCase()}`);
+        }
+
+        // Función para pausar animación actual (sin recargar avatar)
+        function pausarAnimacion() {
+            if (mixer && currentAction) {
+                mixer.timeScale = 0;
+                isPaused = true;
+                console.log('⏸️ Animación pausada');
+            }
+        }
+
+        // Función para reanudar animación actual (sin recargar avatar)
+        function reanudarAnimacion() {
+            if (mixer && currentAction) {
+                mixer.timeScale = 1;
+                isPaused = false;
+                console.log('▶️ Animación reanudada');
+            }
+        }
+
+        // Función para cargar siguiente animación SIN mostrar loading (transición suave)
+        async function cargarSiguienteAnimacionSilenciosa(letra) {
+            const letraNormalizada = letra.toLowerCase().trim();
+            console.log(`🔄 SILENCIOSA INICIO: letra="${letraNormalizada}"`);
+            
+            const loader = loaderInstance || new GLTFLoader();
+            const categoria = params.get('categoria') || params.get('category') || 'alfabeto';
+            const archivo = letraNormalizada;
+            const cacheKey = `${categoria}_${archivo}`;
+            const nombreCapitalizado = avatarName.charAt(0).toUpperCase() + avatarName.slice(1);
+            
+            console.log(`🔍 SILENCIOSA: Buscando en caché - cacheKey="${cacheKey}", existe=${animationCache.has(cacheKey)}`);
+            
+            // Verificar caché primero
+            if (animationCache.has(cacheKey)) {
+                console.log(`⚡ SILENCIOSA: Encontrado en caché: ${letraNormalizada}`);
+                const clip = animationCache.get(cacheKey);
+                reproducirClip(clip, letraNormalizada);
+                console.log(`✅ SILENCIOSA: Clip reproducido desde caché`);
+                return;
+            }
+            
+            // Cargar sin mostrar loading
+            console.log(`⏬ SILENCIOSA: No está en caché, cargando desde servidor...`);
+            const rutasIntento = [
+                `../output/glb/${nombreCapitalizado}/${categoria}/${nombreCapitalizado}_resultado_${archivo}.glb`,
+                `../output/glb/${nombreCapitalizado}/${categoria}/${avatarName}_resultado_${archivo}.glb`,
+            ];
+            
+            console.log(`🔍 SILENCIOSA: Intentando ${rutasIntento.length} rutas`);
+            
+            for (const ruta of rutasIntento) {
+                try {
+                    console.log(`⏳ SILENCIOSA: Intentando cargar: ${ruta}`);
+                    const gltf = await new Promise((resolve, reject) => {
+                        loader.load(ruta, resolve, undefined, reject);
+                    });
+                    console.log(`✅ SILENCIOSA: Archivo cargado exitosamente desde: ${ruta}`);
+                    
+                    if (gltf.animations && gltf.animations.length > 0) {
+                        console.log(`🎬 SILENCIOSA: Clip encontrado, procesando...`);
+                        const clip = gltf.animations[0];
+                        
+                        // Corregir nombres de tracks si hay mapping
+                        if (avatarModel.userData.nodeNameMap) {
+                            clip.tracks = clip.tracks.map(track => {
+                                const trackNodeName = track.name.split('.')[0];
+                                const mappedName = avatarModel.userData.nodeNameMap[trackNodeName];
+                                if (mappedName) {
+                                    track.name = track.name.replace(trackNodeName, mappedName);
+                                }
+                                return track;
+                            });
+                        }
+                        
+                        // Guardar en caché
+                        if (animationCache.size >= MAX_CACHE_SIZE) {
+                            const firstKey = animationCache.keys().next().value;
+                            animationCache.delete(firstKey);
+                        }
+                        animationCache.set(cacheKey, clip);
+                        console.log(`💾 SILENCIOSA: Guardado en caché: ${cacheKey}`);
+                        
+                        // Reproducir inmediatamente
+                        console.log(`▶️ SILENCIOSA: Reproduciendo clip...`);
+                        reproducirClip(clip, letraNormalizada);
+                        console.log(`✅ SILENCIOSA COMPLETO: Todo exitoso`);
+                        return;
+                    }
+                } catch (error) {
+                    console.log(`❌ SILENCIOSA: Error en ruta ${ruta}: ${error.message}`);
+                    // Continuar con siguiente ruta
+                }
+            }
+            
+            console.error(`❌ SILENCIOSA FALLÓ: No se encontró animación "${letraNormalizada}" en ninguna ruta`);
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            const delta = clock.getDelta();
+            
+            if (mixer && !isPaused) {
+                mixer.update(delta);
+            }
+            
+            controls.update();
+            renderer.render(scene, camera);
+        }
+
+        // Nueva función: Precargar letras más comunes
+        async function precargarLetrasComunes() {
+            // En móvil, precargar solo vocales
+            const letrasComunes = isMobile 
+                ? ['a', 'e', 'i', 'o', 'u'] 
+                : ['a', 'e', 'i', 'o', 'u', 'h', 'l', 's', 'n', 'r'];
+            const categoria = params.get('categoria') || params.get('category') || 'alfabeto';
+            const nombreCapitalizado = avatarName.charAt(0).toUpperCase() + avatarName.slice(1);
+            
+            console.log('🔄 Iniciando precarga de letras comunes...');
+            
+            for (const letra of letrasComunes) {
+                const cacheKey = `${categoria}_${letra}`;
+                if (animationCache.has(cacheKey)) continue;
+                
+                try {
+                    const loader = loaderInstance || new GLTFLoader();
+                    
+                    const rutasIntento = [
+                        `../output/glb/${nombreCapitalizado}/${categoria}/${nombreCapitalizado}_resultado_${letra}.glb`,
+                        `../output/glb/${nombreCapitalizado}/${categoria}/${avatarName}_resultado_${letra}.glb`,
+                        `output/glb/${nombreCapitalizado}/${categoria}/${nombreCapitalizado}_resultado_${letra}.glb`,
+                        `output/glb/${nombreCapitalizado}/${categoria}/${avatarName}_resultado_${letra}.glb`,
+                    ];
+                    
+                    let cargada = false;
+                    for (const ruta of rutasIntento) {
+                        if (cargada) break;
+                        
+                        try {
+                            const gltf = await new Promise((resolve, reject) => {
+                                const timeout = isMobile ? 8000 : 12000;
+                                const timeoutId = setTimeout(() => reject(new Error('Timeout')), timeout);
+                                loader.load(
+                                    ruta, 
+                                    (result) => { clearTimeout(timeoutId); resolve(result); },
+                                    undefined, 
+                                    () => { clearTimeout(timeoutId); reject(); }
+                                );
+                            });
+                            
+                            if (gltf.animations && gltf.animations.length > 0) {
+                                const clip = gltf.animations[0];
+                                
+                                // Corregir nombres de tracks
+                                if (avatarModel && avatarModel.userData.nodeNameMap) {
+                                    clip.tracks = clip.tracks.map(track => {
+                                        const trackNodeName = track.name.split('.')[0];
+                                        const mappedName = avatarModel.userData.nodeNameMap[trackNodeName];
+                                        if (mappedName) {
+                                            track.name = track.name.replace(trackNodeName, mappedName);
+                                        }
+                                        return track;
+                                    });
+                                }
+                                
+                                animationCache.set(cacheKey, clip);
+                                console.log(`✅ Precargada: ${letra}`);
+                                
+                                // Liberar recursos del GLB
+                                if (gltf.scene) {
+                                    gltf.scene.traverse((child) => {
+                                        if (child.geometry) child.geometry.dispose();
+                                        if (child.material) {
+                                            if (Array.isArray(child.material)) {
+                                                child.material.forEach(m => m.dispose());
+                                            } else {
+                                                child.material.dispose();
+                                            }
+                                        }
+                                    });
+                                }
+                                
+                                cargada = true;
+                            }
+                        } catch (error) {
+                            // Continuar con siguiente ruta
+                        }
+                    }
+                    
+                    // Pausa adaptativa según dispositivo
+                    await new Promise(r => setTimeout(r, LOAD_DELAY));
+                    
+                } catch (error) {
+                    console.log(`⚠️ No se pudo precargar: ${letra}`);
+                }
+            }
+            
+            console.log(`✅ Precarga completada: ${animationCache.size} letras en caché`);
+        }
+
+        // Detectar eventos de focus/blur que también indican teclado virtual
+        window.addEventListener('focusin', () => {
+            if (isMobile && camera && controls && !savedCameraState) {
+                savedCameraState = {
+                    position: camera.position.clone(),
+                    target: controls.target.clone()
+                };
+                console.log('🔍 Input enfocado - estado guardado');
+            }
+        });
+        
+        window.addEventListener('focusout', () => {
+            if (isMobile && savedCameraState) {
+                setTimeout(() => {
+                    if (camera && controls) {
+                        camera.position.copy(savedCameraState.position);
+                        controls.target.copy(savedCameraState.target);
+                        controls.update();
+                        savedCameraState = null;
+                        console.log('🎯 Cámara restaurada después de perder foco');
+                    }
+                }, 300);
+            }
+        });
+        
+        // EXPONER FUNCIONES GLOBALMENTE para que React Native pueda llamarlas
+        window.cargarSiguienteAnimacionSilenciosa = cargarSiguienteAnimacionSilenciosa;
+        window.cargarYReproducirAnimacion = cargarYReproducirAnimacion;
+        window.pausarAnimacion = pausarAnimacion;
+        window.reanudarAnimacion = reanudarAnimacion;
+        console.log('✅ Funciones expuestas globalmente:', {
+            cargarSiguienteAnimacionSilenciosa: typeof window.cargarSiguienteAnimacionSilenciosa,
+            cargarYReproducirAnimacion: typeof window.cargarYReproducirAnimacion,
+            pausarAnimacion: typeof window.pausarAnimacion,
+            reanudarAnimacion: typeof window.reanudarAnimacion
+        });
+        
+        window.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
