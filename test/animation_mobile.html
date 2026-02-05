@@ -1520,8 +1520,8 @@
             
             let baseUrl;
             if (isGithubPages) {
-                // Usar GitHub Releases para modelos GLB
-                baseUrl = 'https://github.com/usm-argenis/Avatar_LSV/releases/download/models-v1/';
+                // Usar jsDelivr CDN para GitHub Releases (con CORS habilitado)
+                baseUrl = 'https://cdn.jsdelivr.net/gh/usm-argenis/Avatar_LSV@models-v1/';
             } else if (isLocalhost) {
                 // Servidor local
                 baseUrl = '';
@@ -1937,7 +1937,7 @@
                 // Determinar URL base según entorno
                 const isGithubPages = window.location.hostname.includes('github.io');
                 const baseUrl = isGithubPages
-                    ? 'https://github.com/usm-argenis/Avatar_LSV/releases/download/models-v1/'
+                    ? 'https://cdn.jsdelivr.net/gh/usm-argenis/Avatar_LSV@models-v1/'
                     : '';
                 
                 let nombreArchivo = avatarActual === 'Remy' 
@@ -2014,7 +2014,7 @@
             // Determinar URL base según entorno
             const isGithubPages = window.location.hostname.includes('github.io');
             const baseUrl = isGithubPages
-                ? 'https://github.com/usm-argenis/Avatar_LSV/releases/download/models-v1/'
+                ? 'https://cdn.jsdelivr.net/gh/usm-argenis/Avatar_LSV@models-v1/'
                 : '';
             
             // Construir el nombre del archivo según el avatar
@@ -2169,7 +2169,7 @@
                     // Determinar URL base según entorno
                     const isGithubPages = window.location.hostname.includes('github.io');
                     const baseUrl = isGithubPages
-                        ? 'https://github.com/usm-argenis/Avatar_LSV/releases/download/models-v1/'
+                        ? 'https://cdn.jsdelivr.net/gh/usm-argenis/Avatar_LSV@models-v1/'
                         : '';
                     
                     // Construir ruta según entorno
