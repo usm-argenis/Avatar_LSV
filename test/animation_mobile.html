@@ -357,7 +357,7 @@
         let avatarModel, mixer;
         let animationCache = new Map();
         let currentAction = null;
-        let avatarActual = 'Nancy';
+        let avatarActual = 'Duvall';
         let isPaused = false;
         let ultimoTexto = '';
         let isAnimating = false;
@@ -1520,8 +1520,8 @@
             
             let baseUrl;
             if (isGithubPages) {
-                // Usar jsDelivr CDN para GitHub Releases (con CORS habilitado)
-                baseUrl = 'https://cdn.jsdelivr.net/gh/usm-argenis/Avatar_LSV@models-v1/';
+                // Usar jsDelivr CDN para archivos del repositorio (con CORS habilitado)
+                baseUrl = 'https://cdn.jsdelivr.net/gh/usm-argenis/Avatar_LSV@main/assets/models/';
             } else if (isLocalhost) {
                 // Servidor local
                 baseUrl = '';
@@ -1936,17 +1936,18 @@
                 
                 // Determinar URL base según entorno
                 const isGithubPages = window.location.hostname.includes('github.io');
-                const baseUrl = isGithubPages
-                    ? 'https://cdn.jsdelivr.net/gh/usm-argenis/Avatar_LSV@models-v1/'
+                // Animaciones están en GitHub Releases
+                const baseUrlAnimacion = isGithubPages
+                    ? 'https://github.com/usm-argenis/Avatar_LSV/releases/download/models-v1/'
                     : '';
                 
                 let nombreArchivo = avatarActual === 'Remy' 
                     ? archivo.replace(/ /g, '_') 
                     : archivo;
                 
-                // Construir ruta según entorno
+                // Construir ruta según entorno (animaciones desde Release)
                 const rutaCompleta = isGithubPages
-                    ? `${baseUrl}${avatarActual}_resultado_${nombreArchivo}.glb`
+                    ? `${baseUrlAnimacion}${avatarActual}_resultado_${nombreArchivo}.glb`
                     : `output/glb/${avatarActual}/${categoria}/${avatarActual}_resultado_${nombreArchivo}.glb`;
                 
                 const gltf = await new Promise((resolve, reject) => {
@@ -2013,8 +2014,12 @@
             
             // Determinar URL base según entorno
             const isGithubPages = window.location.hostname.includes('github.io');
-            const baseUrl = isGithubPages
-                ? 'https://cdn.jsdelivr.net/gh/usm-argenis/Avatar_LSV@models-v1/'
+            // Separar URLs: archivos base en repositorio, animaciones en Release
+            const baseUrlAvatar = isGithubPages
+                ? 'https://cdn.jsdelivr.net/gh/usm-argenis/Avatar_LSV@main/assets/models/'
+                : '';
+            const baseUrlAnimacion = isGithubPages
+                ? 'https://github.com/usm-argenis/Avatar_LSV/releases/download/models-v1/'
                 : '';
             
             // Construir el nombre del archivo según el avatar
@@ -2026,9 +2031,9 @@
                 nombreArchivo = archivo;
             }
             
-            // Construir ruta según entorno
+            // Construir ruta según entorno (animaciones desde Release)
             const rutaCompleta = isGithubPages
-                ? `${baseUrl}${avatarActual}_resultado_${nombreArchivo}.glb`
+                ? `${baseUrlAnimacion}${avatarActual}_resultado_${nombreArchivo}.glb`
                 : `output/glb/${avatarActual}/${categoria}/${avatarActual}_resultado_${nombreArchivo}.glb`;
             
             console.log(`🔄 Cargando: ${rutaCompleta}`);
@@ -2165,13 +2170,14 @@
                     
                     // Determinar URL base según entorno
                     const isGithubPages = window.location.hostname.includes('github.io');
-                    const baseUrl = isGithubPages
-                        ? 'https://cdn.jsdelivr.net/gh/usm-argenis/Avatar_LSV@models-v1/'
+                    // Animaciones están en GitHub Releases
+                    const baseUrlAnimacion = isGithubPages
+                        ? 'https://github.com/usm-argenis/Avatar_LSV/releases/download/models-v1/'
                         : '';
                     
-                    // Construir ruta según entorno
+                    // Construir ruta según entorno (animaciones desde Release)
                     const rutaCompleta = isGithubPages
-                        ? `${baseUrl}${avatarActual}_resultado_${nombreArchivo}.glb`
+                        ? `${baseUrlAnimacion}${avatarActual}_resultado_${nombreArchivo}.glb`
                         : `output/glb/${avatarActual}/${categoria}/${avatarActual}_resultado_${nombreArchivo}.glb`;
                     
                     await new Promise((resolve) => {
