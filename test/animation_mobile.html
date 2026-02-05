@@ -772,7 +772,7 @@
         
         // Diccionario de mapeo
                                 const DICCIONARIO = {
-            // 📌 Generado automáticamente desde backend/scripts/data.json (336 palabras)
+            // 📌 Generado automáticamente desde backend/scripts/data.json (357 palabras)
             '0': { categoria: 'numero', archivo: '0' },
             '1': { categoria: 'numero', archivo: '1' },
             '10': { categoria: 'numero', archivo: '10' },
@@ -900,7 +900,7 @@
             'directors': { categoria: 'profesiones', archivo: 'director' },
             'divorciado': { categoria: 'estado_civil', archivo: 'divorciado' },
             'doc': { categoria: 'profesiones', archivo: 'medico' },
-            'domingo': { categoria: 'tiempo', archivo: 'domingo' },
+            'domingo': { categoria: 'dias_semana', archivo: 'domingo' },
             'donde': { categoria: 'expresiones', archivo: 'donde' },
             'donde (especifico)': { categoria: 'expresiones', archivo: 'donde (especifico)' },
             'dormir': { categoria: 'verbos', archivo: 'dormir' },
@@ -961,7 +961,7 @@
             'jefe': { categoria: 'profesiones', archivo: 'jefe' },
             'jefes': { categoria: 'profesiones', archivo: 'jefe' },
             'joven': { categoria: 'personas', archivo: 'joven' },
-            'jueves': { categoria: 'tiempo', archivo: 'jueves' },
+            'jueves': { categoria: 'dias_semana', archivo: 'jueves' },
             'julio': { categoria: 'expresiones', archivo: 'julio' },
             'junio': { categoria: 'expresiones', archivo: 'junio' },
             'k': { categoria: 'alfabeto', archivo: 'k' },
@@ -971,12 +971,12 @@
             'licenciados': { categoria: 'profesiones', archivo: 'licenciado' },
             'llevar': { categoria: 'verbos', archivo: 'llevar' },
             'lugares': { categoria: 'adverbios', archivo: 'lugares' },
-            'lunes': { categoria: 'tiempo', archivo: 'lunes' },
+            'lunes': { categoria: 'dias_semana', archivo: 'lunes' },
             'm': { categoria: 'alfabeto', archivo: 'm' },
             'maestro': { categoria: 'profesiones', archivo: 'maestro' },
             'maestros': { categoria: 'profesiones', archivo: 'maestro' },
             'mal': { categoria: 'expresiones', archivo: 'mal' },
-            'martes': { categoria: 'tiempo', archivo: 'martes' },
+            'martes': { categoria: 'dias_semana', archivo: 'martes' },
             'marzo': { categoria: 'expresiones', archivo: 'marzo' },
             'mas': { categoria: 'preposiciones', archivo: 'mas' },
             'mayo': { categoria: 'expresiones', archivo: 'mayo' },
@@ -993,7 +993,7 @@
             'mes': { categoria: 'tiempo', archivo: 'mes' },
             'mesonero': { categoria: 'profesiones', archivo: 'mesonero' },
             'mesoneros': { categoria: 'profesiones', archivo: 'mesonero' },
-            'miercoles': { categoria: 'tiempo', archivo: 'miercoles' },
+            'miercoles': { categoria: 'dias_semana', archivo: 'miercoles' },
             'mio': { categoria: 'pronombres', archivo: 'mio' },
             'muchas gracias': { categoria: 'cortesia', archivo: 'muchas gracias' },
             'mucho': { categoria: 'preposiciones', archivo: 'mucho' },
@@ -1051,7 +1051,7 @@
             'regular': { categoria: 'expresiones', archivo: 'regular' },
             'responder': { categoria: 'verbos', archivo: 'responder' },
             's': { categoria: 'alfabeto', archivo: 's' },
-            'sabado': { categoria: 'tiempo', archivo: 'sabado' },
+            'sabado': { categoria: 'dias_semana', archivo: 'sabado' },
             'sala': { categoria: 'viviendas', archivo: 'sala' },
             'saludar': { categoria: 'verbos', archivo: 'saludar' },
             'saludas a': { categoria: 'expresiones', archivo: 'saludas a' },
@@ -1098,7 +1098,7 @@
             'verbo': { categoria: 'verbos', archivo: 'verbo' },
             'vestir': { categoria: 'verbos', archivo: 'vestir' },
             'viejo': { categoria: 'personas', archivo: 'viejo' },
-            'viernes': { categoria: 'tiempo', archivo: 'viernes' },
+            'viernes': { categoria: 'dias_semana', archivo: 'viernes' },
             'vigilante': { categoria: 'profesiones', archivo: 'vigilante' },
             'vigilantes': { categoria: 'profesiones', archivo: 'vigilante' },
             'viudo': { categoria: 'estado_civil', archivo: 'viudo' },
@@ -1108,8 +1108,76 @@
             'y': { categoria: 'alfabeto', archivo: 'y' },
             'yo': { categoria: 'pronombres', archivo: 'yo' },
             'z': { categoria: 'alfabeto', archivo: 'z' },
-            'ñ': { categoria: 'alfabeto', archivo: 'ñ' }
+            'ñ': { categoria: 'alfabeto', archivo: 'ñ' },
+            'defensa': { categoria: 'general', archivo: 'defensa' },
+            'teg': { categoria: 'general', archivo: 'teg' },
+            'trabajo': { categoria: 'general', archivo: 'trabajo' },
+            'especial': { categoria: 'general', archivo: 'especial' },
+            'grado': { categoria: 'general', archivo: 'grado' },
+            'aporte': { categoria: 'general', archivo: 'aporte' },
+            'tecnologico': { categoria: 'general', archivo: 'tecnologico' },
+            'tecnologia': { categoria: 'general', archivo: 'tecnologia' },
+            'integracion': { categoria: 'general', archivo: 'integracion' },
+            'integrar': { categoria: 'verbos', archivo: 'integrar' },
+            'comunidad': { categoria: 'general', archivo: 'comunidad' },
+            'venezuela': { categoria: 'lugares', archivo: 'venezuela' },
+            'venezolano': { categoria: 'general', archivo: 'venezolano' },
+            'miembro': { categoria: 'general', archivo: 'miembro' },
+            'miembros': { categoria: 'general', archivo: 'miembro' },
+            'jurado': { categoria: 'general', archivo: 'jurado' },
+            'presentacion': { categoria: 'general', archivo: 'presentacion' },
+            'traduccion': { categoria: 'general', archivo: 'traduccion' },
+            'traducir': { categoria: 'verbos', archivo: 'traducir' },
+            'lsv': { categoria: 'general', archivo: 'lsv' },
+            'universidad': { categoria: 'lugares', archivo: 'universidad' }
         };
+
+        // 🗂️ MAPEO DE CATEGORÍAS: Diccionario → Carpetas Duvall
+        // Las categorías en el diccionario no siempre coinciden con los nombres de carpetas
+        const MAPEO_CATEGORIAS = {
+            // Categorías que coinciden exactamente
+            'alfabeto': 'alfabeto',
+            'verbos': 'verbos',
+            'numero': 'numero',
+            'expresiones': 'expresiones',
+            'cortesia': 'cortesia',
+            'saludos': 'saludos',
+            'personas': 'personas',
+            'pronombres': 'pronombres',
+            
+            // Categorías que necesitan mapeo
+            'ordinales': 'numeros ordinales',         // ordinales → numeros ordinales
+            'profesiones': 'profesion',               // profesiones → profesion
+            'adverbios': 'adverbios lugares',         // adverbios → adverbios lugares
+            'viviendas': 'tipos de vivienda',         // viviendas → tipos de vivienda
+            'estado_civil': 'estado civil',           // estado_civil → estado civil
+            'interrogantes': 'preguntas',             // interrogantes → preguntas
+            'preposiciones': 'preposicion',           // preposiciones → preposicion
+            
+            // Días de la semana y tiempo
+            'dias_semana': 'dias_semana',
+            'tiempo': 'tiempo',                       // tiempo → tiempo (pero algunos días están en dias_semana)
+            
+            // Lugares
+            'lugares': 'lugares',
+            
+            // Medios de transporte
+            'transporte': 'medios transporte',
+            
+            // Horario y palabras generales nuevas
+            'general': 'horario'                      // general → horario (para palabras de tiempo)
+        };
+
+        // Función para obtener el nombre correcto de la carpeta
+        // Incluye lógica especial para días de la semana
+        function obtenerNombreCarpeta(categoria) {
+            // Si la categoría ya tiene mapeo, usarlo
+            if (MAPEO_CATEGORIAS[categoria]) {
+                return MAPEO_CATEGORIAS[categoria];
+            }
+            // Si no, retornar la categoría original
+            return categoria;
+        }
 
         // Exponer función para React Native
         window.animarPalabras = async function(texto, avatar = 'Nancy') {
@@ -1446,19 +1514,31 @@
             const loader = loaderInstance || new GLTFLoader();
             if (!loaderInstance) loaderInstance = loader;
             
-            // Construir URL base para GitHub Pages o local
-            const baseUrl = window.location.hostname.includes('github.io') 
-                ? 'https://usm-argenis.github.io/STT_LSV/test/'
-                : '';
+            // Construir URL base según el entorno
+            const isGithubPages = window.location.hostname.includes('github.io');
+            const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
             
-            // Determinar género del avatar
-            const genero = (nombreAvatar === 'Nancy' || nombreAvatar === 'Nina') ? 'Mujer' : 'Hombre';
+            let baseUrl;
+            if (isGithubPages) {
+                // Usar GitHub Releases para modelos GLB
+                baseUrl = 'https://github.com/usm-argenis/Avatar_LSV/releases/download/models-v1/';
+            } else if (isLocalhost) {
+                // Servidor local
+                baseUrl = '';
+            } else {
+                // Fallback a ruta relativa
+                baseUrl = '';
+            }
             
             // Intentar múltiples rutas
-            const rutasAvatar = [
-                `${baseUrl}output/glb/${nombreAvatar}/${nombreAvatar}.glb`,
-                `${baseUrl}output/glb/${genero}/${nombreAvatar}.glb`
-            ];
+            const rutasAvatar = isGithubPages 
+                ? [
+                    `${baseUrl}${nombreAvatar}.glb`  // GitHub Releases
+                ]
+                : [
+                    `output/glb/${nombreAvatar}/${nombreAvatar}.glb`,  // Local
+                    `../output/glb/${nombreAvatar}/${nombreAvatar}.glb`
+                ];
             
             for (const ruta of rutasAvatar) {
                 try {
@@ -1853,15 +1933,21 @@
             try {
                 const loader = loaderInstance || new GLTFLoader();
                 const { categoria, archivo } = DICCIONARIO[palabraNormalizada];
-                const baseUrl = window.location.hostname.includes('github.io') 
-                    ? 'https://usm-argenis.github.io/STT_LSV/test/'
+                
+                // Determinar URL base según entorno
+                const isGithubPages = window.location.hostname.includes('github.io');
+                const baseUrl = isGithubPages
+                    ? 'https://github.com/usm-argenis/Avatar_LSV/releases/download/models-v1/'
                     : '';
                 
                 let nombreArchivo = avatarActual === 'Remy' 
                     ? archivo.replace(/ /g, '_') 
                     : archivo;
                 
-                const rutaCompleta = `${baseUrl}output/glb/${avatarActual}/${categoria}/${avatarActual}_resultado_${nombreArchivo}.glb`;
+                // Construir ruta según entorno
+                const rutaCompleta = isGithubPages
+                    ? `${baseUrl}${avatarActual}_resultado_${nombreArchivo}.glb`
+                    : `output/glb/${avatarActual}/${categoria}/${avatarActual}_resultado_${nombreArchivo}.glb`;
                 
                 const gltf = await new Promise((resolve, reject) => {
                     const timeoutId = setTimeout(() => reject(new Error('Timeout')), 5000);
@@ -1924,8 +2010,11 @@
             // Reutilizar loader global
             const loader = loaderInstance || new GLTFLoader();
             const { categoria, archivo } = DICCIONARIO[palabraNormalizada];
-            const baseUrl = window.location.hostname.includes('github.io') 
-                ? 'https://usm-argenis.github.io/STT_LSV/test/'
+            
+            // Determinar URL base según entorno
+            const isGithubPages = window.location.hostname.includes('github.io');
+            const baseUrl = isGithubPages
+                ? 'https://github.com/usm-argenis/Avatar_LSV/releases/download/models-v1/'
                 : '';
             
             // Construir el nombre del archivo según el avatar
@@ -1937,7 +2026,10 @@
                 nombreArchivo = archivo;
             }
             
-            const rutaCompleta = `${baseUrl}output/glb/${avatarActual}/${categoria}/${avatarActual}_resultado_${nombreArchivo}.glb`;
+            // Construir ruta según entorno
+            const rutaCompleta = isGithubPages
+                ? `${baseUrl}${avatarActual}_resultado_${nombreArchivo}.glb`
+                : `output/glb/${avatarActual}/${categoria}/${avatarActual}_resultado_${nombreArchivo}.glb`;
             
             console.log(`🔄 Cargando: ${rutaCompleta}`);
             
@@ -2074,7 +2166,16 @@
                         ? archivo.replace(/ /g, '_') 
                         : archivo;
                     
-                    const rutaCompleta = `${baseUrl}output/glb/${avatarActual}/${categoria}/${avatarActual}_resultado_${nombreArchivo}.glb`;
+                    // Determinar URL base según entorno
+                    const isGithubPages = window.location.hostname.includes('github.io');
+                    const baseUrl = isGithubPages
+                        ? 'https://github.com/usm-argenis/Avatar_LSV/releases/download/models-v1/'
+                        : '';
+                    
+                    // Construir ruta según entorno
+                    const rutaCompleta = isGithubPages
+                        ? `${baseUrl}${avatarActual}_resultado_${nombreArchivo}.glb`
+                        : `output/glb/${avatarActual}/${categoria}/${avatarActual}_resultado_${nombreArchivo}.glb`;
                     
                     await new Promise((resolve) => {
                         const timeout = isMobile ? 10000 : 15000; // Timeout más corto en móvil
