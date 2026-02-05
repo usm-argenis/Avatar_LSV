@@ -267,10 +267,10 @@
             // Precargar letras comunes en background (no bloqueante)
             precargarLetrasComunes();
             
-            // Cargar animación si autoplay está habilitado
+            // Cargar animación si autoplay está habilitado (sin mostrar loading)
             if (autoplay && avatarModel) {
-                loadingText.textContent = 'Cargando animación...';
-                await cargarYReproducirAnimacion(letraParam);
+                console.log('🎯 INIT: Llamando cargarSiguienteAnimacionSilenciosa con:', letraParam);
+                await cargarSiguienteAnimacionSilenciosa(letraParam);
             }
             
             // OCULTAR loading solo cuando TODO esté listo
@@ -731,16 +731,20 @@
         }
         
         function reproducirClip(clip, letra) {
+            console.log(`🎭 REPRODUCIR CLIP INICIO: letra="${letra}"`);
+            
             if (!mixer || !avatarModel) {
                 console.error('❌ Mixer o avatar no disponibles');
                 return;
             }
             
+            console.log(`🎭 REPRODUCIR: Deteniendo acción previa (si existe)...`);
             if (currentAction) {
                 currentAction.stop();
                 currentAction = null;
             }
             
+            console.log(`🎭 REPRODUCIR: Creando nueva acción...`);
             const action = mixer.clipAction(clip);
             action.reset();
             action.setLoop(THREE.LoopRepeat);
@@ -750,6 +754,7 @@
             currentAction = action;
             isPaused = false;
             
+            console.log(`🎭 REPRODUCIR: Habilitando botón de pausa...`);
             // Habilitar botón de pausa
             document.getElementById('pauseBtn').disabled = false;
             
@@ -759,9 +764,106 @@
             document.getElementById('pauseIcon').textContent = '⏸️';
             document.getElementById('pauseText').textContent = 'Pausar';
             
+            console.log(`🎭 REPRODUCIR: Actualizando status...`);
             document.getElementById('status').textContent = `▶️ ${letra.toUpperCase()}`;
             
-            console.log(`✅ Reproduciendo: ${letra.toUpperCase()}`);
+            console.log(`✅ REPRODUCIR COMPLETO: ${letra.toUpperCase()}`);
+        }
+
+        // Función para pausar animación actual (sin recargar avatar)
+        function pausarAnimacion() {
+            if (mixer && currentAction) {
+                mixer.timeScale = 0;
+                isPaused = true;
+                console.log('⏸️ Animación pausada');
+            }
+        }
+
+        // Función para reanudar animación actual (sin recargar avatar)
+        function reanudarAnimacion() {
+            if (mixer && currentAction) {
+                mixer.timeScale = 1;
+                isPaused = false;
+                console.log('▶️ Animación reanudada');
+            }
+        }
+
+        // Función para cargar siguiente animación SIN mostrar loading (transición suave)
+        async function cargarSiguienteAnimacionSilenciosa(letra) {
+            const letraNormalizada = letra.toLowerCase().trim();
+            console.log(`🔄 SILENCIOSA INICIO: letra="${letraNormalizada}"`);
+            
+            const loader = loaderInstance || new GLTFLoader();
+            const categoria = params.get('categoria') || params.get('category') || 'alfabeto';
+            const archivo = letraNormalizada;
+            const cacheKey = `${categoria}_${archivo}`;
+            const nombreCapitalizado = avatarName.charAt(0).toUpperCase() + avatarName.slice(1);
+            
+            console.log(`🔍 SILENCIOSA: Buscando en caché - cacheKey="${cacheKey}", existe=${animationCache.has(cacheKey)}`);
+            
+            // Verificar caché primero
+            if (animationCache.has(cacheKey)) {
+                console.log(`⚡ SILENCIOSA: Encontrado en caché: ${letraNormalizada}`);
+                const clip = animationCache.get(cacheKey);
+                reproducirClip(clip, letraNormalizada);
+                console.log(`✅ SILENCIOSA: Clip reproducido desde caché`);
+                return;
+            }
+            
+            // Cargar sin mostrar loading
+            console.log(`⏬ SILENCIOSA: No está en caché, cargando desde servidor...`);
+            const rutasIntento = [
+                `../output/glb/${nombreCapitalizado}/${categoria}/${nombreCapitalizado}_resultado_${archivo}.glb`,
+                `../output/glb/${nombreCapitalizado}/${categoria}/${avatarName}_resultado_${archivo}.glb`,
+            ];
+            
+            console.log(`🔍 SILENCIOSA: Intentando ${rutasIntento.length} rutas`);
+            
+            for (const ruta of rutasIntento) {
+                try {
+                    console.log(`⏳ SILENCIOSA: Intentando cargar: ${ruta}`);
+                    const gltf = await new Promise((resolve, reject) => {
+                        loader.load(ruta, resolve, undefined, reject);
+                    });
+                    console.log(`✅ SILENCIOSA: Archivo cargado exitosamente desde: ${ruta}`);
+                    
+                    if (gltf.animations && gltf.animations.length > 0) {
+                        console.log(`🎬 SILENCIOSA: Clip encontrado, procesando...`);
+                        const clip = gltf.animations[0];
+                        
+                        // Corregir nombres de tracks si hay mapping
+                        if (avatarModel.userData.nodeNameMap) {
+                            clip.tracks = clip.tracks.map(track => {
+                                const trackNodeName = track.name.split('.')[0];
+                                const mappedName = avatarModel.userData.nodeNameMap[trackNodeName];
+                                if (mappedName) {
+                                    track.name = track.name.replace(trackNodeName, mappedName);
+                                }
+                                return track;
+                            });
+                        }
+                        
+                        // Guardar en caché
+                        if (animationCache.size >= MAX_CACHE_SIZE) {
+                            const firstKey = animationCache.keys().next().value;
+                            animationCache.delete(firstKey);
+                        }
+                        animationCache.set(cacheKey, clip);
+                        console.log(`💾 SILENCIOSA: Guardado en caché: ${cacheKey}`);
+                        
+                        // Reproducir inmediatamente
+                        console.log(`▶️ SILENCIOSA: Reproduciendo clip...`);
+                        reproducirClip(clip, letraNormalizada);
+                        console.log(`✅ SILENCIOSA COMPLETO: Todo exitoso`);
+                        return;
+                    }
+                } catch (error) {
+                    console.log(`❌ SILENCIOSA: Error en ruta ${ruta}: ${error.message}`);
+                    // Continuar con siguiente ruta
+                }
+            }
+            
+            console.error(`❌ SILENCIOSA FALLÓ: No se encontró animación "${letraNormalizada}" en ninguna ruta`);
         }
 
         function animate() {
@@ -891,6 +993,18 @@
                     }
                 }, 300);
             }
+        });
+        
+        // EXPONER FUNCIONES GLOBALMENTE para que React Native pueda llamarlas
+        window.cargarSiguienteAnimacionSilenciosa = cargarSiguienteAnimacionSilenciosa;
+        window.cargarYReproducirAnimacion = cargarYReproducirAnimacion;
+        window.pausarAnimacion = pausarAnimacion;
+        window.reanudarAnimacion = reanudarAnimacion;
+        console.log('✅ Funciones expuestas globalmente:', {
+            cargarSiguienteAnimacionSilenciosa: typeof window.cargarSiguienteAnimacionSilenciosa,
+            cargarYReproducirAnimacion: typeof window.cargarYReproducirAnimacion,
+            pausarAnimacion: typeof window.pausarAnimacion,
+            reanudarAnimacion: typeof window.reanudarAnimacion
         });
         
         window.addEventListener('DOMContentLoaded', init);

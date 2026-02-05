@@ -7,12 +7,12 @@ import {
   StatusBar,
   Alert,
   ScrollView,
-  Modal
+  Modal,
+  Image
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { WebView } from 'react-native-webview';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const MathOperationsGame = ({ route, navigation }) => {
@@ -25,23 +25,164 @@ const MathOperationsGame = ({ route, navigation }) => {
   const [isCorrect, setIsCorrect] = useState(false);
   const [selectedAnswer, setSelectedAnswer] = useState(null);
   const [questions, setQuestions] = useState([]);
-  const [showAnimation, setShowAnimation] = useState(false);
-  const [avatarSeleccionado, setAvatarSeleccionado] = useState('luis');
+  const [timer, setTimer] = useState(180); // Empezar en 180 segundos (3 minutos)
+  const [timerInterval, setTimerInterval] = useState(null);
+
+  // Mapeo de imágenes base
+  const numberImages = {
+    '0': require('../assets/numeros/0.png'),
+    '1_D': require('../assets/numeros/1_D.png'),
+    '2_D': require('../assets/numeros/2_D.png'),
+    '3_D': require('../assets/numeros/3_D.png'),
+    '4_D': require('../assets/numeros/4_D.png'),
+    '5_D': require('../assets/numeros/5_D.png'),
+    '1_I': require('../assets/numeros/1_I.png'),
+    '2_I': require('../assets/numeros/2_I.png'),
+    '3_I': require('../assets/numeros/3_I.png'),
+    '4_I': require('../assets/numeros/4_I.png'),
+    '5_I': require('../assets/numeros/5_I.png'),
+  };
+
+  const getNumberImages = (number) => {
+    const num = parseInt(number);
+    console.log(`🔢 getNumberImages llamado para: ${num}`);
+    
+    // 0-5: Usar imágenes _D y el 0
+    if (num === 0) {
+      console.log('  ✅ Retornando imagen de 0');
+      return [[numberImages['0']]];
+    }
+    if (num >= 1 && num <= 5) {
+      console.log(`  ✅ Retornando imagen ${num}_D`);
+      return [[numberImages[`${num}_D`]]];
+    }
+    
+    // 6-10: Combinaciones con 5_I (como un solo grupo)
+    if (num === 6) {
+      console.log('  ✅ Retornando 6: [1_D, 5_I]');
+      return [[numberImages['1_D'], numberImages['5_I']]];
+    }
+    if (num === 7) {
+      console.log('  ✅ Retornando 7: [2_D, 5_I]');
+      return [[numberImages['2_D'], numberImages['5_I']]];
+    }
+    if (num === 8) {
+      console.log('  ✅ Retornando 8: [3_D, 5_I]');
+      return [[numberImages['3_D'], numberImages['5_I']]];
+    }
+    if (num === 9) {
+      console.log('  ✅ Retornando 9: [4_D, 5_I]');
+      return [[numberImages['4_D'], numberImages['5_I']]];
+    }
+    if (num === 10) {
+      console.log('  ✅ Retornando 10: [5_D, 5_I]');
+      return [[numberImages['5_D'], numberImages['5_I']]];
+    }
+    
+    // 11-15: Grupo del 10 + grupo de la unidad
+    if (num >= 11 && num <= 15) {
+      const unidad = num - 10;
+      console.log(`  ✅ Retornando ${num}: [[5_D, 5_I], [${unidad}_D]]`);
+      return [
+        [numberImages['5_D'], numberImages['5_I']], // Grupo 10
+        [numberImages[`${unidad}_D`]] // Grupo unidad
+      ];
+    }
+    
+    // 16-19: Grupo del 10 + grupo del 5 + unidad
+    if (num >= 16 && num <= 19) {
+      const unidad = num - 15;
+      console.log(`  ✅ Retornando ${num}: [[5_D, 5_I], [1_D, ${unidad}_I]]`);
+      return [
+        [numberImages['5_D'], numberImages['5_I']], // Grupo 10
+        [numberImages['1_D'], numberImages[`${unidad}_I`]] // Grupo 5+unidad
+      ];
+    }
+    
+    // 20+: Separar dígitos (23 = 2_D + 3_D)
+    if (num >= 20) {
+      const digits = number.toString().split('');
+      const groups = [];
+      console.log(`  📊 Procesando dígitos de ${num}: ${digits.join(', ')}`);
+      digits.forEach(digit => {
+        const d = parseInt(digit);
+        if (d === 0) {
+          groups.push([numberImages['0']]);
+          console.log(`    - Dígito ${d}: agregando imagen 0`);
+        } else if (d >= 1 && d <= 5) {
+          groups.push([numberImages[`${d}_D`]]);
+          console.log(`    - Dígito ${d}: agregando imagen ${d}_D`);
+        } else if (d >= 6 && d <= 9) {
+          // Para 6-9, agregar la combinación como un grupo
+          const base = d - 5;
+          groups.push([numberImages[`${base}_D`], numberImages['5_I']]);
+          console.log(`    - Dígito ${d}: agregando imágenes ${base}_D + 5_I`);
+        }
+      });
+      console.log(`  ✅ Retornando ${groups.length} grupos para número ${num}`);
+      // Asegurar que siempre retorne algo válido
+      return groups.length > 0 ? groups : [[numberImages['0']]];
+    }
+    
+    // Por defecto, retornar 0
+    console.log('  ⚠️ Caso por defecto - retornando imagen 0');
+    return [[numberImages['0']]];
+  };
 
   useEffect(() => {
-    loadSelectedAvatar();
     generateQuestions();
+    startTimer();
+    return () => {
+      if (timerInterval) clearInterval(timerInterval);
+    };
   }, []);
 
-  const loadSelectedAvatar = async () => {
-    try {
-      const avatar = await AsyncStorage.getItem('selectedAvatar');
-      if (avatar) {
-        setAvatarSeleccionado(avatar.toLowerCase());
-      }
-    } catch (error) {
-      console.error('Error cargando avatar:', error);
+  useEffect(() => {
+    // Verificar si se acabó el tiempo
+    if (timer <= 0) {
+      gameOver();
     }
+  }, [timer]);
+
+  const startTimer = () => {
+    const interval = setInterval(() => {
+      setTimer(prev => prev - 1); // Decrementar en vez de incrementar
+    }, 1000);
+    setTimerInterval(interval);
+  };
+
+  const stopTimer = () => {
+    if (timerInterval) {
+      clearInterval(timerInterval);
+      setTimerInterval(null);
+    }
+  };
+
+  const gameOver = () => {
+    stopTimer();
+    Alert.alert(
+      '⏱️ Tiempo Agotado',
+      '¡Se acabó el tiempo! Perdiste automáticamente.',
+      [
+        {
+          text: 'Reintentar',
+          onPress: () => {
+            setLives(3);
+            setScore(0);
+            setCurrentQuestion(0);
+            setShowResult(false);
+            setSelectedAnswer(null);
+            setTimer(180);
+            generateQuestions();
+            startTimer();
+          }
+        },
+        {
+          text: 'Salir',
+          onPress: () => navigation.goBack()
+        }
+      ]
+    );
   };
 
   const generateQuestions = () => {
@@ -117,7 +258,9 @@ const MathOperationsGame = ({ route, navigation }) => {
                   setCurrentQuestion(0);
                   setShowResult(false);
                   setSelectedAnswer(null);
+                  setTimer(180);
                   generateQuestions();
+                  startTimer();
                 }
               },
               {
@@ -143,13 +286,33 @@ const MathOperationsGame = ({ route, navigation }) => {
   };
 
   const showCompletionMessage = () => {
-    if (onComplete) {
-      onComplete(starReward);
+    stopTimer();
+    
+    const tiempoUsado = 180 - timer; // Calcular tiempo usado (lo que falta del temporizador)
+    let finalStars = 0;
+    let timeMessage = '';
+    
+    if (tiempoUsado <= 60) {
+      finalStars = 150;
+      timeMessage = '¡Increíble! Terminaste en menos de 1 minuto';
+    } else if (tiempoUsado <= 120) {
+      finalStars = 100;
+      timeMessage = '¡Buen trabajo! Terminaste entre 1-2 minutos';
+    } else if (tiempoUsado <= 180) {
+      finalStars = 50;
+      timeMessage = 'Terminaste entre 2-3 minutos';
     }
+    
+    if (onComplete) {
+      onComplete(finalStars);
+    }
+    
+    const minutos = Math.floor(tiempoUsado / 60);
+    const segundos = tiempoUsado % 60;
     
     Alert.alert(
       '🎉 ¡Juego Completado!',
-      `Puntuación: ${score}\nVidas restantes: ${lives}\n\n⭐ +${starReward} estrellas ganadas!`,
+      `${timeMessage}\nTiempo usado: ${minutos}:${segundos.toString().padStart(2, '0')}\nPuntuación: ${score}\nVidas restantes: ${lives}\n\n⭐ +${finalStars} estrellas ganadas!`,
       [
         {
           text: 'Volver al menú',
@@ -157,10 +320,6 @@ const MathOperationsGame = ({ route, navigation }) => {
         }
       ]
     );
-  };
-
-  const getAnimationUrl = (number) => {
-    return `http://192.168.10.93:8000/lesson_simple.html?letra=${encodeURIComponent(number.toString())}&avatar=${avatarSeleccionado}&autoplay=true&v=${Date.now()}`;
   };
 
   if (questions.length === 0) {
@@ -210,6 +369,15 @@ const MathOperationsGame = ({ route, navigation }) => {
 
       {/* Question */}
       <View style={styles.questionContainer}>
+        <View style={styles.timerContainer}>
+          <Ionicons name="time-outline" size={20} color={timer <= 60 ? '#F44336' : timer <= 120 ? '#FF9800' : '#4CAF50'} />
+          <Text style={[
+            styles.timerText,
+            { color: timer <= 60 ? '#F44336' : timer <= 120 ? '#FF9800' : '#4CAF50' }
+          ]}>
+            {Math.floor(timer / 60)}:{(timer % 60).toString().padStart(2, '0')}
+          </Text>
+        </View>
         <Text style={styles.questionTitle}>Resuelve la operación:</Text>
         <Text style={styles.operationText}>{question.question}</Text>
         <Text style={styles.scoreText}>Puntos: {score}</Text>
@@ -223,6 +391,17 @@ const MathOperationsGame = ({ route, navigation }) => {
         {question.options.map((option, index) => {
           const isSelected = selectedAnswer === option;
           const isCorrectOption = option === question.correctAnswer;
+          const imageGroups = getNumberImages(option);
+          const numGroups = imageGroups.length;
+          
+          // Calcular aspectRatio dinámico basado en grupos
+          // 1 grupo = ratio 1:1, 2 grupos = ratio 1:1.3, 3+ grupos = ratio 1:1.5
+          let aspectRatio = 1;
+          if (numGroups === 2) {
+            aspectRatio = 0.77; // Más alto (1:1.3)
+          } else if (numGroups >= 3) {
+            aspectRatio = 0.67; // Aún más alto (1:1.5)
+          }
           
           let backgroundColor = '#fff';
           let borderColor = '#ddd';
@@ -246,21 +425,40 @@ const MathOperationsGame = ({ route, navigation }) => {
                 { 
                   backgroundColor, 
                   borderColor,
-                  borderWidth
+                  borderWidth,
+                  aspectRatio // Aplicar ratio dinámico
                 }
               ]}
               onPress={() => handleAnswer(option)}
               disabled={showResult}
               activeOpacity={0.7}
             >
-              <View style={styles.signContainer}>
-                <WebView
-                  source={{ uri: getAnimationUrl(option) }}
-                  style={styles.miniWebview}
-                  javaScriptEnabled={true}
-                  domStorageEnabled={true}
-                  pointerEvents="none"
-                />
+              <View style={[
+                styles.signContainer,
+                imageGroups.length === 1 && imageGroups[0].length === 1 && styles.signContainerSingle,
+                imageGroups.length === 1 && imageGroups[0].length === 2 && styles.signContainerPair
+              ]}>
+                {imageGroups.map((group, groupIdx) => (
+                  <View key={groupIdx} style={[
+                    styles.groupContainer,
+                    imageGroups.length === 1 && imageGroups[0].length === 1 && styles.groupContainerSingle,
+                    imageGroups.length === 1 && imageGroups[0].length === 2 && styles.groupContainerPair,
+                    numGroups > 1 && { marginVertical: 2 } // Más espacio entre grupos
+                  ]}>
+                    {group.map((img, imgIdx) => (
+                      <Image
+                        key={`${groupIdx}-${imgIdx}`}
+                        source={img}
+                        style={[
+                          styles.numberImage,
+                          imageGroups.length === 1 && imageGroups[0].length === 1 && styles.numberImageSingle,
+                          group.length === 2 && styles.numberImagePair
+                        ]}
+                        resizeMode="contain"
+                      />
+                    ))}
+                  </View>
+                ))}
               </View>
               <Text style={[
                 styles.optionNumber,
@@ -337,6 +535,20 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#f0f0f0',
   },
+  timerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    marginBottom: 10,
+    paddingHorizontal: 15,
+    paddingVertical: 8,
+    backgroundColor: '#f5f5f5',
+    borderRadius: 20,
+  },
+  timerText: {
+    fontSize: 20,
+    fontWeight: 'bold',
+  },
   questionTitle: {
     fontSize: 18,
     color: '#666',
@@ -364,7 +576,7 @@ const styles = StyleSheet.create({
   },
   optionCard: {
     width: '48%',
-    aspectRatio: 1,
+    // aspectRatio eliminado - ahora es dinámico en el componente
     marginBottom: 15,
     borderRadius: 16,
     overflow: 'hidden',
@@ -376,11 +588,48 @@ const styles = StyleSheet.create({
   },
   signContainer: {
     flex: 1,
-    backgroundColor: '#000',
+    backgroundColor: '#fff',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 5,
+    flexDirection: 'column',
   },
-  miniWebview: {
+  signContainerSingle: {
+    padding: 15,
+  },
+  signContainerPair: {
+    padding: 10,
+  },
+  groupContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: '100%',
+    height: 'auto',
+    flex: 1, // Cambiado: permitir que cada grupo tome espacio flexible
+    marginVertical: 1,
+  },
+  groupContainerSingle: {
+    maxHeight: '100%',
+    height: '100%',
+  },
+  groupContainerPair: {
+    maxHeight: '100%',
+    height: '80%',
+  },
+  numberImage: {
+    width: '100%',
+    height: '100%',
     flex: 1,
-    backgroundColor: 'transparent',
+  },
+  numberImageSingle: {
+    width: '100%',
+    height: '100%',
+  },
+  numberImagePair: {
+    width: '48%',
+    flex: 0,
+    margin: 1,
   },
   optionNumber: {
     fontSize: 24,

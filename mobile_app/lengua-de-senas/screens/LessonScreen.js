@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import {
   View,
   Text,
@@ -86,6 +86,106 @@ const letterImages = {
   'z': require('../assets/alfabeto/Z.png'),
 };
 
+// Mapeo de imágenes de números
+const numberImages = {
+  '0': require('../assets/numeros/0.png'),
+  '1_D': require('../assets/numeros/1_D.png'),
+  '2_D': require('../assets/numeros/2_D.png'),
+  '3_D': require('../assets/numeros/3_D.png'),
+  '4_D': require('../assets/numeros/4_D.png'),
+  '5_D': require('../assets/numeros/5_D.png'),
+  '1_I': require('../assets/numeros/1_I.png'),
+  '2_I': require('../assets/numeros/2_I.png'),
+  '3_I': require('../assets/numeros/3_I.png'),
+  '4_I': require('../assets/numeros/4_I.png'),
+  '5_I': require('../assets/numeros/5_I.png'),
+};
+
+// Función para obtener las imágenes correspondientes a un número
+const getNumberImages = (number) => {
+  const num = parseInt(number);
+  
+  // 0-5: Usar imágenes _D y el 0
+  if (num === 0) return [[numberImages['0']]];
+  if (num >= 1 && num <= 5) return [[numberImages[`${num}_D`]]];
+  
+  // 6-10: Combinaciones con 5_I (como un solo grupo)
+  if (num === 6) return [[numberImages['1_D'], numberImages['5_I']]];
+  if (num === 7) return [[numberImages['2_D'], numberImages['5_I']]];
+  if (num === 8) return [[numberImages['3_D'], numberImages['5_I']]];
+  if (num === 9) return [[numberImages['4_D'], numberImages['5_I']]];
+  if (num === 10) return [[numberImages['5_D'], numberImages['5_I']]];
+  
+  // 11-15: Grupo del 10 + grupo de la unidad
+  if (num >= 11 && num <= 15) {
+    const unidad = num - 10;
+    return [
+      [numberImages['5_D'], numberImages['5_I']], // Grupo 10
+      [numberImages[`${unidad}_D`]] // Grupo unidad
+    ];
+  }
+  
+  // 16-19: Grupo del 10 + grupo del 5 + unidad
+  if (num >= 16 && num <= 19) {
+    const unidad = num - 15;
+    return [
+      [numberImages['5_D'], numberImages['5_I']], // Grupo 10
+      [numberImages['1_D'], numberImages[`${unidad}_I`]] // Grupo 5+unidad
+    ];
+  }
+  
+  // 20+: Separar dígitos (23 = 2_D + 3_D)
+  if (num >= 20) {
+    const digits = number.toString().split('');
+    const groups = [];
+    digits.forEach(digit => {
+      const d = parseInt(digit);
+      if (d === 0) {
+        groups.push([numberImages['0']]);
+      } else if (d >= 1 && d <= 5) {
+        groups.push([numberImages[`${d}_D`]]);
+      } else if (d >= 6 && d <= 9) {
+        // Para 6-9, agregar la combinación como un grupo
+        const base = d - 5;
+        groups.push([numberImages[`${base}_D`], numberImages['5_I']]);
+      }
+    });
+    // Asegurar que siempre retorne algo válido
+    return groups.length > 0 ? groups : [[numberImages['0']]];
+  }
+  
+  // Por defecto, retornar 0
+  return [[numberImages['0']]];
+};
+
+// Función para convertir número a secuencia de animación para el HTML
+const getNumberAnimationSequence = (number) => {
+  const num = parseInt(number);
+  console.log(`🔢 Generando secuencia de animación para número: ${num}`);
+  
+  // 0-10: Usar directamente el número
+  if (num >= 0 && num <= 10) {
+    console.log(`  → Número simple: ${num}`);
+    return [num.toString()];
+  }
+  
+  // 11-19: Primero 10, luego el segundo dígito
+  if (num >= 11 && num <= 19) {
+    const segundoDigito = num - 10;
+    console.log(`  → 11-19: [10, ${segundoDigito}]`);
+    return ['10', segundoDigito.toString()];
+  }
+  
+  // 20+: Separar dígitos (24 = 2, luego 4; 40 = 4, luego 0)
+  if (num >= 20) {
+    const digits = number.toString().split('');
+    console.log(`  → 20+: [${digits.join(', ')}]`);
+    return digits;
+  }
+  
+  return [num.toString()];
+};
+
 const LessonScreen = ({ route, navigation }) => {
   const { category, title, starReward = 100, onComplete } = route.params;
   
@@ -100,6 +200,11 @@ const LessonScreen = ({ route, navigation }) => {
   const [currentSign, setCurrentSign] = useState('');
   const [scaleAnim] = useState(new Animated.Value(1));
   const [avatarSeleccionado, setAvatarSeleccionado] = useState('luis'); // Avatar por defecto
+  const webViewRef = useRef(null); // Ref para controlar WebView
+  const [animationSequenceIndex, setAnimationSequenceIndex] = useState(0);
+  const [isPlayingSequence, setIsPlayingSequence] = useState(false);
+  const [webViewReady, setWebViewReady] = useState(false); // Estado para saber si WebView está listo
+  const hasInitialized = useRef(false); // Evitar múltiples ejecuciones de onLoadEnd
 
   const [failedLetters, setFailedLetters] = useState([]);
   const [isReviewMode, setIsReviewMode] = useState(false);
@@ -110,6 +215,81 @@ const LessonScreen = ({ route, navigation }) => {
     loadSelectedAvatar();
     generateQuestions();
   }, []);
+
+  // Resetear hasInitialized cuando cambia la pregunta/seña
+  useEffect(() => {
+    hasInitialized.current = false;
+    setWebViewReady(false);
+    console.log('🔄 Nueva seña, reseteando hasInitialized y webViewReady');
+  }, [currentSign]);
+
+  // Controlar secuencia de animación de números
+  useEffect(() => {
+    if (!isPlayingSequence || !webViewRef.current || !webViewReady) {
+      if (!webViewReady) {
+        console.log('⏳ useEffect: WebView no está listo aún, esperando...');
+      }
+      return;
+    }
+
+    const sign = currentSign.toLowerCase();
+    const isNumber = /^\d+$/.test(sign);
+    
+    if (isNumber && category === 'numeros') {
+      const sequence = getNumberAnimationSequence(sign);
+      
+      if (animationSequenceIndex < sequence.length) {
+        const currentNum = sequence[animationSequenceIndex];
+        console.log(`🎬 Reproduciendo número ${currentNum} (${animationSequenceIndex + 1}/${sequence.length})`);
+        
+        // Usar siempre carga silenciosa (el avatar ya está cargado)
+        if (webViewRef.current) {
+          console.log(`📤 Inyectando JavaScript para número: ${currentNum}`);
+          const script = `
+            console.log('🟢 JS INYECTADO: Ejecutando para número ${currentNum}');
+            (async function() {
+              try {
+                if (typeof window.cargarSiguienteAnimacionSilenciosa === 'function') {
+                  console.log('✅ Función cargarSiguienteAnimacionSilenciosa existe, llamando...');
+                  await window.cargarSiguienteAnimacionSilenciosa('${currentNum}');
+                } else {
+                  console.error('❌ Función cargarSiguienteAnimacionSilenciosa NO EXISTE');
+                  console.log('window keys:', Object.keys(window).filter(k => k.includes('cargar')));
+                }
+              } catch (error) {
+                console.error('❌ Error en JS inyectado:', error.message);
+              }
+            })();
+            true;
+          `;
+          webViewRef.current.injectJavaScript(script);
+          console.log(`✅ JavaScript inyectado exitosamente`);
+        }
+        
+        // Duración: 2s animación (flujo continuo sin pausa adicional)
+        const animationDuration = 2000;
+        
+        // Después de la animación, pasar al siguiente número directamente
+        const timer = setTimeout(() => {
+          if (webViewRef.current) {
+            setAnimationSequenceIndex(prev => prev + 1);
+          }
+        }, animationDuration);
+        
+        return () => clearTimeout(timer);
+      } else {
+        // Secuencia completada, reiniciar para loop
+        console.log('✅ Secuencia completada, reiniciando...');
+        const timer = setTimeout(() => {
+          if (webViewRef.current) {
+            setAnimationSequenceIndex(0);
+          }
+        }, 2000); // Pausa de 2s antes de reiniciar
+        
+        return () => clearTimeout(timer);
+      }
+    }
+  }, [isPlayingSequence, animationSequenceIndex, currentSign, category, webViewReady]);
 
   const loadSelectedAvatar = async () => {
     try {
@@ -208,6 +388,8 @@ const LessonScreen = ({ route, navigation }) => {
       setShowAnimation(false);
       setShowAnimationOption(false);
       setWantsToSeeAnimation(false);
+      setIsPlayingSequence(false);
+      setAnimationSequenceIndex(0);
     } else {
       // Verificar si hay letras fallidas para repasar
       if (failedLetters.length > 0 && !isReviewMode) {
@@ -356,6 +538,23 @@ const LessonScreen = ({ route, navigation }) => {
             borderColor = '#4CAF50';
           }
 
+          // Calcular altura dinámica para números según cantidad TOTAL de imágenes
+          let cardHeight = 170; // Default
+          if (category === 'numeros') {
+            const imageGroups = getNumberImages(option);
+            const totalImages = imageGroups.reduce((sum, g) => sum + g.length, 0);
+            
+            if (totalImages === 1) {
+              cardHeight = 150; // Una imagen
+            } else if (totalImages === 2) {
+              cardHeight = 190; // Dos imágenes
+            } else if (totalImages === 3) {
+              cardHeight = 200; // Tres imágenes
+            } else {
+              cardHeight = 220; // Cuatro o más imágenes
+            }
+          }
+
           return (
             <Animated.View
               key={index}
@@ -364,6 +563,7 @@ const LessonScreen = ({ route, navigation }) => {
                 { 
                   backgroundColor,
                   borderColor,
+                  height: cardHeight, // Altura dinámica
                   transform: [{ scale: isSelected && isCorrect ? scaleAnim : 1 }]
                 }
               ]}
@@ -379,6 +579,102 @@ const LessonScreen = ({ route, navigation }) => {
                     style={styles.optionImage}
                     resizeMode="contain"
                   />
+                ) : category === 'numeros' ? (
+                  (() => {
+                    const imageGroups = getNumberImages(option);
+                    const totalImages = imageGroups.reduce((sum, g) => sum + g.length, 0);
+                    
+                    // Aplanar todas las imágenes en un solo array
+                    const allImages = imageGroups.flat();
+                    
+                    if (totalImages === 1) {
+                      // 1 imagen: ocupa todo el espacio
+                      return (
+                        <View style={styles.numberSignContainer}>
+                          <Image
+                            source={allImages[0]}
+                            style={styles.numberImageFull}
+                            resizeMode="contain"
+                          />
+                        </View>
+                      );
+                    } else if (totalImages === 2) {
+                      // 2 imágenes: mitad y mitad horizontalmente
+                      return (
+                        <View style={styles.numberSignContainer}>
+                          <View style={styles.numberRowContainer}>
+                            <Image
+                              source={allImages[0]}
+                              style={styles.numberImageHalf}
+                              resizeMode="contain"
+                            />
+                            <Image
+                              source={allImages[1]}
+                              style={styles.numberImageHalf}
+                              resizeMode="contain"
+                            />
+                          </View>
+                        </View>
+                      );
+                    } else if (totalImages === 3) {
+                      // 3 imágenes: 2 arriba (25% cada una), 1 abajo (50%)
+                      return (
+                        <View style={styles.numberSignContainer}>
+                          <View style={styles.numberRowContainer}>
+                            <Image
+                              source={allImages[0]}
+                              style={styles.numberImageQuarter}
+                              resizeMode="contain"
+                            />
+                            <Image
+                              source={allImages[1]}
+                              style={styles.numberImageQuarter}
+                              resizeMode="contain"
+                            />
+                          </View>
+                          <View style={styles.numberRowContainer}>
+                            <Image
+                              source={allImages[2]}
+                              style={styles.numberImageHalf}
+                              resizeMode="contain"
+                            />
+                          </View>
+                        </View>
+                      );
+                    } else {
+                      // 4+ imágenes: cuadrantes de 25% cada uno
+                      return (
+                        <View style={styles.numberSignContainer}>
+                          <View style={styles.numberRowContainer}>
+                            <Image
+                              source={allImages[0]}
+                              style={styles.numberImageQuarter}
+                              resizeMode="contain"
+                            />
+                            <Image
+                              source={allImages[1]}
+                              style={styles.numberImageQuarter}
+                              resizeMode="contain"
+                            />
+                          </View>
+                          <View style={styles.numberRowContainer}>
+                            <Image
+                              source={allImages[2]}
+                              style={styles.numberImageQuarter}
+                              resizeMode="contain"
+                            />
+                            {allImages[3] && (
+                              <Image
+                                source={allImages[3]}
+                                style={styles.numberImageQuarter}
+                                resizeMode="contain"
+                              />
+                            )}
+                          </View>
+                        </View>
+                      );
+                    }
+                  })()
                 ) : (
                   <>
                     <Text style={[
@@ -470,6 +766,8 @@ const LessonScreen = ({ route, navigation }) => {
             <Text style={styles.modalTitle}>🤟 Seña: {currentSign.toUpperCase()}</Text>
             <TouchableOpacity onPress={() => {
               setShowAnimation(false);
+              setIsPlayingSequence(false);
+              setAnimationSequenceIndex(0);
               nextQuestion();
             }}>
               <Ionicons name="close" size={40} color="#fff" />
@@ -477,8 +775,23 @@ const LessonScreen = ({ route, navigation }) => {
           </View>
           
           <WebView
+            ref={webViewRef}
             source={{ 
-              uri: `http://192.168.10.93:8000/lesson_simple.html?letra=${encodeURIComponent(currentSign.toLowerCase())}&avatar=${avatarSeleccionado || 'luis'}&autoplay=true&v=${Date.now()}`
+              uri: (() => {
+                const sign = currentSign.toLowerCase();
+                const isNumber = /^\d+$/.test(sign);
+                
+                if (isNumber && category === 'numeros') {
+                  // Para números, cargar la primera animación de la secuencia
+                  const sequence = getNumberAnimationSequence(sign);
+                  const firstNum = sequence[0];
+                  console.log(`🎬 Iniciando secuencia de número ${sign}: [${sequence.join(', ')}]`);
+                  return `http://192.168.10.93:8000/lesson_simple.html?letra=${encodeURIComponent(firstNum)}&categoria=numero&avatar=${avatarSeleccionado || 'luis'}&autoplay=true`;
+                } else {
+                  // Para letras y otras categorías, usar el comportamiento normal
+                  return `http://192.168.10.93:8000/lesson_simple.html?letra=${encodeURIComponent(sign)}&categoria=${encodeURIComponent(category)}&avatar=${avatarSeleccionado || 'luis'}&autoplay=true`;
+                }
+              })()
             }}
             originWhitelist={['*']}
             javaScriptEnabled={true}
@@ -486,6 +799,29 @@ const LessonScreen = ({ route, navigation }) => {
             allowsInlineMediaPlayback={true}
             mediaPlaybackRequiresUserAction={false}
             style={styles.webview}
+            onLoadEnd={() => {
+              // Cuando el WebView carga, iniciar secuencia si es número (solo una vez)
+              if (hasInitialized.current) {
+                console.log('⚠️ onLoadEnd: Ya inicializado, ignorando');
+                return;
+              }
+              
+              console.log('✅ onLoadEnd: WebView cargado, marcando como listo');
+              
+              // Marcar WebView como listo después de un pequeño delay
+              setTimeout(() => {
+                setWebViewReady(true);
+                
+                const sign = currentSign.toLowerCase();
+                const isNumber = /^\d+$/.test(sign);
+                if (isNumber && category === 'numeros') {
+                  console.log('✅ onLoadEnd: Primera vez, iniciando secuencia');
+                  hasInitialized.current = true;
+                  setAnimationSequenceIndex(0);
+                  setIsPlayingSequence(true);
+                }
+              }, 500); // Esperar 500ms para asegurar que el DOM está listo
+            }}
             onError={(syntheticEvent) => {
               const { nativeEvent } = syntheticEvent;
               console.warn('WebView error: ', nativeEvent);
@@ -493,12 +829,20 @@ const LessonScreen = ({ route, navigation }) => {
             useWebKit={true}
             sharedCookiesEnabled={true}
             thirdPartyCookiesEnabled={true}
+            cacheEnabled={true}
+            cacheMode="LOAD_CACHE_ELSE_NETWORK"
+            androidLayerType="hardware"
+            androidHardwareAccelerationDisabled={false}
+            scalesPageToFit={true}
+            nestedScrollEnabled={false}
           />
           
           <TouchableOpacity 
             style={styles.closeModalButton}
             onPress={() => {
               setShowAnimation(false);
+              setIsPlayingSequence(false);
+              setAnimationSequenceIndex(0);
               nextQuestion();
             }}
           >
@@ -584,7 +928,7 @@ const styles = StyleSheet.create({
   },
   optionCard: {
     width: (width - 60) / 2,
-    height: 140,
+    // height ahora es dinámica - se asigna en el componente según contenido
     margin: 10,
     borderRadius: 15,
     borderWidth: 4,
@@ -600,12 +944,40 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 15,
+    padding: 5, // Reducido de 10 a 5 para más espacio para imágenes
   },
   optionImage: {
-    width: 110,
-    height: 110,
+    width: 120, // Aumentado de 110 a 120
+    height: 120,
     marginBottom: 5,
+  },
+  numberSignContainer: {
+    flex: 1,
+    width: '100%',
+    height: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  numberRowContainer: {
+    flexDirection: 'row',
+    flex: 1,
+    width: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  numberImageFull: {
+    width: '90%',
+    height: '90%',
+  },
+  numberImageHalf: {
+    width: '45%',
+    height: '90%',
+    margin: 2,
+  },
+  numberImageQuarter: {
+    width: '45%',
+    height: '100%',
+    margin: 2,
   },
   optionText: {
     fontSize: 18,

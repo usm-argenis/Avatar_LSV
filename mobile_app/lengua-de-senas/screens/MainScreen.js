@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import {
   StyleSheet,
   View,
@@ -10,6 +10,7 @@ import {
   Animated,
   TouchableWithoutFeedback,
   Image,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
@@ -27,6 +28,7 @@ export default function MainScreen({ navigation }) {
   const [showAvatarSelector, setShowAvatarSelector] = useState(false);
   const [avatarSeleccionado, setAvatarSeleccionado] = useState('luis');
   const [showMenu, setShowMenu] = useState(false);
+  const [avatarLoading, setAvatarLoading] = useState(false);
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(-10)).current;
 
@@ -207,7 +209,14 @@ export default function MainScreen({ navigation }) {
 
       {/* Avatar 3D en el centro */}
       <View style={styles.avatarContainer}>
+        {avatarLoading && (
+          <View style={styles.avatarLoadingOverlay}>
+            <ActivityIndicator size="large" color="#4A90E2" />
+            <Text style={styles.loadingText}>Cambiando avatar...</Text>
+          </View>
+        )}
         <WebView
+          key={`avatar-${avatarSeleccionado}`}
           source={{ uri: avatarViewerUrl }}
           style={styles.avatarWebView}
           opaque={false}
@@ -217,6 +226,14 @@ export default function MainScreen({ navigation }) {
           bounces={false}
           showsVerticalScrollIndicator={false}
           showsHorizontalScrollIndicator={false}
+          cacheEnabled={true}
+          cacheMode="LOAD_CACHE_ELSE_NETWORK"
+          androidLayerType="hardware"
+          androidHardwareAccelerationDisabled={false}
+          scalesPageToFit={false}
+          nestedScrollEnabled={false}
+          onLoadStart={() => setAvatarLoading(true)}
+          onLoadEnd={() => setAvatarLoading(false)}
         />
       </View>
 
@@ -357,6 +374,24 @@ const styles = StyleSheet.create({
     flex: 0.99,
     marginTop: -1,
     backgroundColor: '#ffffff',
+    position: 'relative',
+  },
+  avatarLoadingOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 10,
+  },
+  loadingText: {
+    marginTop: 10,
+    fontSize: 16,
+    color: '#4A90E2',
+    fontWeight: '600',
   },
   avatarWebView: {
     flex: 1,

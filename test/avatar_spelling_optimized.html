@@ -194,17 +194,17 @@
         
         // Detección de dispositivo móvil
         const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-        const MAX_CACHE_SIZE = isMobile ? 10 : 30; // Menos caché en móvil
+        const MAX_CACHE_SIZE = isMobile ? 15 : 30; // Más caché en móvil para evitar recargas
         const PRELOAD_COUNT = isMobile ? 5 : 10; // Menos precarga en móvil
         const LOAD_DELAY = isMobile ? 400 : 100; // Mayor delay entre cargas en móvil
-        const LOOKAHEAD = isMobile ? 2 : 3; // Cuantas letras precargar por adelantado
+        const LOOKAHEAD = isMobile ? 4 : 5; // Precargar 4 letras adelante en móvil (más agresivo)
         
         // Sistema de precarga anticipada
         let currentWord = [];
         let currentLetterIndex = 0;
         
         async function init() {
-            console.log('🚀 Avatar Spelling v2.3 (N1:3s N2:1.4s N3:1s) - Iniciando...');
+            console.log('🚀 Avatar Spelling v2.4 RÁPIDO - Iniciando...');
             // Obtener parámetros desde URL
             const params = new URLSearchParams(window.location.search);
             avatarActual = params.get('avatar') || 'Nancy';
@@ -220,11 +220,10 @@
             // NO mostrar loading, cargar directamente
             await cargarAvatar(avatarActual);
             
-            // Precargar letras más comunes en background
-            precargarLetrasComunes();
+            // NO precargar letras al inicio - solo cuando se necesiten
+            // Esto hace el inicio más rápido
             
-            // NO iniciar automáticamente - esperar mensaje de React Native
-            console.log('✅ Avatar cargado, esperando mensaje de React Native...');
+            console.log('✅ Avatar cargado RÁPIDO, esperando mensaje de React Native...');
             
             animate();
         }
@@ -521,7 +520,8 @@
             const replayBtn = document.getElementById('replayBtn');
             if (replayBtn) replayBtn.disabled = true;
             
-            // Precargar las primeras letras
+            // PRECARGA INTELIGENTE: Solo precargar las primeras letras (no todas)
+            console.log('🚀 Iniciando precarga de primeras letras...');
             precargarSiguientesLetras(0);
             
             for (let i = 0; i < letras.length; i++) {
@@ -599,7 +599,7 @@
                     for (const rutaCompleta of rutasCompletas) {
                         try {
                             const gltf = await new Promise((resolve, reject) => {
-                                const timeout = 5000;
+                                const timeout = 3000; // 3s timeout para precarga en background
                                 const timeoutId = setTimeout(() => reject(new Error('Timeout')), timeout);
                                 loader.load(
                                     rutaCompleta, 
@@ -687,7 +687,7 @@
                 for (const rutaCompleta of rutasCompletas) {
                     try {
                         const gltf = await new Promise((resolve, reject) => {
-                            const timeout = isMobile ? 8000 : 15000; // Timeout más corto en móvil
+                            const timeout = isMobile ? 5000 : 15000; // 5s en móvil, 15s en desktop
                             const timeoutId = setTimeout(() => reject(new Error('Timeout')), timeout);
                             loader.load(
                                 rutaCompleta,

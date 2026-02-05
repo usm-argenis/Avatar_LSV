@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import {
   View,
   Text,
@@ -77,17 +77,12 @@ const AvatarToTextGame = ({ route, navigation }) => {
       setLevel(1);
       setWordsCompletedInLevel(0);
       console.log(`🎮 [AvatarToTextGame] Nivel inicial: 1`);
-      
-      // Esperar a que el WebView se cargue completamente antes de enviar mensaje
-      setTimeout(() => {
-        console.log('📤 [AvatarToTextGame] Iniciando primera palabra...');
-        startNewRound();
-      }, 500); // Optimizado: reducido de 1000ms a 500ms
+      // No llamar startNewRound aquí - esperar a que WebView esté listo
     };
     init();
   }, []);
 
-  // Enviar mensaje pendiente cuando WebView esté listo
+  // Enviar mensaje pendiente cuando WebView esté listo con timeout de seguridad
   useEffect(() => {
     if (webViewReady && pendingWord && webViewRef.current) {
       console.log('✅ WebView ahora listo, enviando mensaje pendiente:', pendingWord);
@@ -96,23 +91,32 @@ const AvatarToTextGame = ({ route, navigation }) => {
     }
   }, [webViewReady, pendingWord]);
 
-  // Detectar cambio de avatar desde AsyncStorage (cuando el usuario lo cambia en configuración)
+  // Iniciar primera ronda cuando WebView esté listo
   useEffect(() => {
-    const interval = setInterval(async () => {
+    if (webViewReady && !targetWord) {
+      console.log('📬 [AvatarToTextGame] WebView listo - iniciando primera palabra INMEDIATAMENTE');
+      // Iniciar sin delay - el HTML ya está completamente cargado después de onLoadEnd
+      startNewRound();
+    }
+  }, [webViewReady]);
+
+  // Detectar cambio de avatar cuando se enfoca la pantalla (más eficiente que polling)
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('focus', async () => {
       try {
         const avatar = await AsyncStorage.getItem('selectedAvatar');
         if (avatar && avatar !== selectedAvatar) {
-          // Avatar cambió, actualizar y forzar recarga del WebView
+          console.log('🔄 Cambio de avatar detectado:', selectedAvatar, '->', avatar);
           setSelectedAvatar(avatar);
           setWebViewKey(prev => prev + 1); // Forzar recarga del WebView
         }
       } catch (error) {
         console.error('Error verificando avatar:', error);
       }
-    }, 2000); // Revisar cada 2 segundos
+    });
 
-    return () => clearInterval(interval);
-  }, [selectedAvatar]);
+    return unsubscribe;
+  }, [navigation, selectedAvatar]);
 
   const loadSelectedAvatar = async () => {
     try {
@@ -242,10 +246,37 @@ const AvatarToTextGame = ({ route, navigation }) => {
     if (webViewReady && webViewRef.current) {
       console.log('✅ WebView listo, enviando mensaje ahora');
       webViewRef.current.postMessage(JSON.stringify(message));
+      
+      // Timeout de seguridad: si después de 3 segundos no se recibió respuesta, forzar fin de animación
+      setTimeout(() => {
+        if (isAnimating) {
+          console.warn('⚠️ Timeout: animación no finalizó, forzando fin');
+          setIsAnimating(false);
+        }
+      }, (speed * wordToUse.length + 2) * 1000); // Tiempo de animación + 2 segundos de margen
     } else {
       // Si no, guardar para enviar cuando esté listo
       console.log('⏳ WebView no listo, guardando mensaje pendiente');
       setPendingWord(message);
+      
+      // Timeout de seguridad: si después de 5 segundos el WebView no está listo, hay un problema
+      setTimeout(() => {
+        if (!webViewReady) {
+          console.error('❌ Error: WebView no se cargó después de 5 segundos');
+          setIsAnimating(false);
+          Alert.alert(
+            'Error de Carga',
+            'El avatar no se pudo cargar correctamente. Intenta reiniciar el juego.',
+            [
+              { text: 'Reintentar', onPress: () => {
+                setWebViewKey(prev => prev + 1);
+                setTimeout(() => startNewWord(wordToUse, levelToUse, keepFailedFlag), 500);
+              }},
+              { text: 'Salir', onPress: () => navigation.goBack() }
+            ]
+          );
+        }
+      }, 5000);
     }
   };
 
@@ -426,13 +457,23 @@ const AvatarToTextGame = ({ route, navigation }) => {
     // Este mensaje vendrá del WebView cuando termine cada letra
     try {
       const data = JSON.parse(event.nativeEvent.data);
+      console.log('📩 Mensaje del WebView:', data);
+      
       if (data.type === 'letterComplete') {
+        console.log(`✅ Letra ${data.letterIndex + 1} completada`);
         setCurrentLetter(data.letterIndex);
       } else if (data.type === 'allComplete') {
+        console.log('✅ Todas las letras completadas');
+        setIsAnimating(false);
+      } else if (data.type === 'ready') {
+        console.log('✅ WebView confirma que está listo');
+        setWebViewReady(true);
+      } else if (data.type === 'error') {
+        console.error('❌ Error del WebView:', data.message);
         setIsAnimating(false);
       }
     } catch (e) {
-      // Ignorar errores de parsing
+      console.warn('⚠️ Error parseando mensaje del WebView:', e);
     }
   };
 
@@ -535,9 +576,29 @@ const AvatarToTextGame = ({ route, navigation }) => {
           mediaPlaybackRequiresUserAction={false}
           style={styles.webview}
           onMessage={handleAnimationProgress}
+          onLoadStart={() => {
+            console.log('📥 WebView iniciando carga...');
+            setWebViewReady(false);
+          }}
           onLoad={() => {
-            console.log('✅ WebView cargado completamente');
+            console.log('✅ WebView onLoad disparado');
+          }}
+          onLoadEnd={() => {
+            console.log('✅ WebView cargado completamente (onLoadEnd)');
             setWebViewReady(true);
+          }}
+          onError={(syntheticEvent) => {
+            const { nativeEvent } = syntheticEvent;
+            console.error('❌ Error cargando WebView:', nativeEvent);
+            setIsAnimating(false);
+            Alert.alert(
+              'Error de Carga',
+              'No se pudo cargar el avatar. Verifica tu conexión e intenta de nuevo.',
+              [
+                { text: 'Reintentar', onPress: () => setWebViewKey(prev => prev + 1) },
+                { text: 'Salir', onPress: () => navigation.goBack() }
+              ]
+            );
           }}
           startInLoadingState={true}
           renderLoading={() => (
@@ -549,6 +610,12 @@ const AvatarToTextGame = ({ route, navigation }) => {
           useWebKit={true}
           sharedCookiesEnabled={true}
           thirdPartyCookiesEnabled={true}
+          cacheEnabled={true}
+          cacheMode="LOAD_CACHE_ELSE_NETWORK"
+          androidLayerType="hardware"
+          androidHardwareAccelerationDisabled={false}
+          scalesPageToFit={true}
+          nestedScrollEnabled={false}
         />
 
         
