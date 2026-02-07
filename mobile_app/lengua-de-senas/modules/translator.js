@@ -14,6 +14,9 @@ class LSVTranslator {
         this.dictionary = this._buildDictionary();
         this.alphabet = this._buildAlphabet();
         this.numbers = this._buildNumbers();
+        // Mapeo de palabras originales (con tildes) para mostrar en UI
+        this.originalWords = new Map();
+        this._buildOriginalWordsMap();
     }
 
     /**
@@ -296,6 +299,34 @@ class LSVTranslator {
         dict.set('dormir', 'dormir');
         dict.set('trabajar', 'trabajar');
         dict.set('estudiar', 'estudiar');
+        dict.set('agarrar', 'agarrar');
+        dict.set('amar', 'amar');
+        dict.set('atraer', 'atraer');
+        dict.set('ayudar', 'ayudar');
+        dict.set('burlar', 'burlar');
+        dict.set('calmar', 'calmar');
+        dict.set('cansar', 'cansar');
+        dict.set('conocer', 'conocer');
+        dict.set('deletrear', 'deletrear');
+        dict.set('enganar', 'enganar');
+        dict.set('engañar', 'enganar');
+        dict.set('guardar', 'guardar');
+        dict.set('invitar', 'invitar');
+        dict.set('llevar', 'llevar');
+        dict.set('pelear', 'pelear');
+        dict.set('preguntar', 'preguntar');
+        dict.set('presentar', 'presentar');
+        dict.set('regalar', 'regalar');
+        dict.set('responder', 'responder');
+        dict.set('saludar', 'saludar');
+        dict.set('sentir', 'sentir');
+        dict.set('sufrir', 'sufrir');
+        dict.set('traer', 'traer');
+        dict.set('usar', 'usar');
+        dict.set('ver', 'ver');
+        dict.set('verbo', 'verbo');
+        dict.set('vestir', 'vestir');
+        dict.set('vivir', 'vivir');
 
         // === PALABRAS ADICIONALES ===
         dict.set('nombre', 'nombre');
@@ -373,6 +404,51 @@ class LSVTranslator {
             counts[cat] = words.length;
         }
         return counts;
+    }
+
+    /**
+     * Construir mapeo de palabras con su forma original (con tildes)
+     * @private
+     */
+    _buildOriginalWordsMap() {
+        // Palabras que deben mostrar tildes en UI
+        const wordsWithAccents = {
+            'mañana': 'mañana',
+            'manana': 'mañana',
+            'año': 'año',
+            'ano': 'año',
+            'seña': 'seña',
+            'sena': 'seña',
+            'más': 'más',
+            'mas': 'más',
+            'después': 'después',
+            'despues': 'después',
+            'perdón': 'perdón',
+            'perdon': 'perdón',
+            'sábado': 'sábado',
+            'sabado': 'sábado',
+            'miércoles': 'miércoles',
+            'miercoles': 'miércoles',
+            'tú': 'tú',
+            'tu': 'tú',
+            'está': 'está',
+            'esta': 'está',
+            'están': 'están',
+            'estan': 'están'
+        };
+
+        for (const [normalized, original] of Object.entries(wordsWithAccents)) {
+            this.originalWords.set(normalized, original);
+        }
+    }
+
+    /**
+     * Obtener forma original de una palabra (con tildes)
+     * @param {string} word - Palabra normalizada
+     * @returns {string} Palabra con tildes si existe
+     */
+    getOriginalForm(word) {
+        return this.originalWords.get(word.toLowerCase()) || word;
     }
 }
 

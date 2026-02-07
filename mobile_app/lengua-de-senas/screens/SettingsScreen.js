@@ -145,7 +145,7 @@ export default function SettingsScreen({ navigation }) {
         end={{ x: 1, y: 0 }}
       >
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={28} color="white" />
+          <Ionicons name="arrow-back" size={28} color="#000" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Configuración</Text>
         <View style={styles.placeholder} />
@@ -177,12 +177,12 @@ export default function SettingsScreen({ navigation }) {
             <View style={styles.inputContainer}>
               <Text style={styles.label}>Correo Electrónico</Text>
               <TextInput
-                style={styles.input}
+                style={[styles.input, styles.inputDisabled]}
                 value={email}
-                onChangeText={setEmail}
                 placeholder="tu@email.com"
                 keyboardType="email-address"
                 autoCapitalize="none"
+                editable={false}
               />
             </View>
 
@@ -314,7 +314,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 22,
     fontWeight: '700',
-    color: 'white',
+    color: '#000',
   },
   placeholder: {
     width: 38,
@@ -368,6 +368,10 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     fontSize: 16,
     color: '#333',
+  },
+  inputDisabled: {
+    backgroundColor: '#E8E8E8',
+    color: '#999',
   },
   passwordContainer: {
     flexDirection: 'row',

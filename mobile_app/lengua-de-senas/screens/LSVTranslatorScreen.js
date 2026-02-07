@@ -2,9 +2,10 @@
  * LSVTranslatorScreen - Componente React Native para traducción de texto a LSV
  * Avatar por defecto: Luis
  * Compatible con Expo + expo-three
+ * OPTIMIZADO para mejor rendimiento en dispositivos móviles
  */
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import {
   View,
   Text,
@@ -14,7 +15,8 @@ import {
   StyleSheet,
   Dimensions,
   ActivityIndicator,
-  Alert
+  Alert,
+  InteractionManager
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ExpoWebGLRenderingContext, GLView } from 'expo-gl';
@@ -27,6 +29,19 @@ import AvatarLoader from '../modules/loader';
 import SignAnimator from '../modules/animator';
 import LSVTranslator from '../modules/translator';
 import apiService from '../services/apiService';
+import { GLB_SERVER_URL } from '../config/serverConfig';
+
+// Importar utilidades de optimización
+import {
+  executeAfterInteractions,
+  debounce,
+  throttle,
+  avatarCache,
+  lazyAnimationLoader,
+  RenderOptimizer,
+  memoryOptimizer,
+  batchAnimationLoader
+} from '../utils/performanceOptimizations';
 
 const { width, height } = Dimensions.get('window');
 
@@ -42,6 +57,8 @@ const LSVTranslatorScreen = () => {
   const [playbackSpeed, setPlaybackSpeed] = useState(1.0);
   const [isOptimizing, setIsOptimizing] = useState(false);
   const [optimizationResult, setOptimizationResult] = useState(null);
+  const [animationsReady, setAnimationsReady] = useState(false);
+  const [loadingAnimations, setLoadingAnimations] = useState(false);
 
   // ============= REFS =============
   const loaderRef = useRef(null);
@@ -52,7 +69,8 @@ const LSVTranslatorScreen = () => {
   const rendererRef = useRef(null);
   const animationFrameRef = useRef(null);
   const clockRef = useRef(new THREE.Clock());
-  const avatarCacheRef = useRef({}); // Caché de avatares cargados
+  const renderOptimizerRef = useRef(new RenderOptimizer());
+  const isChangingAvatarRef = useRef(false);
 
   // ============= INICIALIZACIÓN =============
   useEffect(() => {
@@ -61,10 +79,40 @@ const LSVTranslatorScreen = () => {
     console.log('✅ Traductor LSV inicializado');
 
     return () => {
-      // Cleanup
+      // Cleanup mejorado con gestión de memoria
+      console.log('🧹 Limpiando recursos...');
+      
+      // Detener loop de renderizado
       if (animationFrameRef.current) {
         cancelAnimationFrame(animationFrameRef.current);
       }
+
+      // Limpiar avatar actual
+      if (sceneRef.current) {
+        const avatar = sceneRef.current.getObjectByName('currentAvatar');
+        if (avatar) {
+          memoryOptimizer.disposeAvatar(avatar);
+          sceneRef.current.remove(avatar);
+        }
+      }
+
+      // Detener animator
+      if (animatorRef.current) {
+        animatorRef.current.stop();
+        animatorRef.current = null;
+      }
+
+      // Limpiar escena
+      if (sceneRef.current) {
+        sceneRef.current.clear();
+      }
+
+      // Disponer renderer
+      if (rendererRef.current) {
+        rendererRef.current.dispose();
+      }
+
+      console.log('✅ Recursos liberados correctamente');
     };
   }, []);
 
@@ -105,8 +153,9 @@ const LSVTranslatorScreen = () => {
       backLight.position.set(-5, 5, -5);
       scene.add(backLight);
 
-      // Inicializar loader
-      loaderRef.current = new AvatarLoader(THREE, GLTFLoader);
+      // Inicializar loader con URL del servidor
+      console.log(`🌐 Configurando AvatarLoader con servidor: ${GLB_SERVER_URL}`);
+      loaderRef.current = new AvatarLoader(THREE, GLTFLoader, GLB_SERVER_URL);
 
       // Cargar avatar por defecto (Luis)
       await loadAvatar(selectedAvatar);
@@ -124,45 +173,41 @@ const LSVTranslatorScreen = () => {
     }
   };
 
-  // ============= CARGA DE AVATAR =============
-  const loadAvatar = async (avatarName) => {
+  // ============= CARGA DE AVATAR (OPTIMIZADA) =============
+  const loadAvatar = useCallback(async (avatarName) => {
+    // Prevenir cargas múltiples simultáneas
+    if (isChangingAvatarRef.current) {
+      console.log('⚠️ Ya hay un cambio de avatar en proceso');
+      return;
+    }
+
+    isChangingAvatarRef.current = true;
+
     try {
-      // Verificar si el avatar ya está en caché
-      if (avatarCacheRef.current[avatarName]) {
+      // Verificar caché global primero
+      if (avatarCache.has(avatarName)) {
         console.log(`⚡ Usando avatar en caché: ${avatarName}`);
         
-        // Remover avatar actual de la escena
-        const previousAvatar = sceneRef.current.getObjectByName('currentAvatar');
-        if (previousAvatar) {
-          sceneRef.current.remove(previousAvatar);
-        }
-        
-        // Añadir avatar desde caché
-        const cachedAvatarData = avatarCacheRef.current[avatarName];
-        cachedAvatarData.model.name = 'currentAvatar';
-        sceneRef.current.add(cachedAvatarData.model);
-        
-        // Crear nuevo animator con los datos en caché
-        animatorRef.current = new SignAnimator(cachedAvatarData, THREE);
-        
-        // Configurar callbacks
-        animatorRef.current.on('AnimationStart', (name) => {
-          console.log(`▶️ Reproduciendo: ${name}`);
-          const index = translationResult.findIndex(anim => anim === name);
-          setCurrentAnimIndex(index);
-        });
-
-        animatorRef.current.on('AnimationEnd', (name) => {
-          console.log(`✅ Completado: ${name}`);
-        });
-
-        animatorRef.current.on('QueueComplete', () => {
-          console.log('🏁 Secuencia completada');
-          setIsPlaying(false);
-          setCurrentAnimIndex(-1);
+        await executeAfterInteractions(() => {
+          // Remover avatar actual de la escena
+          const previousAvatar = sceneRef.current.getObjectByName('currentAvatar');
+          if (previousAvatar && previousAvatar.userData.avatarName !== avatarName) {
+            sceneRef.current.remove(previousAvatar);
+          }
+          
+          // Añadir avatar desde caché
+          const cachedAvatarData = avatarCache.get(avatarName);
+          cachedAvatarData.model.name = 'currentAvatar';
+          cachedAvatarData.model.userData.avatarName = avatarName;
+          sceneRef.current.add(cachedAvatarData.model);
+          
+          // Crear nuevo animator con los datos en caché
+          animatorRef.current = new SignAnimator(cachedAvatarData, THREE);
+          setupAnimatorCallbacks();
         });
         
         console.log(`✅ Avatar ${avatarName} cargado desde caché`);
+        isChangingAvatarRef.current = false;
         return;
       }
       
@@ -170,7 +215,7 @@ const LSVTranslatorScreen = () => {
       setLoadingProgress(0);
       console.log(`🔄 Cargando avatar: ${avatarName}`);
 
-      // Cargar modelo base
+      // Cargar modelo base (sin bloquear UI)
       const avatarData = await loaderRef.current.loadAvatar(
         avatarName,
         (progress) => {
@@ -178,8 +223,8 @@ const LSVTranslatorScreen = () => {
         }
       );
 
-      // Guardar en caché
-      avatarCacheRef.current[avatarName] = avatarData;
+      // Guardar en caché global
+      avatarCache.set(avatarName, avatarData);
       console.log(`💾 Avatar ${avatarName} guardado en caché`);
 
       // Agregar a escena
@@ -221,8 +266,13 @@ const LSVTranslatorScreen = () => {
         setCurrentAnimIndex(-1);
       });
 
-      // Cargar animaciones comunes
-      await loadCommonAnimations(avatarName);
+      // Añadir metadata al modelo
+      avatarData.model.userData.avatarName = avatarName;
+
+      // Cargar animaciones esenciales de forma no bloqueante
+      executeAfterInteractions(() => {
+        loadCommonAnimations(avatarName);
+      });
 
       console.log(`✅ Avatar ${avatarName} cargado exitosamente`);
 
@@ -231,38 +281,81 @@ const LSVTranslatorScreen = () => {
       Alert.alert('Error', `No se pudo cargar el avatar ${avatarName}`);
     } finally {
       setIsLoading(false);
+      isChangingAvatarRef.current = false;
     }
-  };
+  }, [translationResult]);
 
-  const loadCommonAnimations = async (avatarName) => {
-    const commonAnimations = [
-      'hola', 'adios', 'gracias', 'buenos_dias', 'buenas_tardes',
+  // Configurar callbacks del animator (extraído para reutilizar)
+  const setupAnimatorCallbacks = useCallback(() => {
+    if (!animatorRef.current) return;
+
+    animatorRef.current.on('AnimationStart', (name) => {
+      console.log(`▶️ Reproduciendo: ${name}`);
+      const index = translationResult.findIndex(anim => anim === name);
+      setCurrentAnimIndex(index);
+    });
+
+    animatorRef.current.on('AnimationEnd', (name) => {
+      console.log(`✅ Completado: ${name}`);
+    });
+
+    animatorRef.current.on('QueueComplete', () => {
+      console.log('🏁 Secuencia completada');
+      setIsPlaying(false);
+      setCurrentAnimIndex(-1);
+    });
+  }, [translationResult]);
+
+  // Cargar animaciones comunes con lazy loading
+  const loadCommonAnimations = useCallback(async (avatarName) => {
+    const essentialAnimations = [
+      'hola', 'adios', 'gracias', 'buenos_dias', 'buenas_tardes'
+    ];
+    
+    const secondaryAnimations = [
       'como_estas', 'mi', 'nombre', 'yo', 'tu', 'el', 'ella',
-      'hoy', 'ayer', 'manana', 'lunes', 'martes', 'miercoles',
-      // Alfabeto
-      ...Array.from('abcdefghijklmnopqrstuvwxyz').map(l => `alfabeto_${l}`)
+      'hoy', 'ayer', 'manana', 'lunes', 'martes', 'miercoles'
     ];
 
-    await loaderRef.current.loadAnimations(
-      avatarName,
-      commonAnimations,
-      (progress, animName) => {
-        setLoadingProgress(Math.round(progress));
-      }
-    );
+    try {
+      // Cargar esenciales primero (rápido)
+      console.log(`⚡ Cargando animaciones esenciales para ${avatarName}`);
+      await batchAnimationLoader.loadBatch(
+        avatarName,
+        essentialAnimations,
+        loaderRef.current,
+        (progress) => setLoadingProgress(Math.round(progress * 50))
+      );
 
-    console.log(`✅ Animaciones cargadas para ${avatarName}`);
-  };
+      // Cargar secundarias en background (lazy)
+      lazyAnimationLoader.preloadAnimations(
+        avatarName,
+        secondaryAnimations,
+        loaderRef.current,
+        (progress) => setLoadingProgress(50 + Math.round(progress * 30))
+      );
 
-  // ============= LOOP DE RENDERIZADO =============
+      // Alfabeto se cargará bajo demanda (no precarga)
+      console.log(`✅ Sistema de carga configurado para ${avatarName}`);
+    } catch (error) {
+      console.warn('⚠️ Error precargando animaciones:', error);
+    }
+  }, []);
+
+  // ============= LOOP DE RENDERIZADO (OPTIMIZADO) =============
   const startRenderLoop = () => {
     const render = () => {
       animationFrameRef.current = requestAnimationFrame(render);
 
+      // Control de FPS optimizado
+      if (!renderOptimizerRef.current.shouldRender()) {
+        return;
+      }
+
       const delta = clockRef.current.getDelta();
 
-      // Actualizar animator
-      if (animatorRef.current) {
+      // Actualizar animator solo si hay animaciones activas
+      if (animatorRef.current && isPlaying) {
         animatorRef.current.update(delta);
       }
 
@@ -281,80 +374,158 @@ const LSVTranslatorScreen = () => {
   };
 
   // ============= TRADUCCIÓN Y REPRODUCCIÓN =============
-  const handleTranslate = async () => {
-    if (!inputText.trim()) {
-      Alert.alert('Atención', 'Por favor ingresa un texto para traducir');
-      return;
-    }
+  // ============= TRADUCCIÓN (OPTIMIZADA) =============
+  const handleTranslate = useCallback(
+    debounce(async () => {
+      if (!inputText.trim()) {
+        Alert.alert('Atención', 'Por favor ingresa un texto para traducir');
+        return;
+      }
 
-    console.log(`📝 Traduciendo: "${inputText}"`);
+      console.log(`📝 Traduciendo: "${inputText}"`);
 
-    setIsOptimizing(true);
+      setIsOptimizing(true);
+      setOptimizationResult(null);
+      
+      // Ejecutar traducción sin bloquear UI
+      await executeAfterInteractions(async () => {
+        try {
+          // OPTIMIZACIÓN: Procesar traducción local INMEDIATAMENTE (no esperar API)
+          const animationsLocal = translatorRef.current.translate(inputText, {
+            spellUnknownWords: true,
+            includeIdle: false,
+            maxSpellingLength: 10
+          });
+
+          if (animationsLocal.length === 0) {
+            Alert.alert('Error', 'No se pudo traducir el texto');
+            setIsOptimizing(false);
+            return;
+          }
+
+          // Mostrar resultado local INMEDIATAMENTE
+          setTranslationResult(animationsLocal);
+          console.log(`⚡ Traducción local rápida: ${animationsLocal.length} animaciones`);
+          
+          // Cargar las animaciones necesarias
+          await loadAnimationsForTranslation(animationsLocal);
+          
+          // Intentar optimizar con IA en paralelo (con timeout de 3 segundos)
+          const result = await apiService.optimizarTexto(inputText, 3000);
+          
+          if (result.success) {
+            setOptimizationResult(result.data);
+            
+            // Usar texto LSV optimizado si es diferente
+            const textoAUsar = result.data.textoLSV || result.data.textoCorregido;
+            console.log(`✨ Optimizado por IA: "${textoAUsar}"`);
+            
+            // Si el texto optimizado es diferente, re-traducir
+            if (textoAUsar.toLowerCase() !== inputText.toLowerCase()) {
+              const animationsOptimized = translatorRef.current.translate(textoAUsar, {
+                spellUnknownWords: true,
+                includeIdle: false,
+                maxSpellingLength: 10
+              });
+
+              if (animationsOptimized.length > 0) {
+                setTranslationResult(animationsOptimized);
+                console.log(`✅ Traducción optimizada: ${animationsOptimized.length} animaciones`);
+                
+                // Recargar animaciones si el texto cambió
+                await loadAnimationsForTranslation(animationsOptimized);
+              }
+            }
+            
+            // Mostrar info si hubo corrección (solo si no viene de caché)
+            if (result.data.textoCorregido && result.data.textoCorregido !== inputText && !result.fromCache) {
+              setTimeout(() => {
+                Alert.alert(
+                  '✨ Texto Optimizado por IA',
+                  `Original: "${inputText}"\nOptimizado: "${textoAUsar}"\nCobertura: ${(result.data.porcentajeCobertura || 0).toFixed(1)}%`,
+                  [{ text: 'OK' }]
+                );
+              }, 300);
+            }
+          } else {
+            // API no disponible o timeout - ya tenemos la traducción local
+            if (result.isTimeout) {
+              console.log('⏱️ API timeout - usando traducción local (ya mostrada)');
+            } else {
+              console.warn('⚠️ API no disponible - usando traducción local');
+            }
+          }
+        } catch (error) {
+          console.error('❌ Error en traducción:', error);
+          
+          // Intentar traducción de emergencia si no hay resultado
+          if (translationResult.length === 0) {
+            const emergencyTranslation = translatorRef.current.translate(inputText, {
+              spellUnknownWords: true,
+              includeIdle: false,
+              maxSpellingLength: 10
+            });
+            
+            if (emergencyTranslation.length > 0) {
+              setTranslationResult(emergencyTranslation);
+            } else {
+              Alert.alert('Error', 'Hubo un problema al traducir');
+            }
+          }
+        } finally {
+          setIsOptimizing(false);
+        }
+      });
+    }, 300), // Debounce de 300ms
+    [inputText, translationResult]
+  );
+
+  // Cargar animaciones necesarias para la traducción
+  const loadAnimationsForTranslation = useCallback(async (animationNames) => {
+    if (!loaderRef.current || animationNames.length === 0) return;
+    
+    setLoadingAnimations(true);
+    setAnimationsReady(false);
     
     try {
-      // Optimizar con IA
-      const result = await apiService.optimizarTexto(inputText);
+      console.log(`🎬 Cargando ${animationNames.length} animaciones...`);
       
-      if (result.success) {
-        setOptimizationResult(result.data);
-        
-        // Usar texto LSV optimizado
-        const textoAUsar = result.data.textoLSV || result.data.textoCorregido;
-        console.log(`✨ Optimizado por IA: "${textoAUsar}"`);
-        
-        // Traducir a animaciones
-        const animations = translatorRef.current.translate(textoAUsar, {
-          spellUnknownWords: true,
-          includeIdle: false,
-          maxSpellingLength: 10
-        });
-
-        if (animations.length === 0) {
-          Alert.alert('Error', 'No se pudo traducir el texto');
-          setIsOptimizing(false);
-          return;
-        }
-
-        setTranslationResult(animations);
-        console.log(`✅ Traducción: ${animations.length} animaciones`);
-        
-        // Mostrar info de optimización
-        if (result.data.textoCorregido && result.data.textoCorregido !== inputText) {
-          Alert.alert(
-            'Texto Optimizado',
-            `Original: "${inputText}"\nOptimizado: "${textoAUsar}"\nCobertura: ${(result.data.porcentajeCobertura || 0).toFixed(1)}%`,
-            [{ text: 'OK' }]
-          );
-        }
+      // Filtrar animaciones ya cargadas
+      const loadedAnims = loaderRef.current.getLoadedAnimations(selectedAvatar);
+      const animsToLoad = animationNames.filter(name => !loadedAnims.includes(name));
+      
+      if (animsToLoad.length > 0) {
+        console.log(`📥 Faltan ${animsToLoad.length} animaciones por cargar`);
+        await loaderRef.current.loadAnimations(
+          selectedAvatar,
+          animsToLoad,
+          (progress) => {
+            console.log(`📊 Progreso carga: ${progress.toFixed(0)}%`);
+          }
+        );
       } else {
-        // Fallback: traducir sin optimización
-        console.warn('⚠️ API no disponible, traduciendo sin optimización');
-        const animations = translatorRef.current.translate(inputText, {
-          spellUnknownWords: true,
-          includeIdle: false,
-          maxSpellingLength: 10
-        });
-
-        if (animations.length === 0) {
-          Alert.alert('Error', 'No se pudo traducir el texto');
-          setIsOptimizing(false);
-          return;
-        }
-
-        setTranslationResult(animations);
-        console.log(`✅ Traducción (sin IA): ${animations.length} animaciones`);
-        setIsOptimizing(false);
+        console.log(`✅ Todas las animaciones ya están en caché`);
       }
+      
+      setAnimationsReady(true);
+      console.log(`✅ Animaciones listas para reproducir`);
     } catch (error) {
-      console.error('Error en traducción:', error);
-      Alert.alert('Error', 'Hubo un problema al traducir');
-      setIsOptimizing(false);
+      console.error('❌ Error cargando animaciones:', error);
+      Alert.alert('Error', 'Algunas animaciones no se pudieron cargar');
+      setAnimationsReady(true); // Permitir reproducir las que sí cargaron
+    } finally {
+      setLoadingAnimations(false);
     }
-  };
+  }, [selectedAvatar]);
 
   const handlePlay = () => {
     if (!animatorRef.current || translationResult.length === 0) {
       Alert.alert('Error', 'Primero debes traducir un texto');
+      return;
+    }
+    
+    if (!animationsReady) {
+      Alert.alert('Espera', 'Las animaciones aún se están cargando...');
       return;
     }
 
@@ -392,7 +563,13 @@ const LSVTranslatorScreen = () => {
     if (avatarName === selectedAvatar) return;
     
     setSelectedAvatar(avatarName);
+    setAnimationsReady(false);
     await loadAvatar(avatarName);
+    
+    // Recargar animaciones si hay una traducción activa
+    if (translationResult.length > 0) {
+      await loadAnimationsForTranslation(translationResult);
+    }
   };
 
   // ============= RENDER =============
@@ -467,9 +644,12 @@ const LSVTranslatorScreen = () => {
               end={{ x: 1, y: 0 }}
             >
               {isOptimizing ? (
-                <ActivityIndicator color="white" />
+                <>
+                  <ActivityIndicator color="white" size="small" />
+                  <Text style={[styles.translateBtnText, { marginLeft: 8 }]}>Traduciendo...</Text>
+                </>
               ) : (
-                <Text style={styles.translateBtnText}>🤖 Traducir con IA</Text>
+                <Text style={styles.translateBtnText}>🚀 Traducir</Text>
               )}
             </LinearGradient>
           </TouchableOpacity>
@@ -527,11 +707,16 @@ const LSVTranslatorScreen = () => {
         {translationResult.length > 0 && (
           <View style={styles.playbackControls}>
             <TouchableOpacity
-              style={styles.controlBtn}
+              style={[
+                styles.controlBtn,
+                (!animationsReady || isPlaying || loadingAnimations) && styles.controlBtnDisabled
+              ]}
               onPress={handlePlay}
-              disabled={isPlaying}
+              disabled={!animationsReady || isPlaying || loadingAnimations}
             >
-              <Text style={styles.controlBtnText}>▶</Text>
+              <Text style={styles.controlBtnText}>
+                {loadingAnimations ? '⏳' : '▶'}
+              </Text>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -674,6 +859,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     alignItems: 'center',
     justifyContent: 'center',
+    flexDirection: 'row',
   },
   translateBtnText: {
     color: 'white',
@@ -751,6 +937,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 10,
+  },
+  controlBtnDisabled: {
+    backgroundColor: 'rgba(100, 100, 100, 0.2)',
+    borderColor: 'rgba(100, 100, 100, 0.3)',
+    opacity: 0.5,
   },
   controlBtnText: {
     color: 'white',

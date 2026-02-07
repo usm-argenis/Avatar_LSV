@@ -14,12 +14,14 @@ import {
   Dimensions,
   ImageBackground,
   StatusBar,
+  Modal,
 } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as LocalAuthentication from 'expo-local-authentication';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { login } from '../services/authService';
+import { LinearGradient } from 'expo-linear-gradient';
+import { login, requestPasswordReset } from '../services/authService';
 
 const { width, height } = Dimensions.get('window');
 
@@ -30,6 +32,11 @@ export default function LoginScreen({ navigation }) {
   const [showPassword, setShowPassword] = useState(false);
   const [isBiometricSupported, setIsBiometricSupported] = useState(false);
   const [hasSavedCredentials, setHasSavedCredentials] = useState(false);
+  
+  // Estados para modal de recuperación
+  const [showForgotModal, setShowForgotModal] = useState(false);
+  const [resetEmail, setResetEmail] = useState('');
+  const [resetLoading, setResetLoading] = useState(false);
 
   useEffect(() => {
     checkBiometricSupport();
@@ -148,6 +155,43 @@ export default function LoginScreen({ navigation }) {
     }
   };
 
+  const handleForgotPassword = async () => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    
+    if (!resetEmail || resetEmail.trim().length === 0) {
+      Alert.alert('Error', 'Por favor ingresa tu correo electrónico');
+      return;
+    }
+
+    if (!emailRegex.test(resetEmail)) {
+      Alert.alert('Error', 'Por favor ingresa un correo electrónico válido');
+      return;
+    }
+
+    setResetLoading(true);
+
+    try {
+      const response = await requestPasswordReset(resetEmail.trim());
+
+      if (response.success) {
+        setShowForgotModal(false);
+        setResetEmail('');
+        Alert.alert(
+          '✅ Correo Enviado',
+          'Se ha enviado un enlace de recuperación a tu correo electrónico. Por favor revisa tu bandeja de entrada.',
+          [{ text: 'OK' }]
+        );
+      } else {
+        Alert.alert('Error', response.mensaje || 'No se pudo enviar el correo de recuperación');
+      }
+    } catch (error) {
+      console.error('❌ Error en recuperación:', error);
+      Alert.alert('Error', 'Error de conexión con el servidor');
+    } finally {
+      setResetLoading(false);
+    }
+  };
+
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
       <StatusBar barStyle="dark-content" translucent={false} />
@@ -227,7 +271,7 @@ export default function LoginScreen({ navigation }) {
               {/* Link Olvidaste contraseña */}
               <TouchableOpacity 
                 style={styles.forgotPasswordButton}
-                onPress={() => Alert.alert('Recuperar contraseña', 'Esta función estará disponible próximamente')}
+                onPress={() => setShowForgotModal(true)}
               >
                 <Text style={styles.forgotPasswordText}>¿Olvidaste tu contraseña?</Text>
               </TouchableOpacity>
@@ -309,6 +353,73 @@ export default function LoginScreen({ navigation }) {
           <Ionicons name="star" size={20} color="rgba(255, 217, 0, 0.32)" style={styles.starBg4} />
           <Ionicons name="star" size={28} color="rgba(255, 217, 0, 0.32)" style={styles.starBg5} />
         </View>
+        
+        {/* Modal de Recuperación de Contraseña */}
+        <Modal
+          visible={showForgotModal}
+          transparent={true}
+          animationType="fade"
+          onRequestClose={() => setShowForgotModal(false)}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContent}>
+              <LinearGradient
+                colors={['#FFC107', '#2196F3', '#F44336']}
+                style={styles.modalHeader}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+              >
+                <Ionicons name="lock-closed" size={40} color="white" />
+              </LinearGradient>
+              
+              <View style={styles.modalBody}>
+                <Text style={styles.modalTitle}>¿Olvidaste tu contraseña?</Text>
+                <Text style={styles.modalSubtitle}>
+                  Ingresa tu correo electrónico y te enviaremos un enlace para restablecer tu contraseña
+                </Text>
+                
+                <View style={styles.modalInputContainer}>
+                  <Ionicons name="mail-outline" size={20} color="#2196F3" style={styles.modalInputIcon} />
+                  <TextInput
+                    style={styles.modalInput}
+                    placeholder="tucorreo@ejemplo.com"
+                    placeholderTextColor="#999"
+                    value={resetEmail}
+                    onChangeText={setResetEmail}
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                    autoFocus
+                  />
+                </View>
+                
+                <TouchableOpacity
+                  style={[styles.modalButton, resetLoading && styles.modalButtonDisabled]}
+                  onPress={handleForgotPassword}
+                  disabled={resetLoading}
+                >
+                  {resetLoading ? (
+                    <ActivityIndicator color="white" />
+                  ) : (
+                    <>
+                      <Ionicons name="send" size={20} color="white" style={{ marginRight: 8 }} />
+                      <Text style={styles.modalButtonText}>Enviar enlace</Text>
+                    </>
+                  )}
+                </TouchableOpacity>
+                
+                <TouchableOpacity
+                  style={styles.modalCancelButton}
+                  onPress={() => {
+                    setShowForgotModal(false);
+                    setResetEmail('');
+                  }}
+                >
+                  <Text style={styles.modalCancelText}>Cancelar</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </Modal>
       </KeyboardAvoidingView>
       </View>
     </SafeAreaView>
@@ -552,5 +663,95 @@ starBg1: {
     position: 'absolute',
     bottom: 30,
     right: 10,
+  },
+  // Estilos del Modal
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  modalContent: {
+    backgroundColor: 'white',
+    borderRadius: 20,
+    width: '100%',
+    maxWidth: 400,
+    overflow: 'hidden',
+    elevation: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+  },
+  modalHeader: {
+    padding: 30,
+    alignItems: 'center',
+  },
+  modalBody: {
+    padding: 25,
+  },
+  modalTitle: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: '#333',
+    textAlign: 'center',
+    marginBottom: 10,
+  },
+  modalSubtitle: {
+    fontSize: 14,
+    color: '#666',
+    textAlign: 'center',
+    marginBottom: 25,
+    lineHeight: 20,
+  },
+  modalInputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F5F5F5',
+    borderRadius: 12,
+    paddingHorizontal: 15,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+  },
+  modalInputIcon: {
+    marginRight: 10,
+  },
+  modalInput: {
+    flex: 1,
+    paddingVertical: 15,
+    fontSize: 16,
+    color: '#333',
+  },
+  modalButton: {
+    backgroundColor: '#2196F3',
+    borderRadius: 12,
+    padding: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 15,
+    elevation: 3,
+    shadowColor: '#2196F3',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+  },
+  modalButtonDisabled: {
+    backgroundColor: '#ccc',
+  },
+  modalButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  modalCancelButton: {
+    padding: 15,
+    alignItems: 'center',
+  },
+  modalCancelText: {
+    color: '#666',
+    fontSize: 16,
   },
 });
