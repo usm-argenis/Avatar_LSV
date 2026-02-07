@@ -217,6 +217,32 @@
         window.changeAvatar = function(name) {
             loadAvatar(name);
         };
+
+        // Listener para mensajes de React Native WebView
+        window.addEventListener('message', function(event) {
+            try {
+                const data = JSON.parse(event.data);
+                if (data.type === 'changeAvatar' && data.avatar) {
+                    console.log('📱 Mensaje recibido: cambiar a avatar', data.avatar);
+                    loadAvatar(data.avatar);
+                }
+            } catch (e) {
+                // Ignorar mensajes mal formados
+            }
+        });
+
+        // Listener adicional para Android
+        document.addEventListener('message', function(event) {
+            try {
+                const data = JSON.parse(event.data);
+                if (data.type === 'changeAvatar' && data.avatar) {
+                    console.log('📱 Mensaje recibido (Android): cambiar a avatar', data.avatar);
+                    loadAvatar(data.avatar);
+                }
+            } catch (e) {
+                // Ignorar mensajes mal formados
+            }
+        });
     </script>
 </body>
 </html>

@@ -433,21 +433,36 @@ const LessonScreen = ({ route, navigation }) => {
   };
 
   const showCompletionMessage = () => {
-    // Dar recompensa de estrellas
-    if (onComplete) {
+    // Solo dar recompensa de estrellas si NO estamos en modo repaso
+    // (en modo repaso las estrellas ya fueron otorgadas en el modo clásico)
+    if (onComplete && !isReviewMode) {
       onComplete(starReward);
     }
     
-    Alert.alert(
-      '🎉 ¡Lección Completada!',
-      `Puntuación: ${score}\nVidas restantes: ${lives}\n\n⭐ +${starReward} estrellas ganadas!`,
-      [
-        {
-          text: 'Volver al menú',
-          onPress: () => navigation.goBack()
-        }
-      ]
-    );
+    // Si estamos en modo repaso, solo mostrar mensaje de repaso completado
+    if (isReviewMode) {
+      Alert.alert(
+        '✅ ¡Repaso Completado!',
+        `Has repasado las letras fallidas.\n\nPuntuación en repaso: ${score}`,
+        [
+          {
+            text: 'Volver al menú',
+            onPress: () => navigation.goBack()
+          }
+        ]
+      );
+    } else {
+      Alert.alert(
+        '🎉 ¡Lección Completada!',
+        `Puntuación: ${score}\nVidas restantes: ${lives}\n\n⭐ +${starReward} estrellas ganadas!`,
+        [
+          {
+            text: 'Volver al menú',
+            onPress: () => navigation.goBack()
+          }
+        ]
+      );
+    }
   };
 
   const handleAnimationChoice = (choice) => {
@@ -786,10 +801,10 @@ const LessonScreen = ({ route, navigation }) => {
                   const sequence = getNumberAnimationSequence(sign);
                   const firstNum = sequence[0];
                   console.log(`🎬 Iniciando secuencia de número ${sign}: [${sequence.join(', ')}]`);
-                  return `http://192.168.10.93:8000/lesson_simple.html?letra=${encodeURIComponent(firstNum)}&categoria=numero&avatar=${avatarSeleccionado || 'luis'}&autoplay=true`;
+                  return `http://192.168.86.27:8000/lesson_simple.html?letra=${encodeURIComponent(firstNum)}&categoria=numero&avatar=${avatarSeleccionado || 'luis'}&autoplay=true`;
                 } else {
                   // Para letras y otras categorías, usar el comportamiento normal
-                  return `http://192.168.10.93:8000/lesson_simple.html?letra=${encodeURIComponent(sign)}&categoria=${encodeURIComponent(category)}&avatar=${avatarSeleccionado || 'luis'}&autoplay=true`;
+                  return `http://192.168.86.27:8000/lesson_simple.html?letra=${encodeURIComponent(sign)}&categoria=${encodeURIComponent(category)}&avatar=${avatarSeleccionado || 'luis'}&autoplay=true`;
                 }
               })()
             }}
@@ -799,6 +814,10 @@ const LessonScreen = ({ route, navigation }) => {
             allowsInlineMediaPlayback={true}
             mediaPlaybackRequiresUserAction={false}
             style={styles.webview}
+            onLoad={() => {
+              console.log('⚡ onLoad: WebView listo - marcando inmediatamente');
+              setWebViewReady(true);
+            }}
             onLoadEnd={() => {
               // Cuando el WebView carga, iniciar secuencia si es número (solo una vez)
               if (hasInitialized.current) {
@@ -806,21 +825,19 @@ const LessonScreen = ({ route, navigation }) => {
                 return;
               }
               
-              console.log('✅ onLoadEnd: WebView cargado, marcando como listo');
+              console.log('✅ onLoadEnd: WebView completamente cargado');
               
-              // Marcar WebView como listo después de un pequeño delay
-              setTimeout(() => {
-                setWebViewReady(true);
-                
-                const sign = currentSign.toLowerCase();
-                const isNumber = /^\d+$/.test(sign);
-                if (isNumber && category === 'numeros') {
-                  console.log('✅ onLoadEnd: Primera vez, iniciando secuencia');
-                  hasInitialized.current = true;
+              const sign = currentSign.toLowerCase();
+              const isNumber = /^\d+$/.test(sign);
+              if (isNumber && category === 'numeros') {
+                console.log('✅ onLoadEnd: Primera vez, iniciando secuencia');
+                hasInitialized.current = true;
+                // Usar setTimeout(0) para liberar el thread
+                setTimeout(() => {
                   setAnimationSequenceIndex(0);
                   setIsPlayingSequence(true);
-                }
-              }, 500); // Esperar 500ms para asegurar que el DOM está listo
+                }, 0);
+              }
             }}
             onError={(syntheticEvent) => {
               const { nativeEvent } = syntheticEvent;

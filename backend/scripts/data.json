@@ -508,7 +508,7 @@
     "archivo": "medico"
   },
   "domingo": {
-    "categoria": "tiempo",
+    "categoria": "dias_semana",
     "archivo": "domingo"
   },
   "donde": {
@@ -752,7 +752,7 @@
     "archivo": "joven"
   },
   "jueves": {
-    "categoria": "tiempo",
+    "categoria": "dias_semana",
     "archivo": "jueves"
   },
   "julio": {
@@ -792,7 +792,7 @@
     "archivo": "lugares"
   },
   "lunes": {
-    "categoria": "tiempo",
+    "categoria": "dias_semana",
     "archivo": "lunes"
   },
   "m": {
@@ -812,7 +812,7 @@
     "archivo": "mal"
   },
   "martes": {
-    "categoria": "tiempo",
+    "categoria": "dias_semana",
     "archivo": "martes"
   },
   "marzo": {
@@ -880,7 +880,7 @@
     "archivo": "mesonero"
   },
   "miercoles": {
-    "categoria": "tiempo",
+    "categoria": "dias_semana",
     "archivo": "miercoles"
   },
   "mio": {
@@ -1055,6 +1055,10 @@
     "categoria": "profesiones",
     "archivo": "profesor"
   },
+  "proyecto": {
+    "categoria": "sustantivos",
+    "archivo": "proyecto"
+  },
   "psicologo": {
     "categoria": "profesiones",
     "archivo": "psicologo"
@@ -1112,7 +1116,7 @@
     "archivo": "s"
   },
   "sabado": {
-    "categoria": "tiempo",
+    "categoria": "dias_semana",
     "archivo": "sabado"
   },
   "sala": {
@@ -1300,7 +1304,7 @@
     "archivo": "viejo"
   },
   "viernes": {
-    "categoria": "tiempo",
+    "categoria": "dias_semana",
     "archivo": "viernes"
   },
   "vigilante": {
@@ -1342,5 +1346,437 @@
   "ñ": {
     "categoria": "alfabeto",
     "archivo": "ñ"
+  },
+  "defensa": {
+    "categoria": "general",
+    "archivo": "defensa"
+  },
+  "teg": {
+    "categoria": "general",
+    "archivo": "teg"
+  },
+  "trabajo": {
+    "categoria": "general",
+    "archivo": "trabajo"
+  },
+  "especial": {
+    "categoria": "general",
+    "archivo": "especial"
+  },
+  "grado": {
+    "categoria": "general",
+    "archivo": "grado"
+  },
+  "aporte": {
+    "categoria": "general",
+    "archivo": "aporte"
+  },
+  "tecnologico": {
+    "categoria": "general",
+    "archivo": "tecnologico"
+  },
+  "tecnologia": {
+    "categoria": "general",
+    "archivo": "tecnologia"
+  },
+  "integracion": {
+    "categoria": "general",
+    "archivo": "integracion"
+  },
+  "integrar": {
+    "categoria": "verbos",
+    "archivo": "integrar"
+  },
+  "comunidad": {
+    "categoria": "general",
+    "archivo": "comunidad"
+  },
+  "venezuela": {
+    "categoria": "lugares",
+    "archivo": "venezuela"
+  },
+  "venezolano": {
+    "categoria": "general",
+    "archivo": "venezolano"
+  },
+  "miembro": {
+    "categoria": "general",
+    "archivo": "miembro"
+  },
+  "miembros": {
+    "categoria": "general",
+    "archivo": "miembro"
+  },
+  "jurado": {
+    "categoria": "general",
+    "archivo": "jurado"
+  },
+  "presentacion": {
+    "categoria": "general",
+    "archivo": "presentacion"
+  },
+  "traduccion": {
+    "categoria": "general",
+    "archivo": "traduccion"
+  },
+  "traducir": {
+    "categoria": "verbos",
+    "archivo": "traducir"
+  },
+  "lsv": {
+    "categoria": "general",
+    "archivo": "lsv"
+  },
+  "universidad": {
+    "categoria": "lugares",
+    "archivo": "universidad"
+  },
+  "bienvenir": {
+    "categoria": "saludos",
+    "archivo": "bienvenido"
+  },
+  "objetivo": {
+    "categoria": "educacion",
+    "archivo": "objetivo"
+  },
+  "crear": {
+    "categoria": "verbos",
+    "archivo": "crear"
+  },
+  "lengua": {
+    "categoria": "general",
+    "archivo": "lengua"
+  },
+  "señas": {
+    "categoria": "general",
+    "archivo": "señas"
+  },
+  "senas": {
+    "categoria": "general",
+    "archivo": "señas"
+  },
+  "comunicacion": {
+    "categoria": "verbos",
+    "archivo": "comunicacion"
+  },
+  "social": {
+    "categoria": "general",
+    "archivo": "social"
+  },
+  "participar": {
+    "categoria": "verbos",
+    "archivo": "participar"
+  },
+  "junto": {
+    "categoria": "general",
+    "archivo": "junto"
+  },
+  "buscar": {
+    "categoria": "verbos",
+    "archivo": "buscar"
+  },
+  "mejorar": {
+    "categoria": "verbos",
+    "archivo": "mejorar"
+  },
+  "existir": {
+    "categoria": "verbos",
+    "archivo": "existir"
+  },
+  "importante": {
+    "categoria": "general",
+    "archivo": "importante"
+  },
+  "este": {
+    "categoria": "general",
+    "archivo": "este"
+  },
+  "esta": {
+    "categoria": "general",
+    "archivo": "este"
+  },
+  "año": {
+    "categoria": "tiempo",
+    "archivo": "año"
+  },
+  "años": {
+    "categoria": "tiempo",
+    "archivo": "año"
+  },
+  "tener": {
+    "categoria": "verbos",
+    "archivo": "tener"
+  },
+  "tengo": {
+    "categoria": "verbos",
+    "archivo": "tener"
+  },
+  "tienes": {
+    "categoria": "verbos",
+    "archivo": "tener"
+  },
+  "tiene": {
+    "categoria": "verbos",
+    "archivo": "tener"
+  },
+  "nombre": {
+    "categoria": "general",
+    "archivo": "nombre"
+  },
+  "llamar": {
+    "categoria": "verbos",
+    "archivo": "llamar"
+  },
+  "llamo": {
+    "categoria": "verbos",
+    "archivo": "llamar"
+  },
+  "edad": {
+    "categoria": "general",
+    "archivo": "edad"
+  },
+  "ir": {
+    "categoria": "verbos",
+    "archivo": "ir"
+  },
+  "voy": {
+    "categoria": "verbos",
+    "archivo": "ir"
+  },
+  "vas": {
+    "categoria": "verbos",
+    "archivo": "ir"
+  },
+  "va": {
+    "categoria": "verbos",
+    "archivo": "ir"
+  },
+  "vamos": {
+    "categoria": "verbos",
+    "archivo": "ir"
+  },
+  "van": {
+    "categoria": "verbos",
+    "archivo": "ir"
+  },
+  "entender": {
+    "categoria": "verbos",
+    "archivo": "entender"
+  },
+  "entiendo": {
+    "categoria": "verbos",
+    "archivo": "entender"
+  },
+  "entiendes": {
+    "categoria": "verbos",
+    "archivo": "entender"
+  },
+  "entiende": {
+    "categoria": "verbos",
+    "archivo": "entender"
+  },
+  "soy": {
+    "categoria": "verbos",
+    "archivo": "ser"
+  },
+  "eres": {
+    "categoria": "verbos",
+    "archivo": "ser"
+  },
+  "facilitar": {
+    "categoria": "verbos",
+    "archivo": "facilitar"
+  },
+  "busca": {
+    "categoria": "verbos",
+    "archivo": "buscar"
+  },
+  "buscas": {
+    "categoria": "verbos",
+    "archivo": "buscar"
+  },
+  "buscamos": {
+    "categoria": "verbos",
+    "archivo": "buscar"
+  },
+  "buscan": {
+    "categoria": "verbos",
+    "archivo": "buscar"
+  },
+  "facilita": {
+    "categoria": "verbos",
+    "archivo": "facilitar"
+  },
+  "facilitas": {
+    "categoria": "verbos",
+    "archivo": "facilitar"
+  },
+  "facilitamos": {
+    "categoria": "verbos",
+    "archivo": "facilitar"
+  },
+  "facilitan": {
+    "categoria": "verbos",
+    "archivo": "facilitar"
+  },
+  "facilite": {
+    "categoria": "verbos",
+    "archivo": "facilitar"
+  },
+  "hermano": {
+    "categoria": "familia",
+    "archivo": "hermano"
+  },
+  "hijo": {
+    "categoria": "familia",
+    "archivo": "hijo"
+  },
+  "madre": {
+    "categoria": "familia",
+    "archivo": "madre"
+  },
+  "madrina": {
+    "categoria": "familia",
+    "archivo": "madrina"
+  },
+  "mama": {
+    "categoria": "familia",
+    "archivo": "mama"
+  },
+  "nieto": {
+    "categoria": "familia",
+    "archivo": "nieto"
+  },
+  "padre": {
+    "categoria": "familia",
+    "archivo": "padre"
+  },
+  "padrino": {
+    "categoria": "familia",
+    "archivo": "padrino"
+  },
+  "papa": {
+    "categoria": "familia",
+    "archivo": "papa"
+  },
+  "primo": {
+    "categoria": "familia",
+    "archivo": "primo"
+  },
+  "sobrino": {
+    "categoria": "familia",
+    "archivo": "sobrino"
+  },
+  "suegro": {
+    "categoria": "familia",
+    "archivo": "suegro"
+  },
+  "tio": {
+    "categoria": "familia",
+    "archivo": "tio"
+  },
+  "abuelo": {
+    "categoria": "familia",
+    "archivo": "abuelo"
+  },
+  "cuñado": {
+    "categoria": "familia",
+    "archivo": "cunado"
+  },
+  "familia": {
+    "categoria": "familia",
+    "archivo": "familia"
+  },
+  "seña": {
+    "categoria": "general",
+    "archivo": "sena"
+  },
+  "correr": {
+    "categoria": "verbos",
+    "archivo": "correr"
+  },
+  "dividir": {
+    "categoria": "verbos",
+    "archivo": "dividir"
+  },
+  "entrar": {
+    "categoria": "verbos",
+    "archivo": "entrar"
+  },
+  "fumar": {
+    "categoria": "verbos",
+    "archivo": "fumar"
+  },
+  "multiplicar": {
+    "categoria": "verbos",
+    "archivo": "multiplicar"
+  },
+  "permitir": {
+    "categoria": "verbos",
+    "archivo": "permitir"
+  },
+  "prohibir": {
+    "categoria": "verbos",
+    "archivo": "prohibir"
+  },
+  "respetar": {
+    "categoria": "verbos",
+    "archivo": "respetar"
+  },
+  "restar": {
+    "categoria": "verbos",
+    "archivo": "restar"
+  },
+  "sumar": {
+    "categoria": "verbos",
+    "archivo": "sumar"
+  },
+  "viajar": {
+    "categoria": "verbos",
+    "archivo": "viajar"
+  },
+  "evaluar": {
+    "categoria": "verbos",
+    "archivo": "evaluar"
+  },
+  "antes": {
+    "categoria": "tiempo",
+    "archivo": "antes"
+  },
+  "hace rato": {
+    "categoria": "tiempo",
+    "archivo": "hace_rato"
+  },
+  "mejora": {
+    "categoria": "verbos",
+    "archivo": "mejorar"
+  },
+  "computadora": {
+    "categoria": "tecnologia",
+    "archivo": "computadora"
+  },
+  "computadoras": {
+    "categoria": "tecnologia",
+    "archivo": "computadora"
+  },
+  "mejor": {
+    "categoria": "expresiones",
+    "archivo": "mejor"
+  },
+  "sordas": {
+    "categoria": "personas",
+    "archivo": "sordo"
+  },
+  "sordos": {
+    "categoria": "personas",
+    "archivo": "sordo"
+  },
+  "habia una vez": {
+    "categoria": "tiempo",
+    "archivo": "habia una vez"
+  },
+  "stro": {
+    "categoria": "general",
+    "archivo": "stro"
   }
 }

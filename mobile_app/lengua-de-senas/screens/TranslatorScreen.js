@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import {
   StyleSheet,
   View,
@@ -17,36 +17,42 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 export default function TranslatorScreen({ navigation }) {
   const [loading, setLoading] = useState(true);
   const [avatarSeleccionado, setAvatarSeleccionado] = useState('luis');
-  const [timestamp, setTimestamp] = useState(Date.now());
+  const webViewRef = useRef(null);
 
+  // Cargar avatar solo cuando la pantalla gana foco (evita carga duplicada)
   useEffect(() => {
-    loadSelectedAvatar();
-  }, []);
-
-  // Recargar avatar cuando vuelven a esta pantalla
-  useEffect(() => {
-    const unsubscribe = navigation.addListener('focus', () => {
-      loadSelectedAvatar();
-      setTimestamp(Date.now()); // Forzar recarga del WebView
-    });
-    return unsubscribe;
-  }, [navigation]);
-
-  const loadSelectedAvatar = async () => {
-    try {
-      const savedAvatar = await AsyncStorage.getItem('selectedAvatar');
-      if (savedAvatar) {
-        setAvatarSeleccionado(savedAvatar);
-        console.log('✅ Avatar cargado en TranslatorScreen:', savedAvatar);
+    const loadAvatar = async () => {
+      try {
+        const savedAvatar = await AsyncStorage.getItem('selectedAvatar');
+        if (savedAvatar && savedAvatar !== avatarSeleccionado) {
+          setAvatarSeleccionado(savedAvatar);
+          
+          // Enviar mensaje al WebView para cambiar avatar sin recargar
+          if (webViewRef.current) {
+            webViewRef.current.postMessage(JSON.stringify({
+              type: 'changeAvatar',
+              avatar: savedAvatar.charAt(0).toUpperCase() + savedAvatar.slice(1)
+            }));
+          }
+        }
+      } catch (error) {
+        console.error('Error cargando avatar:', error);
       }
-    } catch (error) {
-      console.error('Error cargando avatar:', error);
-    }
-  };
+    };
 
-  // URL del visualizador 3D animation_mobile.html con el avatar seleccionado
-  const avatarCapitalized = avatarSeleccionado.charAt(0).toUpperCase() + avatarSeleccionado.slice(1);
-  const webViewUrl = `http://192.168.10.93:8000/animation_mobile.html?avatar=${avatarCapitalized}&t=${timestamp}`;
+    const unsubscribe = navigation.addListener('focus', loadAvatar);
+    
+    // Cargar también al montar
+    loadAvatar();
+    
+    return unsubscribe;
+  }, [navigation, avatarSeleccionado]);
+
+  // URL memoizada del visualizador 3D (no cambia con cada render)
+  const webViewUrl = useMemo(() => {
+    const avatarCapitalized = avatarSeleccionado.charAt(0).toUpperCase() + avatarSeleccionado.slice(1);
+    return `http://192.168.86.27:8000/animation_mobile.html?avatar=${avatarCapitalized}`;
+  }, [avatarSeleccionado]);
 
   return (
     <SafeAreaView style={styles.container} edges={['bottom']}>
@@ -79,23 +85,24 @@ export default function TranslatorScreen({ navigation }) {
 
       {/* WebView */}
       <WebView
-        key={timestamp}
+        ref={webViewRef}
         source={{ uri: webViewUrl }}
         style={styles.webView}
         onLoadStart={() => setLoading(true)}
         onLoadEnd={() => setLoading(false)}
         onError={(error) => {
-          console.error('WebView error:', error);
+          console.error('❌ [TranslatorWebView] Error:', error.nativeEvent?.description || error);
           setLoading(false);
         }}
         onMessage={(event) => {
           try {
             const msg = JSON.parse(event.nativeEvent.data);
-            if (msg.type === 'LOG') {
-              console.log(`[WebView] ${msg.message}`, msg.data || '');
+            // Solo loggear errores y eventos importantes, no todo
+            if (msg.type === 'ERROR' || msg.type === 'ANIMATION_COMPLETE') {
+              console.log(`[TranslatorWebView] ${msg.message}`, msg.data || '');
             }
           } catch (e) {
-            console.log('[WebView]', event.nativeEvent.data);
+            // Silenciar logs normales del WebView
           }
         }}
         javaScriptEnabled={true}
@@ -103,8 +110,15 @@ export default function TranslatorScreen({ navigation }) {
         startInLoadingState={true}
         allowsInlineMediaPlayback={true}
         mediaPlaybackRequiresUserAction={false}
-        cacheEnabled={false}
-        incognito={true}
+        cacheEnabled={true}
+        cacheMode="LOAD_CACHE_ELSE_NETWORK"
+        androidLayerType="hardware"
+        androidHardwareAccelerationDisabled={false}
+        scalesPageToFit={true}
+        nestedScrollEnabled={false}
+        // Optimizaciones adicionales
+        mixedContentMode="always"
+        thirdPartyCookiesEnabled={false}
         sharedCookiesEnabled={false}
       />
     </SafeAreaView>

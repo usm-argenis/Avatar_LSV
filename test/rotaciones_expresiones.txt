@@ -1,0 +1,18 @@
+# EXPRESIONES
+# Datos extraídos de las 15 imágenes restantes
+
+RightHandThumb1 0.964 0.036 -0.081 0.251
+RightHandIndex1 0.887 0.450 -0.008 0.105
+LeftHandThumb3 0.984 0.015 0.085 -0.154
+LeftHandIndex1 0.945 0.285 -0.109 -0.116
+LeftHandIndex2 0.630 0.750 0.138 0.144
+LeftHandIndex3 0.924 0.381 0.029 0.007
+LeftHandMiddle1 0.911 0.390 -0.110 -0.080
+LeftHandMiddle2 0.685 0.711 0.101 0.125
+LeftHandMiddle3 0.962 0.266 0.033 0.058
+LeftHandRing1 0.907 0.410 -0.093 0.000165
+LeftHandRing2 0.750 0.630 0.153 0.130
+LeftHandRing3 0.886 0.397 -0.052 0.233
+LeftHandPinky1 0.932 0.338 0.057 0.114
+LeftHandPinky2 0.751 0.578 -0.177 -0.264
+LeftHandPinky3 0.878 0.396 -0.176 -0.203

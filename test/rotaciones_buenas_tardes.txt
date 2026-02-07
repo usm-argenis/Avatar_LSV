@@ -1,0 +1,6 @@
+# BUENAS TARDES
+# Datos extraídos de las 3 imágenes
+
+RightHandIndex1 0.992 0.115 -0.043 0.040
+RightHandIndex2 0.887 0.362 0.276 0.074
+RightHandIndex3 0.903 0.387 -0.000928 0.185

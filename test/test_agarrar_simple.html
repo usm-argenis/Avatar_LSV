@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Agarrar GLB</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background: #1a1a2e;
+            font-family: Arial, sans-serif;
+        }
+        #info {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            color: white;
+            background: rgba(0,0,0,0.7);
+            padding: 15px;
+            border-radius: 8px;
+            max-width: 400px;
+            z-index: 100;
+        }
+        #info h3 { margin: 0 0 10px 0; }
+        .status { margin: 5px 0; }
+        .error { color: #ff6b6b; }
+        .success { color: #51cf66; }
+    </style>
+</head>
+<body>
+    <div id="info">
+        <h3>🧪 Test GLB - Agarrar</h3>
+        <div class="status" id="status1">Estado: Iniciando...</div>
+        <div class="status" id="status2"></div>
+        <div class="status" id="status3"></div>
+        <div class="status" id="status4"></div>
+    </div>
+    <canvas id="canvas"></canvas>
+
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+            "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+        }
+    }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+
+        // Setup básico de Three.js
+        const canvas = document.getElementById('canvas');
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x1a1a2e);
+
+        const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.set(0, 1.5, 3);
+        camera.lookAt(0, 1, 0);
+
+        const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+
+        // Luces
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+        scene.add(ambientLight);
+
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+        directionalLight.position.set(5, 10, 7);
+        scene.add(directionalLight);
+
+        // Grid para referencia
+        const gridHelper = new THREE.GridHelper(10, 10);
+        scene.add(gridHelper);
+
+        // Estados
+        const status1 = document.getElementById('status1');
+        const status2 = document.getElementById('status2');
+        const status3 = document.getElementById('status3');
+        const status4 = document.getElementById('status4');
+
+        status1.textContent = '✅ Three.js inicializado';
+        status1.className = 'status success';
+
+        // Cargar GLB
+        const loader = new GLTFLoader();
+        const rutaGLB = 'output/glb/Duvall/verbos/Duvall_resultado_agarrar.glb';
+        
+        status2.textContent = `🔄 Cargando: ${rutaGLB}`;
+
+        loader.load(
+            rutaGLB,
+            (gltf) => {
+                status2.textContent = '✅ GLB cargado correctamente';
+                status2.className = 'status success';
+
+                // Verificar estructura
+                const hasScene = !!gltf.scene;
+                const animCount = gltf.animations ? gltf.animations.length : 0;
+                
+                status3.textContent = `📦 Escena: ${hasScene ? 'Sí' : 'No'} | Animaciones: ${animCount}`;
+                status3.className = 'status success';
+
+                if (hasScene) {
+                    // 🔧 CORRECCIÓN DUVALL: Compensar rotación del esqueleto
+                    gltf.scene.rotation.x = -Math.PI / 2; // -90 grados
+                    console.log('🔧 Rotación compensatoria aplicada (-90° en X)');
+                    
+                    // Agregar modelo a la escena
+                    scene.add(gltf.scene);
+                    
+                    // Calcular bounding box
+                    const box = new THREE.Box3().setFromObject(gltf.scene);
+                    const size = box.getSize(new THREE.Vector3());
+                    const center = box.getCenter(new THREE.Vector3());
+                    
+                    status4.textContent = `📏 Tamaño: ${size.x.toFixed(2)}x${size.y.toFixed(2)}x${size.z.toFixed(2)} | Centro: (${center.x.toFixed(2)}, ${center.y.toFixed(2)}, ${center.z.toFixed(2)})`;
+                    status4.className = 'status success';
+
+                    // Ajustar cámara si el modelo es muy grande/pequeño
+                    const maxDim = Math.max(size.x, size.y, size.z);
+                    if (maxDim > 10 || maxDim < 0.1) {
+                        status4.textContent += ` ⚠️ Escala inusual detectada`;
+                        status4.className = 'status error';
+                    }
+
+                    // Configurar animación si existe
+                    if (animCount > 0) {
+                        const mixer = new THREE.AnimationMixer(gltf.scene);
+                        const action = mixer.clipAction(gltf.animations[0]);
+                        action.play();
+
+                        const clock = new THREE.Clock();
+                        function animate() {
+                            requestAnimationFrame(animate);
+                            const delta = clock.getDelta();
+                            mixer.update(delta);
+                            renderer.render(scene, camera);
+                        }
+                        animate();
+                    }
+                } else {
+                    status4.textContent = '❌ No hay escena en el GLB';
+                    status4.className = 'status error';
+                }
+            },
+            (progress) => {
+                const percent = (progress.loaded / progress.total * 100).toFixed(0);
+                status2.textContent = `🔄 Cargando: ${percent}%`;
+            },
+            (error) => {
+                status2.textContent = `❌ Error: ${error.message}`;
+                status2.className = 'status error';
+                status3.textContent = `Detalles: ${error.toString()}`;
+                status3.className = 'status error';
+                console.error('Error completo:', error);
+            }
+        );
+
+        // Render loop básico
+        function render() {
+            requestAnimationFrame(render);
+            renderer.render(scene, camera);
+        }
+        render();
+
+        // Resize
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        // Controles de cámara con mouse
+        let mouseDown = false;
+        let mouseX = 0;
+        let mouseY = 0;
+
+        canvas.addEventListener('mousedown', () => mouseDown = true);
+        canvas.addEventListener('mouseup', () => mouseDown = false);
+        canvas.addEventListener('mousemove', (e) => {
+            if (mouseDown) {
+                const deltaX = e.clientX - mouseX;
+                const deltaY = e.clientY - mouseY;
+                camera.position.x += deltaX * 0.01;
+                camera.position.y -= deltaY * 0.01;
+                camera.lookAt(0, 1, 0);
+            }
+            mouseX = e.clientX;
+            mouseY = e.clientY;
+        });
+
+        // Zoom con scroll
+        canvas.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            camera.position.z += e.deltaY * 0.01;
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,6 @@
+# MIÉRCOLES
+# Pega aquí los datos copiados de las imágenes en formato:
+# NombreHueso W X Y Z
+
+LeftHand 0.0 0.0 0.0 0.0
+RightHand 0.0 0.0 0.0 0.0

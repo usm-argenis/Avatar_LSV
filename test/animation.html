@@ -2,8 +2,10 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nancy - Sistema de Animaciones</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <title>LSV Mobile - Animaciones</title>
     <style>
         * {
             margin: 0;
@@ -13,7 +15,7 @@
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #ffffff;
             overflow: hidden;
             color: white;
         }
@@ -23,142 +25,6 @@
             height: 100vh;
             display: flex;
             flex-direction: column;
-        }
-
-        #header {
-            background: rgba(0, 0, 0, 0.9);
-            padding: 20px 30px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        /* Controles superiores */
-        .top-controls {
-            position: absolute;
-            top: 15px;
-            right: 30px;
-            display: flex;
-            gap: 10px;
-            z-index: 100;
-        }
-
-        .control-btn {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border: none;
-            color: white;
-            padding: 10px 18px;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: transform 0.2s, opacity 0.2s;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .control-btn:active {
-            transform: scale(0.95);
-        }
-
-        .control-btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        .control-btn.pause {
-            background: linear-gradient(135deg, #FFA500 0%, #FF6B35 100%);
-        }
-
-        .control-btn.replay {
-            background: linear-gradient(135deg, #4CAF50 0%, #45B7D1 100%);
-        }
-
-        /* Barra inferior con input */
-        .bottom-input-bar {
-            background: rgba(0, 0, 0, 0.95);
-            padding: 15px 30px;
-            display: flex;
-            gap: 12px;
-            align-items: center;
-            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.5);
-        }
-
-        .text-input-bottom {
-            flex: 1;
-            background: rgba(255, 255, 255, 0.1);
-            border: 2px solid rgba(255, 255, 255, 0.2);
-            border-radius: 8px;
-            color: white;
-            padding: 12px 16px;
-            font-size: 16px;
-            outline: none;
-            transition: border-color 0.3s;
-        }
-
-        .text-input-bottom:focus {
-            border-color: #667eea;
-            background: rgba(255, 255, 255, 0.15);
-        }
-
-        .text-input-bottom::placeholder {
-            color: rgba(255, 255, 255, 0.5);
-        }
-
-        .animate-btn-bottom {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border: none;
-            color: white;
-            padding: 12px 24px;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: transform 0.2s;
-            white-space: nowrap;
-        }
-
-        .animate-btn-bottom:active {
-            transform: scale(0.95);
-        }
-
-        .animate-btn-bottom:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        .header-title {
-            font-size: 28px;
-            font-weight: bold;
-            color: #f093fb;
-        }
-        
-        .avatar-selector {
-            display: flex;
-            gap: 10px;
-        }
-        
-        .avatar-btn {
-            padding: 10px 20px;
-            background: rgba(255, 255, 255, 0.1);
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            border-radius: 8px;
-            color: white;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-size: 14px;
-        }
-        
-        .avatar-btn:hover {
-            background: rgba(255, 255, 255, 0.2);
-            transform: translateY(-2px);
-        }
-        
-        .avatar-btn.active {
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-            border-color: #f093fb;
         }
 
         #viewer-container {
@@ -172,95 +38,19 @@
             height: 100%;
         }
 
-        /* Ocultar panel de traducción original */
-        #translation-panel {
-            display: none !important;
-        }
-
-        #translation-panel-hidden {
-            background: rgba(0, 0, 0, 0.95);
-            padding: 25px 40px;
-            box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.7);
-        }
-
-        .input-group {
-            display: flex;
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-
-        #text-input {
-            flex: 1;
-            padding: 15px 20px;
-            font-size: 16px;
-            background: rgba(255, 255, 255, 0.1);
-            border: 2px solid rgba(240, 147, 251, 0.5);
-            border-radius: 12px;
-            color: white;
-            outline: none;
-        }
-
-        #text-input:focus {
-            border-color: #f093fb;
-            box-shadow: 0 0 0 4px rgba(240, 147, 251, 0.2);
-        }
-
-        #text-input::placeholder {
-            color: rgba(255, 255, 255, 0.4);
-        }
-
-        #translate-btn {
-            padding: 15px 40px;
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-            border: none;
-            border-radius: 12px;
-            color: white;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        #translate-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 25px rgba(245, 87, 108, 0.6);
-        }
-
-        .status {
+        /*.status {
             position: absolute;
-            top: 20px;
-            left: 20px;
-            background: rgba(0, 0, 0, 0.85);
-            padding: 15px 25px;
-            border-radius: 12px;
-            font-size: 14px;
-            z-index: 50;
-        }
-
-        .sign-chips {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            margin-top: 15px;
-        }
-
-        .chip {
-            padding: 8px 15px;
-            background: rgba(240, 147, 251, 0.2);
-            border: 1px solid rgba(240, 147, 251, 0.5);
+            top: 15px;
+            left: 15px;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.95) 0%, rgba(118, 75, 162, 0.95) 100%);
+            padding: 10px 18px;
             border-radius: 20px;
-            font-size: 14px;
-        }
-
-        .chip.active {
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-            animation: pulse 1s infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-        }
+            font-size: 13px;
+            font-weight: 600;
+            z-index: 50;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }*/
 
         #loading {
             position: fixed;
@@ -300,325 +90,1175 @@
             color: #f093fb;
             font-weight: 600;
         }
+
+        /* Barra superior de controles */
+      .top-bar {
+            position: absolute;
+            top: 15px;
+            /* --- CAMBIOS PARA CENTRAR --- */
+            left: 50%;
+            transform: translateX(-50%);
+            /* ---------------------------- */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            z-index: 100;
+            width: max-content; /* Asegura que la barra no se estire de más */
+        }
+
+        .control-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: 2px solid rgba(255, 255, 255, 0.4);
+            color: white;
+            padding: 8px 14px;
+            border-radius: 20px;
+            font-size: 10px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 3px;
+            min-width: 70px;
+            height: auto;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        .control-btn .btn-icon {
+            font-size: 18px;
+            line-height: 1;
+        }
+
+        .control-btn .btn-text {
+            font-size: 9px;
+            line-height: 1;
+            margin-top: 2px;
+        }
+
+        .control-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .control-btn:active {
+            transform: translateY(0) scale(0.95);
+        }
+
+        .control-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Botón Pausar - Verde cuando puede pausar */
+        .control-btn.pause {
+            background: linear-gradient(135deg, #4CAF50 0%, #45A049 100%);
+            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.4);
+        }
+
+        .control-btn.pause:hover {
+            box-shadow: 0 6px 20px rgba(76, 175, 80, 0.6);
+        }
+
+        /* Botón Pausar cuando está pausado - Rojo */
+        .control-btn.pause.paused {
+            background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%);
+            box-shadow: 0 4px 15px rgba(244, 67, 54, 0.4);
+        }
+
+        .control-btn.pause.paused:hover {
+            box-shadow: 0 6px 20px rgba(244, 67, 54, 0.6);
+        }
+
+        /* Botón Repetir - Azul */
+        .control-btn.replay {
+            background: linear-gradient(135deg, #2196F3 0%, #53a5f8 100%);
+            box-shadow: 0 4px 15px rgba(33, 150, 243, 0.4);
+        }
+
+        .control-btn.replay:hover {
+            box-shadow: 0 6px 20px rgba(33, 150, 243, 0.6);
+        }
+
+        /* Botón Reset Cámara - Morado */
+        .control-btn.reset-camera {
+            background: linear-gradient(135deg, #ff3300 0%, #ff3838cb 100%);
+            box-shadow: 0 4px 15px rgba(255, 81, 0, 0.4);
+        }
+
+        .control-btn.reset-camera:hover {
+            box-shadow: 0 6px 20px rgba(156, 39, 176, 0.6);
+        }
+
+        /* Input de texto inferior */
+        .input-container {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            /*background: linear-gradient(180deg, rgba(26, 26, 46, 0.98) 0%, rgba(0, 0, 0, 0.98) 100%);
+            */padding: 15px;
+            padding-bottom: max(15px, env(safe-area-inset-bottom));
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            z-index: 100;
+            /*//box-shadow: 0 -4px 20px rgba(102, 126, 234, 0.3);
+            border-top: 3px solid rgba(102, 126, 234, 0.5);*/
+            min-height: 70px;
+        }
+
+        .text-input {
+            flex: 1;
+            background: linear-gradient(180deg, rgba(46, 46, 73, 0.98) 0%, rgb(34, 42, 54) 100%);
+            
+            border: 2px solid rgba(102, 126, 234, 0.5);
+            border-radius: 25px;
+            color: white;
+            padding: 14px 20px;
+            font-size: 16px;
+            font-weight: 500;
+            outline: none;
+            transition: all 0.3s ease;
+            box-shadow: inset 0 2px 8px rgba(0, 60, 255, 0.253);
+            min-height: 48px;
+        }
+
+        .text-input:focus {
+            border-color: #667eea;
+            background: linear-gradient(180deg, rgba(46, 46, 73, 0.98) 0%, rgb(34, 42, 54) 100%);
+            box-shadow: inset 0 2px 8px rgba(0, 60, 255, 0.253), 0 0 0 3px rgba(102, 126, 234, 0.3);
+        }
+
+        .text-input::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+            font-weight: 400;
+        }
+
+        .animate-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: 2px solid rgba(255, 255, 255, 0.4);
+            color: white;
+            padding: 14px 24px;
+            border-radius: 25px;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.5);
+            min-width: 110px;
+            min-height: 48px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .animate-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.7);
+        }
+
+        .animate-btn:active {
+            transform: translateY(0) scale(0.97);
+        }
+
+        .animate-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.2);
+        }
     </style>
 </head>
 <body>
     <div id="app">
-        <div id="header">
-            <div class="header-title" id="header-title">👩 Nancy - Sistema de Animaciones LSV</div>
-            <div class="avatar-selector" id="avatar-selector"></div>
-        </div>
-
         <div id="viewer-container">
             <canvas id="canvas-3d"></canvas>
+            
+            <!-- Status -->
             <div class="status" id="status">Cargando...</div>
             
-            <!-- Controles superiores (pause/replay) -->
-            <div class="top-controls">
-                <button id="pause-btn" class="control-btn">⏸️ Pausar</button>
-                <button id="replay-btn" class="control-btn">🔄 Repetir</button>
+            <!-- Botones superiores derechos -->
+            <div class="top-bar">
+                <button class="control-btn reset-camera" id="resetCameraBtn" title="Resetear Cámara">
+                    <span class="btn-icon">🎯</span>
+                    <span class="btn-text">Resetear</span>
+                </button>
+                <button class="control-btn pause" id="pauseBtn" disabled title="Pausar/Reanudar">
+                    <span class="btn-icon" id="pauseIcon">⏸️</span>
+                    <span class="btn-text" id="pauseText">Pausar</span>
+                </button>
+                <button class="control-btn replay" id="replayBtn" disabled title="Repetir Animación">
+                    <span class="btn-icon">🔄</span>
+                    <span class="btn-text">Repetir</span>
+                </button>
             </div>
-        </div>
 
-        <!-- Barra inferior con input de texto -->
-        <div class="bottom-input-bar">
-            <input 
-                type="text" 
-                id="text-input-bottom" 
-                class="text-input-bottom" 
-                placeholder="Escribe una frase en español..." 
-                autocomplete="off"
-            />
-            <button id="animate-btn" class="animate-btn">🎬 Animar</button>
-        </div>
-
-        <div id="translation-panel">
-            <div class="sign-chips" id="chips"></div>
+            <!-- Input de texto inferior -->
+            <div class="input-container">
+                <input 
+                    type="text" 
+                    class="text-input" 
+                    id="textInput" 
+                    placeholder="Escribe una frase aquí... ej: hola buenos dias"
+                    autocomplete="off"
+                >
+                <button class="animate-btn" id="animateBtn">
+                    ANIMAR
+                </button>
+            </div>
         </div>
     </div>
 
     <div id="loading">
         <div class="spinner"></div>
-        <div class="loading-text" id="loading-text">Cargando Nancy...</div>
+        <div class="loading-text" id="loading-text">Inicializando...</div>
     </div>
 
-    <!-- Sistema de Gestos Faciales -->
-    <script src="facial_expression_system.js"></script>
-    
     <script type="importmap">
         {
             "imports": {
-                "three": "https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.module.js",
-                "three/examples/": "https://cdn.jsdelivr.net/npm/three@0.128.0/examples/"
+                "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+                "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
             }
         }
     </script>
 
+    <!-- Traductor LSV Standalone para GitHub Pages -->
+    <script src="./lsv-translator.js"></script>
+
     <script type="module">
         import * as THREE from 'three';
-        import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
-        import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+        import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+        // Función para enviar logs a React Native
+        function logToExpo(message, data = null) {
+            const logMessage = data ? `${message} ${JSON.stringify(data)}` : message;
+            console.log(logMessage); // También en consola web
+            
+            // Enviar a React Native si está disponible
+            if (window.ReactNativeWebView) {
+                window.ReactNativeWebView.postMessage(JSON.stringify({
+                    type: 'LOG',
+                    message: message,
+                    data: data,
+                    timestamp: new Date().toISOString()
+                }));
+            }
+        }
 
         let scene, camera, renderer, controls, clock;
-        let nancyModel, mixer;
+        let avatarModel, mixer;
         let animationCache = new Map();
         let currentAction = null;
-
-        // Sistema de gestos faciales
-        let facialSystem = null;
-
-        // Estado del sistema
         let avatarActual = 'Nancy';
-        
-        // Variables de control
         let isPaused = false;
         let ultimoTexto = '';
         let isAnimating = false;
-        let animacionesActuales = [];
         
-        // Diccionario de mapeo (válido para todos los avatares)
-        const DICCIONARIO = {
-            // Alfabeto
+        // Control de API backend
+        let useBackendAPI = false;  // DESACTIVADO para GitHub Pages (usar traductor local)
+        const BACKEND_URL = 'http://192.168.86.27:5000';
+        
+        // Control de teclado virtual y viewport
+        let initialViewportHeight = window.innerHeight;
+        let isKeyboardOpen = false;
+        let savedCameraState = null;
+        
+        // Optimizaciones de rendimiento
+        let loaderInstance = null; // Reutilizar loader
+        let preloadQueue = [];
+        let isPreloading = false;
+        
+        // Detección de dispositivo móvil
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        const MAX_CACHE_SIZE = isMobile ? 15 : 50; // Menos caché en móvil
+        const PRELOAD_COUNT = isMobile ? 3 : 10; // Menos precarga en móvil
+        const LOAD_DELAY = isMobile ? 300 : 100; // Mayor delay entre cargas en móvil
+        const LOOKAHEAD = isMobile ? 2 : 3; // Cuantas animaciones precargar por adelantado
+        
+        // Sistema de precarga anticipada
+        let currentSequence = [];
+        let currentIndex = 0;
+        
+        // Posición inicial de la cámara
+        const INITIAL_CAMERA_POSITION = { x: 0, y: 1.6, z: 2.2 };
+        const INITIAL_CAMERA_TARGET = { x: 0, y: 1.2, z: 0 };
+        
+        // Palabras que se omiten en LSV (no se traducen)
+        const PALABRAS_OMITIDAS = new Set([
+            // Artículos definidos
+            'el', 'la', 'los', 'las',
+            // Artículos indefinidos
+            'un', 'una', 'unos', 'unas',
+            // Preposiciones que no existen en LSV
+            'de', 'del', 'al',
+            // Conectores que se omiten
+            'y', 'e', 'o', 'u',
+            // Pronombres que se omiten en ciertos contextos
+            'se', 'me', 'te', 'le', 'les', 'nos',
+            // Signos de interrogación (se procesarán aparte)
+        ]);
+        
+        // Palabras de TIEMPO que van al inicio en LSV
+        const PALABRAS_TIEMPO = new Set([
+            'ayer', 'hoy', 'mañana', 'anteayer', 'pasado mañana',
+            'hace rato', 'hace años', 'había una vez', 'antes',
+            'ahora', 'despues', 'luego', 'pronto', 'tarde', 'temprano',
+            'lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado', 'domingo',
+            'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
+            'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre',
+        ]);
+        
+        // Palabras FEMENINAS que requieren MUJER después
+        const PALABRAS_FEMENINAS = {
+            'maestra': 'maestro',
+            'profesora': 'profesor',
+            'doctora': 'medico',
+            'enfermera': 'enfermera', // Ya existe como femenino
+            'abuela': 'abuelo',
+            'nieta': 'nieto',
+            'tia': 'tio',
+            'prima': 'primo',
+            'sobrina': 'sobrino',
+            'suegra': 'suegro',
+            'cuñada': 'cuñado',
+            'hermana': 'hermano',
+            'hija': 'hijo',
+            'mama': 'papa',
+            'madre': 'padre',
+            'madrina': 'padrino',
+            'madrastra': 'padrastro',
+            'hijastra': 'hijastro',
+            'hermanastra': 'hermanastro',
+            'señora': 'señor',
+            'novia': 'novio',
+            'amiga': 'amigo',
+            'vieja': 'viejo',
+            'niña': 'niño',
+            'jefa': 'jefe',
+            'directora': 'director',
+            'gerenta': 'gerente',
+            'secretaria': 'secretaria', // Ya existe
+            'vendedora': 'vendedor',
+            'cocinera': 'cocinero',
+            'peluquera': 'peluquera', // Ya existe
+            'dibujante': 'dibujante', // Neutro
+            'abogada': 'abogado',
+            'administradora': 'administrador',
+            'contadora': 'contador',
+            'economista': 'economista', // Neutro
+            'ingeniera': 'ingeniero',
+            'psicologa': 'psicologo',
+            'detective': 'detective', // Neutro
+        };
+        
+        // Normalizaciones de plural a singular y otras simplificaciones LSV
+        const NORMALIZACION_LSV = {
+            // Plurales → Singular
+            'todos': 'todo',
+            'todas': 'todo',
+            'muchos': 'mucho',
+            'muchas': 'mucho',
+            'pocos': 'poco',
+            'pocas': 'poco',
+            'algunos': 'algun',
+            'algunas': 'algun',
+            'ningunos': 'ningun',
+            'ningunas': 'ningun',
+            'otros': 'otro',
+            'otras': 'otro',
+            'demasiados': 'demasiado',
+            'demasiadas': 'demasiado',
+            'bastantes': 'bastante',
+            
+            // Días de la semana (formas alternativas)
+            'lun': 'lunes',
+            'mar': 'martes',
+            'mie': 'miercoles',
+            'jue': 'jueves',
+            'vie': 'viernes',
+            'sab': 'sabado',
+            'dom': 'domingo',
+            
+            // Meses
+            'ene': 'enero',
+            'feb': 'febrero',
+            'mar': 'marzo',
+            'abr': 'abril',
+            'may': 'mayo',
+            'jun': 'junio',
+            'jul': 'julio',
+            'ago': 'agosto',
+            'sep': 'septiembre',
+            'oct': 'octubre',
+            'nov': 'noviembre',
+            'dic': 'diciembre',
+            
+            // Simplificaciones comunes
+            'dias': 'dia',
+            'años': 'año',
+            'meses': 'mes',
+            'semanas': 'semana',
+            'horas': 'hora',
+            'minutos': 'minuto',
+            'segundos': 'segundo',
+            
+            // Pronombres en plural
+            'nosotras': 'nosotros',
+            'vosotros': 'ustedes',
+            'vosotras': 'ustedes',
+            
+            // Pronombres posesivos → LSV
+            'mi': 'mio',
+            'mis': 'mio',
+            'tu': 'tuyo',
+            'tus': 'tuyo',
+            'su': 'suyo',
+            'sus': 'suyo',
+            'nuestro': 'nuestro',
+            'nuestra': 'nuestro',
+            'nuestros': 'nuestro',
+            'nuestras': 'nuestro',
+        };
+        
+        // Sistema de normalización de verbos (conjugaciones → infinitivo)
+        const NORMALIZACION_VERBOS = {
+            // Trabajar
+            'trabajo': 'trabajar', 'trabajas': 'trabajar', 'trabaja': 'trabajar',
+            'trabajamos': 'trabajar', 'trabajan': 'trabajar', 'trabajé': 'trabajar',
+            'trabajaste': 'trabajar', 'trabajó': 'trabajar', 'trabajaron': 'trabajar',
+            'trabajaba': 'trabajar', 'trabajando': 'trabajar',
+            
+            // Estudiar
+            'estudio': 'estudiar', 'estudias': 'estudiar', 'estudia': 'estudiar',
+            'estudiamos': 'estudiar', 'estudian': 'estudiar', 'estudié': 'estudiar',
+            'estudiaste': 'estudiar', 'estudió': 'estudiar', 'estudiaron': 'estudiar',
+            'estudiaba': 'estudiar', 'estudiando': 'estudiar',
+            
+            // Comer
+            'como': 'comer', 'comes': 'comer', 'come': 'comer',
+            'comemos': 'comer', 'comen': 'comer', 'comí': 'comer',
+            'comiste': 'comer', 'comió': 'comer', 'comieron': 'comer',
+            'comía': 'comer', 'comiendo': 'comer',
+            
+            // Vivir
+            'vivo': 'vivir', 'vives': 'vivir', 'vive': 'vivir',
+            'vivimos': 'vivir', 'viven': 'vivir', 'viví': 'vivir',
+            'viviste': 'vivir', 'vivió': 'vivir', 'vivieron': 'vivir',
+            'vivía': 'vivir', 'viviendo': 'vivir',
+            
+            // Dormir
+            'duermo': 'dormir', 'duermes': 'dormir', 'duerme': 'dormir',
+            'dormimos': 'dormir', 'duermen': 'dormir', 'dormí': 'dormir',
+            'dormiste': 'dormir', 'durmió': 'dormir', 'durmieron': 'dormir',
+            'dormía': 'dormir', 'durmiendo': 'dormir',
+            
+            // Ver
+            'veo': 'ver', 'ves': 'ver', 've': 'ver',
+            'vemos': 'ver', 'ven': 'ver', 'vi': 'ver',
+            'viste': 'ver', 'vio': 'ver', 'vieron': 'ver',
+            'veía': 'ver', 'viendo': 'ver',
+            
+            // Estar
+            'estoy': 'estar', 'estás': 'estar', 'está': 'estar',
+            'estamos': 'estar', 'están': 'estar', 'estuve': 'estar',
+            'estuviste': 'estar', 'estuvo': 'estar', 'estuvieron': 'estar',
+            'estaba': 'estar', 'estando': 'estar',
+            
+            // Ser
+            'soy': 'ser', 'eres': 'ser', 'es': 'ser',
+            'somos': 'ser', 'son': 'ser', 'fui': 'ser',
+            'fuiste': 'ser', 'fue': 'ser', 'fueron': 'ser',
+            'era': 'ser', 'siendo': 'ser',
+            
+            // Ayudar
+            'ayudo': 'ayudar', 'ayudas': 'ayudar', 'ayuda': 'ayudar',
+            'ayudamos': 'ayudar', 'ayudan': 'ayudar', 'ayudé': 'ayudar',
+            'ayudando': 'ayudar',
+            
+            // Amar
+            'amo': 'amar', 'amas': 'amar', 'ama': 'amar',
+            'amamos': 'amar', 'aman': 'amar', 'amé': 'amar',
+            'amando': 'amar',
+            
+            // Cansar
+            'canso': 'cansar', 'cansas': 'cansar', 'cansa': 'cansar',
+            'cansamos': 'cansar', 'cansan': 'cansar', 'cansé': 'cansar',
+            'cansando': 'cansar',
+            
+            // Conocer
+            'conozco': 'conocer', 'conoces': 'conocer', 'conoce': 'conocer',
+            'conocemos': 'conocer', 'conocen': 'conocer', 'conocí': 'conocer',
+            'conociendo': 'conocer',
+            
+            // Decir
+            'digo': 'decir', 'dices': 'decir', 'dice': 'decir',
+            'decimos': 'decir', 'dicen': 'decir', 'dije': 'decir',
+            'diciendo': 'decir',
+            
+            // Deletrear
+            'deletreo': 'deletrear', 'deletreas': 'deletrear', 'deletrea': 'deletrear',
+            'deletreamos': 'deletrear', 'deletrean': 'deletrear',
+            
+            // Invitar
+            'invito': 'invitar', 'invitas': 'invitar', 'invita': 'invitar',
+            'invitamos': 'invitar', 'invitan': 'invitar', 'invité': 'invitar',
+            'invitando': 'invitar',
+            
+            // Preguntar
+            'pregunto': 'preguntar', 'preguntas': 'preguntar', 'pregunta': 'preguntar',
+            'preguntamos': 'preguntar', 'preguntan': 'preguntar', 'pregunté': 'preguntar',
+            'preguntando': 'preguntar',
+            
+            // Presentar
+            'presento': 'presentar', 'presentas': 'presentar', 'presenta': 'presentar',
+            'presentamos': 'presentar', 'presentan': 'presentar', 'presenté': 'presentar',
+            'presentando': 'presentar',
+            
+            // Querer
+            'quiero': 'querer', 'quieres': 'querer', 'quiere': 'querer',
+            'queremos': 'querer', 'quieren': 'querer', 'quise': 'querer',
+            'queriendo': 'querer',
+            
+            // Responder
+            'respondo': 'responder', 'respondes': 'responder', 'responde': 'responder',
+            'respondemos': 'responder', 'responden': 'responder', 'respondí': 'responder',
+            'respondiendo': 'responder',
+            
+            // Saludar
+            'saludo': 'saludar', 'saludas': 'saludar', 'saluda': 'saludar',
+            'saludamos': 'saludar', 'saludan': 'saludar', 'saludé': 'saludar',
+            'saludando': 'saludar',
+            
+            // Sentir
+            'siento': 'sentir', 'sientes': 'sentir', 'siente': 'sentir',
+            'sentimos': 'sentir', 'sienten': 'sentir', 'sentí': 'sentir',
+            'sintiendo': 'sentir',
+            
+            // Correr
+            'corro': 'correr', 'corres': 'correr', 'corre': 'correr',
+            'corremos': 'correr', 'corren': 'correr', 'corrí': 'correr',
+            'corriendo': 'correr',
+            
+            // Entrar
+            'entro': 'entrar', 'entras': 'entrar', 'entra': 'entrar',
+            'entramos': 'entrar', 'entran': 'entrar', 'entré': 'entrar',
+            'entrando': 'entrar',
+            
+            // Viajar
+            'viajo': 'viajar', 'viajas': 'viajar', 'viaja': 'viajar',
+            'viajamos': 'viajar', 'viajan': 'viajar', 'viajé': 'viajar',
+            'viajando': 'viajar',
+        };
+        
+        // Función para convertir número a secuencia de glosas LSV
+        function numeroAGlosas(numero) {
+            const num = parseInt(numero);
+            
+            // Números 0-10: directos
+            if (num >= 0 && num <= 10) {
+                return [num.toString()];
+            }
+            
+            // Números 11-19: 10 + segundo dígito
+            if (num >= 11 && num <= 19) {
+                const segundoDigito = num % 10;
+                return ['10', segundoDigito.toString()];
+            }
+            
+            // Números 20+: separar cada dígito
+            if (num >= 20) {
+                return numero.split('');
+            }
+            
+            return null;
+        }
+        
+        // Función para normalizar palabras (convertir conjugaciones a infinitivos)
+        function normalizarPalabra(palabra) {
+            const palabraLower = palabra.toLowerCase();
+            
+            // 0. Verificar si es un número
+            if (/^\d+$/.test(palabraLower)) {
+                return palabraLower; // Retornar el número como está, se procesará después
+            }
+            
+            // 1. Verificar si es una palabra que se omite en LSV
+            if (PALABRAS_OMITIDAS.has(palabraLower)) {
+                return null; // null indica que se debe omitir
+            }
+            
+            // 2. Verificar normalizaciones LSV (plural → singular, etc.)
+            if (NORMALIZACION_LSV[palabraLower]) {
+                return NORMALIZACION_LSV[palabraLower];
+            }
+            
+            // 3. Verificar normalizaciones de verbos
+            if (NORMALIZACION_VERBOS[palabraLower]) {
+                return NORMALIZACION_VERBOS[palabraLower];
+            }
+            
+            // 4. Si está directamente en el diccionario, retornar como está
+            if (DICCIONARIO[palabraLower]) {
+                return palabraLower;
+            }
+            
+            // 5. Reglas genéricas para verbos regulares no mapeados
+            // Presente: -o, -as, -a, -amos, -áis, -an → -ar/-er/-ir
+            if (palabraLower.endsWith('ando') || palabraLower.endsWith('iendo')) {
+                // Gerundio
+                const raiz = palabraLower.slice(0, -4);
+                const candidatos = [raiz + 'ar', raiz + 'er', raiz + 'ir'];
+                for (const candidato of candidatos) {
+                    if (DICCIONARIO[candidato]) return candidato;
+                }
+            }
+            
+            if (palabraLower.endsWith('o') && palabraLower.length > 2) {
+                const raiz = palabraLower.slice(0, -1);
+                const candidatos = [raiz + 'ar', raiz + 'er', raiz + 'ir'];
+                for (const candidato of candidatos) {
+                    if (DICCIONARIO[candidato]) return candidato;
+                }
+            }
+            
+            if (palabraLower.endsWith('as') || palabraLower.endsWith('es')) {
+                const raiz = palabraLower.slice(0, -2);
+                const candidatos = [raiz + 'ar', raiz + 'er', raiz + 'ir'];
+                for (const candidato of candidatos) {
+                    if (DICCIONARIO[candidato]) return candidato;
+                }
+            }
+            
+            if (palabraLower.endsWith('a') && palabraLower.length > 2) {
+                const raiz = palabraLower.slice(0, -1);
+                if (DICCIONARIO[raiz + 'ar']) return raiz + 'ar';
+            }
+            
+            if (palabraLower.endsWith('e') && palabraLower.length > 2) {
+                const raiz = palabraLower.slice(0, -1);
+                const candidatos = [raiz + 'er', raiz + 'ar', raiz + 'ir'];
+                for (const candidato of candidatos) {
+                    if (DICCIONARIO[candidato]) return candidato;
+                }
+            }
+            
+            if (palabraLower.endsWith('amos') || palabraLower.endsWith('emos') || palabraLower.endsWith('imos')) {
+                const raiz = palabraLower.slice(0, -4);
+                const candidatos = [raiz + 'ar', raiz + 'er', raiz + 'ir'];
+                for (const candidato of candidatos) {
+                    if (DICCIONARIO[candidato]) return candidato;
+                }
+            }
+            
+            if (palabraLower.endsWith('an') || palabraLower.endsWith('en')) {
+                const raiz = palabraLower.slice(0, -2);
+                const candidatos = [raiz + 'ar', raiz + 'er', raiz + 'ir'];
+                for (const candidato of candidatos) {
+                    if (DICCIONARIO[candidato]) return candidato;
+                }
+            }
+            
+            // Si no se encontró ninguna normalización, retornar la palabra original
+            return palabraLower;
+        }
+        
+        // Diccionario de mapeo
+                                const DICCIONARIO = {
+            // 📌 Generado automáticamente desde backend/scripts/data.json (336 palabras)
+            '0': { categoria: 'numero', archivo: '0' },
+            '1': { categoria: 'numero', archivo: '1' },
+            '10': { categoria: 'numero', archivo: '10' },
+            '10_o': { categoria: 'ordinales', archivo: '10_o' },
+            '1_o': { categoria: 'ordinales', archivo: '1_o' },
+            '1m': { categoria: 'numero', archivo: '1m' },
+            '2': { categoria: 'numero', archivo: '2' },
+            '2_o': { categoria: 'ordinales', archivo: '2_o' },
+            '3': { categoria: 'numero', archivo: '3' },
+            '3_o': { categoria: 'ordinales', archivo: '3_o' },
+            '4': { categoria: 'numero', archivo: '4' },
+            '4_o': { categoria: 'ordinales', archivo: '4_o' },
+            '5': { categoria: 'numero', archivo: '5' },
+            '5_o': { categoria: 'ordinales', archivo: '5_o' },
+            '6': { categoria: 'numero', archivo: '6' },
+            '6_o': { categoria: 'ordinales', archivo: '6_o' },
+            '7': { categoria: 'numero', archivo: '7' },
+            '7_o': { categoria: 'ordinales', archivo: '7_o' },
+            '8': { categoria: 'numero', archivo: '8' },
+            '8_o': { categoria: 'ordinales', archivo: '8_o' },
+            '9': { categoria: 'numero', archivo: '9' },
+            '9_o': { categoria: 'ordinales', archivo: '9_o' },
             'a': { categoria: 'alfabeto', archivo: 'a' },
-            'b': { categoria: 'alfabeto', archivo: 'b' },
-            'c': { categoria: 'alfabeto', archivo: 'c' },
-            'd': { categoria: 'alfabeto', archivo: 'd' },
-            'e': { categoria: 'alfabeto', archivo: 'e' },
-            'f': { categoria: 'alfabeto', archivo: 'f' },
-            'g': { categoria: 'alfabeto', archivo: 'g' },
-            'h': { categoria: 'alfabeto', archivo: 'h' },
-            'i': { categoria: 'alfabeto', archivo: 'i' },
-            'j': { categoria: 'alfabeto', archivo: 'j' },
-            'k': { categoria: 'alfabeto', archivo: 'k' },
-            'l': { categoria: 'alfabeto', archivo: 'l' },
-            'm': { categoria: 'alfabeto', archivo: 'm' },
-            'n': { categoria: 'alfabeto', archivo: 'n' },
-            'ñ': { categoria: 'alfabeto', archivo: 'ñ' },
-            'o': { categoria: 'alfabeto', archivo: 'o' },
-            'p': { categoria: 'alfabeto', archivo: 'p' },
-            'q': { categoria: 'alfabeto', archivo: 'q' },
-            'r': { categoria: 'alfabeto', archivo: 'r' },
-            's': { categoria: 'alfabeto', archivo: 's' },
-            't': { categoria: 'alfabeto', archivo: 't' },
-            'u': { categoria: 'alfabeto', archivo: 'u' },
-            'v': { categoria: 'alfabeto', archivo: 'v' },
-            'w': { categoria: 'alfabeto', archivo: 'w' },
-            'x': { categoria: 'alfabeto', archivo: 'x' },
-            'y': { categoria: 'alfabeto', archivo: 'y' },
-            'z': { categoria: 'alfabeto', archivo: 'z' },
-
-            // Cortesía
             'a la orden': { categoria: 'cortesia', archivo: 'a la orden' },
-            'buen provecho': { categoria: 'cortesia', archivo: 'buen provecho' },
-            'cortesia': { categoria: 'cortesia', archivo: 'cortesia' },
-            'gracias': { categoria: 'cortesia', archivo: 'gracias' },
-            'muchas gracias': { categoria: 'cortesia', archivo: 'muchas gracias' },
-            'mucho gusto': { categoria: 'cortesia', archivo: 'mucho gusto' },
-            'permiso': { categoria: 'cortesia', archivo: 'permiso' },
-            
-            // Días de la semana
-            'domingo': { categoria: 'dias_semana', archivo: 'domingo' },
-            'jueves': { categoria: 'dias_semana', archivo: 'jueves' },
-            'lunes': { categoria: 'dias_semana', archivo: 'lunes' },
-            'martes': { categoria: 'dias_semana', archivo: 'martes' },
-            'miercoles': { categoria: 'dias_semana', archivo: 'miercoles' },
-            'sabado': { categoria: 'dias_semana', archivo: 'sabado' },
-            'viernes': { categoria: 'dias_semana', archivo: 'viernes' },
-            
-            // Expresiones
+            'aboga': { categoria: 'profesiones', archivo: 'abogado' },
+            'abogado': { categoria: 'profesiones', archivo: 'abogado' },
+            'abogados': { categoria: 'profesiones', archivo: 'abogado' },
             'abril': { categoria: 'expresiones', archivo: 'abril' },
+            'adios': { categoria: 'saludos', archivo: 'adios' },
+            'administrador': { categoria: 'profesiones', archivo: 'administrador' },
+            'administradors': { categoria: 'profesiones', archivo: 'administrador' },
+            'adulto': { categoria: 'personas', archivo: 'adulto' },
+            'adverbios': { categoria: 'adverbios', archivo: 'adverbios' },
+            'agarrar': { categoria: 'verbos', archivo: 'agarrar' },
             'agosto': { categoria: 'expresiones', archivo: 'agosto' },
+            'al lado': { categoria: 'adverbios', archivo: 'al lado' },
+            'albañil': { categoria: 'profesiones', archivo: 'albañil' },
+            'albañils': { categoria: 'profesiones', archivo: 'albañil' },
+            'algo': { categoria: 'preposiciones', archivo: 'algo' },
+            'alguien': { categoria: 'preposiciones', archivo: 'alguien' },
+            'algun': { categoria: 'preposiciones', archivo: 'algun' },
+            'amar': { categoria: 'verbos', archivo: 'amar' },
+            'amigo': { categoria: 'personas', archivo: 'amigo' },
+            'analista': { categoria: 'profesiones', archivo: 'analista' },
+            'analistas': { categoria: 'profesiones', archivo: 'analista' },
+            'anciano': { categoria: 'personas', archivo: 'anciano' },
+            'anteayer': { categoria: 'tiempo', archivo: 'anteayer' },
+            'apartamento': { categoria: 'viviendas', archivo: 'apartamento' },
+            'atraer': { categoria: 'verbos', archivo: 'atraer' },
+            'atras': { categoria: 'adverbios', archivo: 'atras' },
+            'auxiliar': { categoria: 'profesiones', archivo: 'auxiliar' },
+            'auxiliars': { categoria: 'profesiones', archivo: 'auxiliar' },
+            'ayer': { categoria: 'tiempo', archivo: 'ayer' },
+            'ayudar': { categoria: 'verbos', archivo: 'ayudar' },
+            'b': { categoria: 'alfabeto', archivo: 'b' },
+            'barbero': { categoria: 'profesiones', archivo: 'barbero' },
+            'barberos': { categoria: 'profesiones', archivo: 'barbero' },
+            'bastante': { categoria: 'preposiciones', archivo: 'bastante' },
+            'baño': { categoria: 'viviendas', archivo: 'baño' },
+            'bebe': { categoria: 'personas', archivo: 'bebe' },
             'bien': { categoria: 'expresiones', archivo: 'bien' },
+            'bienvenido': { categoria: 'saludos', archivo: 'bienvenido' },
+            'buen provecho': { categoria: 'cortesia', archivo: 'buen provecho' },
+            'buenas noches': { categoria: 'saludos', archivo: 'buenas noches' },
+            'buenas tardes': { categoria: 'saludos', archivo: 'buenas tardes' },
+            'buenasnoches': { categoria: 'saludos', archivo: 'buenas noches' },
+            'buenastardes': { categoria: 'saludos', archivo: 'buenas tardes' },
+            'buenos dias': { categoria: 'saludos', archivo: 'buenos dias' },
+            'buenosdias': { categoria: 'saludos', archivo: 'buenos dias' },
+            'burlar': { categoria: 'verbos', archivo: 'burlar' },
+            'c': { categoria: 'alfabeto', archivo: 'c' },
+            'calendario': { categoria: 'tiempo', archivo: 'calendario' },
+            'calmar': { categoria: 'verbos', archivo: 'calmar' },
+            'cansar': { categoria: 'verbos', archivo: 'cansar' },
+            'carrera': { categoria: 'profesiones', archivo: 'carrera' },
+            'carreras': { categoria: 'profesiones', archivo: 'carrera' },
+            'casa': { categoria: 'viviendas', archivo: 'casa' },
+            'casado': { categoria: 'estado_civil', archivo: 'casado' },
+            'cerca': { categoria: 'adverbios', archivo: 'cerca' },
+            'chao': { categoria: 'saludos', archivo: 'chao' },
+            'chef': { categoria: 'profesiones', archivo: 'chef' },
+            'chefs': { categoria: 'profesiones', archivo: 'chef' },
+            'ciego': { categoria: 'personas', archivo: 'ciego' },
+            'cocina': { categoria: 'viviendas', archivo: 'cocina' },
+            'cocinero': { categoria: 'profesiones', archivo: 'cocinero' },
+            'cocineros': { categoria: 'profesiones', archivo: 'cocinero' },
+            'comedor': { categoria: 'viviendas', archivo: 'comedor' },
+            'comer': { categoria: 'verbos', archivo: 'comer' },
             'como': { categoria: 'expresiones', archivo: 'como' },
+            'como estas': { categoria: 'interrogantes', archivo: 'como estas' },
+            'compañero': { categoria: 'personas', archivo: 'compañero' },
+            'concubino': { categoria: 'estado_civil', archivo: 'concubino' },
+            'conductor': { categoria: 'profesiones', archivo: 'conductor' },
+            'conductors': { categoria: 'profesiones', archivo: 'conductor' },
+            'conocer': { categoria: 'verbos', archivo: 'conocer' },
+            'constructor': { categoria: 'profesiones', archivo: 'constructor' },
+            'constructors': { categoria: 'profesiones', archivo: 'constructor' },
+            'contador': { categoria: 'profesiones', archivo: 'contador' },
+            'contadors': { categoria: 'profesiones', archivo: 'contador' },
+            'cortesia': { categoria: 'cortesia', archivo: 'cortesia' },
             'cual': { categoria: 'expresiones', archivo: 'cual' },
+            'cual es tu nombre': { categoria: 'interrogantes', archivo: 'cual es tu nombre' },
+            'cual es tu sena': { categoria: 'interrogantes', archivo: 'cual es tu sena' },
+            'cualquier': { categoria: 'preposiciones', archivo: 'cualquier' },
             'cuando': { categoria: 'expresiones', archivo: 'cuando' },
             'cuantos': { categoria: 'expresiones', archivo: 'cuantos' },
+            'cuarto': { categoria: 'viviendas', archivo: 'cuarto' },
+            'd': { categoria: 'alfabeto', archivo: 'd' },
             'de nada': { categoria: 'expresiones', archivo: 'de nada' },
+            'decir': { categoria: 'verbos', archivo: 'decir' },
+            'deletrear': { categoria: 'verbos', archivo: 'deletrear' },
+            'demasiado': { categoria: 'preposiciones', archivo: 'demasiado' },
+            'dentista': { categoria: 'profesiones', archivo: 'dentista' },
+            'dentistas': { categoria: 'profesiones', archivo: 'dentista' },
+            'derecha': { categoria: 'adverbios', archivo: 'derecha' },
+            'detective': { categoria: 'profesiones', archivo: 'detective' },
+            'detectives': { categoria: 'profesiones', archivo: 'detective' },
+            'dia': { categoria: 'tiempo', archivo: 'dia' },
+            'dibujante': { categoria: 'profesiones', archivo: 'dibujante' },
+            'dibujante tecnico': { categoria: 'profesiones', archivo: 'dibujante tecnico' },
+            'dibujante tecnicos': { categoria: 'profesiones', archivo: 'dibujante tecnico' },
+            'dibujantes': { categoria: 'profesiones', archivo: 'dibujante' },
             'diciembre': { categoria: 'expresiones', archivo: 'diciembre' },
+            'director': { categoria: 'profesiones', archivo: 'director' },
+            'directors': { categoria: 'profesiones', archivo: 'director' },
+            'divorciado': { categoria: 'estado_civil', archivo: 'divorciado' },
+            'doc': { categoria: 'profesiones', archivo: 'medico' },
+            'domingo': { categoria: 'tiempo', archivo: 'domingo' },
             'donde': { categoria: 'expresiones', archivo: 'donde' },
             'donde (especifico)': { categoria: 'expresiones', archivo: 'donde (especifico)' },
-            'enero': { categoria: 'expresiones', archivo: 'enero' },
-            'expresiones': { categoria: 'expresiones', archivo: 'expresiones' },
-            'febrero': { categoria: 'expresiones', archivo: 'febrero' },
-            'interrogantes': { categoria: 'expresiones', archivo: 'interrogantes' },
-            'julio': { categoria: 'expresiones', archivo: 'julio' },
-            'junio': { categoria: 'expresiones', archivo: 'junio' },
-            'mal': { categoria: 'expresiones', archivo: 'mal' },
-            'marzo': { categoria: 'expresiones', archivo: 'marzo' },
-            'mayo': { categoria: 'expresiones', archivo: 'mayo' },
-            'no': { categoria: 'expresiones', archivo: 'no' },
-            'noviembre': { categoria: 'expresiones', archivo: 'noviembre' },
-            'octubre': { categoria: 'expresiones', archivo: 'octubre' },
-            'porque': { categoria: 'expresiones', archivo: 'porque' },
-            'que': { categoria: 'expresiones', archivo: 'que' },
-            'quien': { categoria: 'expresiones', archivo: 'quien' },
-            'saludas a': { categoria: 'expresiones', archivo: 'saludas a' },
-            'septiembre': { categoria: 'expresiones', archivo: 'septiembre' },
-            'regular': { categoria: 'expresiones', archivo: 'regular' },
-            'si': { categoria: 'expresiones', archivo: 'si' },
-            
-            // Preguntas
-            'como estas': { categoria: 'preguntas', archivo: 'como estas' },
-            'cual es tu nombre': { categoria: 'preguntas', archivo: 'cual es tu nombre' },
-            'cual es tu sena': { categoria: 'preguntas', archivo: 'cual es tu sena' },
-            'que tal': { categoria: 'preguntas', archivo: 'que tal' },
-            
-            // Preposiciones
-            'algo': { categoria: 'preposicion', archivo: 'algo' },
-            'alguien': { categoria: 'preposicion', archivo: 'alguien' },
-            'algun': { categoria: 'preposicion', archivo: 'algun' },
-            'bastante': { categoria: 'preposicion', archivo: 'bastante' },
-            'cualquier': { categoria: 'preposicion', archivo: 'cualquier' },
-            'demasiado': { categoria: 'preposicion', archivo: 'demasiado' },
-            'mucho': { categoria: 'preposicion', archivo: 'mucho' },
-            'nada': { categoria: 'preposicion', archivo: 'nada' },
-            'nadie': { categoria: 'preposicion', archivo: 'nadie' },
-            'ningun': { categoria: 'preposicion', archivo: 'ningun' },
-            'otro': { categoria: 'preposicion', archivo: 'otro' },
-            'poco': { categoria: 'preposicion', archivo: 'poco' },
-            'quienquiera': { categoria: 'preposicion', archivo: 'quienquiera' },
-            'todo': { categoria: 'preposicion', archivo: 'todo' },
-
-            // Pronombres
+            'dormir': { categoria: 'verbos', archivo: 'dormir' },
+            'e': { categoria: 'alfabeto', archivo: 'e' },
+            'economista': { categoria: 'profesiones', archivo: 'economista' },
+            'economistas': { categoria: 'profesiones', archivo: 'economista' },
+            'edificio': { categoria: 'viviendas', archivo: 'edificio' },
             'el': { categoria: 'pronombres', archivo: 'el' },
             'ella': { categoria: 'pronombres', archivo: 'ella' },
             'ellas': { categoria: 'pronombres', archivo: 'ellas' },
             'ellos': { categoria: 'pronombres', archivo: 'ellos' },
-            'nosotros': { categoria: 'pronombres', archivo: 'nosotros' },
-            'tu': { categoria: 'pronombres', archivo: 'tu' },
-            'ustedes': { categoria: 'pronombres', archivo: 'ustedes' },
-            'yo': { categoria: 'pronombres', archivo: 'yo' },
-            
-            // Saludos
-            'adios': { categoria: 'saludos', archivo: 'adios' },
-            'bienvenido': { categoria: 'saludos', archivo: 'bienvenido' },
-            'buenas noches': { categoria: 'saludos', archivo: 'buenas noches' },
-            'buenas tardes': { categoria: 'saludos', archivo: 'buenas tardes' },
-            'buenos dias': { categoria: 'saludos', archivo: 'buenos dias' },
-            'chao': { categoria: 'saludos', archivo: 'chao' },
-            'hola': { categoria: 'saludos', archivo: 'hola' },
-            
-            // Tiempo
-            'anteayer': { categoria: 'tiempo', archivo: 'anteayer' },
-            'ayer': { categoria: 'tiempo', archivo: 'ayer' },
-            'calendario': { categoria: 'tiempo', archivo: 'calendario' },
+            'en punto': { categoria: 'general', archivo: 'en punto' },
+            'enero': { categoria: 'expresiones', archivo: 'enero' },
+            'enfermera': { categoria: 'profesiones', archivo: 'enfermera' },
+            'enfermeras': { categoria: 'profesiones', archivo: 'enfermera' },
+            'enganar': { categoria: 'verbos', archivo: 'enganar' },
+            'escritor': { categoria: 'profesiones', archivo: 'escritor' },
+            'escritors': { categoria: 'profesiones', archivo: 'escritor' },
+            'estar': { categoria: 'verbos', archivo: 'estar' },
+            'estudiar': { categoria: 'verbos', archivo: 'estudiar' },
+            'expresiones': { categoria: 'expresiones', archivo: 'expresiones' },
+            'f': { categoria: 'alfabeto', archivo: 'f' },
+            'febrero': { categoria: 'expresiones', archivo: 'febrero' },
             'fin de semana': { categoria: 'tiempo', archivo: 'fin de semana' },
+            'fotografo': { categoria: 'profesiones', archivo: 'fotografo' },
+            'fotografos': { categoria: 'profesiones', archivo: 'fotografo' },
+            'frente': { categoria: 'adverbios', archivo: 'frente' },
+            'g': { categoria: 'alfabeto', archivo: 'g' },
+            'gerente': { categoria: 'profesiones', archivo: 'gerente' },
+            'gerentes': { categoria: 'profesiones', archivo: 'gerente' },
+            'gracias': { categoria: 'cortesia', archivo: 'gracias' },
+            'guardar': { categoria: 'verbos', archivo: 'guardar' },
+            'h': { categoria: 'alfabeto', archivo: 'h' },
+            'hola': { categoria: 'saludos', archivo: 'hola' },
+            'holi': { categoria: 'saludos', archivo: 'hola' },
+            'holiwis': { categoria: 'saludos', archivo: 'hola' },
+            'hombre': { categoria: 'personas', archivo: 'hombre' },
+            'hora': { categoria: 'general', archivo: 'hora' },
+            'horario': { categoria: 'general', archivo: 'horario' },
+            'horita': { categoria: 'tiempo', archivo: 'hoy' },
             'hoy': { categoria: 'tiempo', archivo: 'hoy' },
-            'manana': { categoria: 'tiempo', archivo: 'manana' },
-            'mañana': { categoria: 'tiempo', archivo: 'manana' },
+            'i': { categoria: 'alfabeto', archivo: 'i' },
+            'informatica': { categoria: 'profesiones', archivo: 'informatica' },
+            'informaticas': { categoria: 'profesiones', archivo: 'informatica' },
+            'inge': { categoria: 'profesiones', archivo: 'ingeniero' },
+            'ingeniero': { categoria: 'profesiones', archivo: 'ingeniero' },
+            'ingenieros': { categoria: 'profesiones', archivo: 'ingeniero' },
+            'inspector': { categoria: 'profesiones', archivo: 'inspector' },
+            'inspectors': { categoria: 'profesiones', archivo: 'inspector' },
+            'instructor': { categoria: 'profesiones', archivo: 'instructor' },
+            'instructors': { categoria: 'profesiones', archivo: 'instructor' },
+            'interprete': { categoria: 'profesiones', archivo: 'interprete' },
+            'interpretes': { categoria: 'profesiones', archivo: 'interprete' },
+            'interrogantes': { categoria: 'expresiones', archivo: 'interrogantes' },
+            'invitar': { categoria: 'verbos', archivo: 'invitar' },
+            'izquierda': { categoria: 'adverbios', archivo: 'izquierda' },
+            'j': { categoria: 'alfabeto', archivo: 'j' },
+            'jefe': { categoria: 'profesiones', archivo: 'jefe' },
+            'jefes': { categoria: 'profesiones', archivo: 'jefe' },
+            'joven': { categoria: 'personas', archivo: 'joven' },
+            'jueves': { categoria: 'tiempo', archivo: 'jueves' },
+            'julio': { categoria: 'expresiones', archivo: 'julio' },
+            'junio': { categoria: 'expresiones', archivo: 'junio' },
+            'k': { categoria: 'alfabeto', archivo: 'k' },
+            'l': { categoria: 'alfabeto', archivo: 'l' },
+            'lejos': { categoria: 'adverbios', archivo: 'lejos' },
+            'licenciado': { categoria: 'profesiones', archivo: 'licenciado' },
+            'licenciados': { categoria: 'profesiones', archivo: 'licenciado' },
+            'llevar': { categoria: 'verbos', archivo: 'llevar' },
+            'lugares': { categoria: 'adverbios', archivo: 'lugares' },
+            'lunes': { categoria: 'tiempo', archivo: 'lunes' },
+            'm': { categoria: 'alfabeto', archivo: 'm' },
+            'maestro': { categoria: 'profesiones', archivo: 'maestro' },
+            'maestros': { categoria: 'profesiones', archivo: 'maestro' },
+            'mal': { categoria: 'expresiones', archivo: 'mal' },
+            'martes': { categoria: 'tiempo', archivo: 'martes' },
+            'marzo': { categoria: 'expresiones', archivo: 'marzo' },
+            'mas': { categoria: 'preposiciones', archivo: 'mas' },
+            'mayo': { categoria: 'expresiones', archivo: 'mayo' },
+            'mayor': { categoria: 'personas', archivo: 'mayor' },
+            'mayor de edad': { categoria: 'personas', archivo: 'mayor de edad' },
+            'mañana': { categoria: 'tiempo', archivo: 'mañana' },
+            'mañanita': { categoria: 'tiempo', archivo: 'mañana' },
+            'media hora': { categoria: 'general', archivo: 'media hora' },
+            'medico': { categoria: 'profesiones', archivo: 'medico' },
+            'medicos': { categoria: 'profesiones', archivo: 'medico' },
+            'menor de edad': { categoria: 'personas', archivo: 'menor de edad' },
+            'mensajero': { categoria: 'profesiones', archivo: 'mensajero' },
+            'mensajeros': { categoria: 'profesiones', archivo: 'mensajero' },
             'mes': { categoria: 'tiempo', archivo: 'mes' },
-            'pasado manana': { categoria: 'tiempo', archivo: 'pasado manana' },
-            'semana': { categoria: 'tiempo', archivo: 'semana' }
-            //preposicion
-            
+            'mesonero': { categoria: 'profesiones', archivo: 'mesonero' },
+            'mesoneros': { categoria: 'profesiones', archivo: 'mesonero' },
+            'miercoles': { categoria: 'tiempo', archivo: 'miercoles' },
+            'mio': { categoria: 'pronombres', archivo: 'mio' },
+            'muchas gracias': { categoria: 'cortesia', archivo: 'muchas gracias' },
+            'mucho': { categoria: 'preposiciones', archivo: 'mucho' },
+            'mucho gusto': { categoria: 'cortesia', archivo: 'mucho gusto' },
+            'mujer': { categoria: 'personas', archivo: 'mujer' },
+            'n': { categoria: 'alfabeto', archivo: 'n' },
+            'nada': { categoria: 'preposiciones', archivo: 'nada' },
+            'nadie': { categoria: 'preposiciones', archivo: 'nadie' },
+            'ningun': { categoria: 'preposiciones', archivo: 'ningun' },
+            'niño': { categoria: 'personas', archivo: 'niño' },
+            'no': { categoria: 'expresiones', archivo: 'no' },
+            'nosotros': { categoria: 'pronombres', archivo: 'nosotros' },
+            'noviembre': { categoria: 'expresiones', archivo: 'noviembre' },
+            'novio': { categoria: 'personas', archivo: 'novio' },
+            'nuestro': { categoria: 'pronombres', archivo: 'nuestro' },
+            'o': { categoria: 'alfabeto', archivo: 'o' },
+            'octubre': { categoria: 'expresiones', archivo: 'octubre' },
+            'otro': { categoria: 'preposiciones', archivo: 'otro' },
+            'oyente': { categoria: 'personas', archivo: 'oyente' },
+            'p': { categoria: 'alfabeto', archivo: 'p' },
+            'pasado mañana': { categoria: 'tiempo', archivo: 'pasado mañana' },
+            'pasante': { categoria: 'profesiones', archivo: 'pasante' },
+            'pasantes': { categoria: 'profesiones', archivo: 'pasante' },
+            'pelear': { categoria: 'verbos', archivo: 'pelear' },
+            'peluquera': { categoria: 'profesiones', archivo: 'peluquera' },
+            'peluqueras': { categoria: 'profesiones', archivo: 'peluquera' },
+            'permiso': { categoria: 'cortesia', archivo: 'permiso' },
+            'persona': { categoria: 'personas', archivo: 'persona' },
+            'personas': { categoria: 'personas', archivo: 'personas' },
+            'pintor': { categoria: 'profesiones', archivo: 'pintor' },
+            'pintors': { categoria: 'profesiones', archivo: 'pintor' },
+            'piso': { categoria: 'viviendas', archivo: 'piso' },
+            'poco': { categoria: 'preposiciones', archivo: 'poco' },
+            'policia': { categoria: 'profesiones', archivo: 'policia' },
+            'policias': { categoria: 'profesiones', archivo: 'policia' },
+            'porque': { categoria: 'expresiones', archivo: 'porque' },
+            'preguntar': { categoria: 'verbos', archivo: 'preguntar' },
+            'presentar': { categoria: 'verbos', archivo: 'presentar' },
+            'profe': { categoria: 'profesiones', archivo: 'profesor' },
+            'profesion': { categoria: 'profesiones', archivo: 'profesion' },
+            'profesions': { categoria: 'profesiones', archivo: 'profesion' },
+            'profesor': { categoria: 'profesiones', archivo: 'profesor' },
+            'profesors': { categoria: 'profesiones', archivo: 'profesor' },
+            'psicologo': { categoria: 'profesiones', archivo: 'psicologo' },
+            'psicologos': { categoria: 'profesiones', archivo: 'psicologo' },
+            'q': { categoria: 'alfabeto', archivo: 'q' },
+            'que': { categoria: 'expresiones', archivo: 'que' },
+            'que tal': { categoria: 'interrogantes', archivo: 'que tal' },
+            'querer': { categoria: 'verbos', archivo: 'querer' },
+            'quien': { categoria: 'expresiones', archivo: 'quien' },
+            'quienquiera': { categoria: 'preposiciones', archivo: 'quienquiera' },
+            'r': { categoria: 'alfabeto', archivo: 'r' },
+            'rancho': { categoria: 'viviendas', archivo: 'rancho' },
+            'regalar': { categoria: 'verbos', archivo: 'regalar' },
+            'regular': { categoria: 'expresiones', archivo: 'regular' },
+            'responder': { categoria: 'verbos', archivo: 'responder' },
+            's': { categoria: 'alfabeto', archivo: 's' },
+            'sabado': { categoria: 'tiempo', archivo: 'sabado' },
+            'sala': { categoria: 'viviendas', archivo: 'sala' },
+            'saludar': { categoria: 'verbos', archivo: 'saludar' },
+            'saludas a': { categoria: 'expresiones', archivo: 'saludas a' },
+            'secretaria': { categoria: 'profesiones', archivo: 'secretaria' },
+            'secretarias': { categoria: 'profesiones', archivo: 'secretaria' },
+            'semana': { categoria: 'tiempo', archivo: 'semana' },
+            'sentir': { categoria: 'verbos', archivo: 'sentir' },
+            'separado': { categoria: 'estado_civil', archivo: 'separado' },
+            'septiembre': { categoria: 'expresiones', archivo: 'septiembre' },
+            'ser': { categoria: 'verbos', archivo: 'ser' },
+            'señor': { categoria: 'personas', archivo: 'señor' },
+            'señorita': { categoria: 'personas', archivo: 'señorita' },
+            'si': { categoria: 'expresiones', archivo: 'si' },
+            'sistema': { categoria: 'profesiones', archivo: 'sistema' },
+            'sistemas': { categoria: 'profesiones', archivo: 'sistema' },
+            'soltero': { categoria: 'estado_civil', archivo: 'soltero' },
+            'sordo': { categoria: 'personas', archivo: 'sordo' },
+            'sordociego': { categoria: 'personas', archivo: 'sordociego' },
+            'sufrir': { categoria: 'verbos', archivo: 'sufrir' },
+            'supervisor': { categoria: 'profesiones', archivo: 'supervisor' },
+            'supervisors': { categoria: 'profesiones', archivo: 'supervisor' },
+            'suyo': { categoria: 'pronombres', archivo: 'suyo' },
+            't': { categoria: 'alfabeto', archivo: 't' },
+            'tecnico': { categoria: 'profesiones', archivo: 'tecnico' },
+            'tecnicos': { categoria: 'profesiones', archivo: 'tecnico' },
+            'todo': { categoria: 'preposiciones', archivo: 'todo' },
+            'trabajar': { categoria: 'verbos', archivo: 'trabajar' },
+            'traductor': { categoria: 'profesiones', archivo: 'traductor' },
+            'traductors': { categoria: 'profesiones', archivo: 'traductor' },
+            'traer': { categoria: 'verbos', archivo: 'traer' },
+            'tu': { categoria: 'pronombres', archivo: 'tu' },
+            'tuyo': { categoria: 'pronombres', archivo: 'tuyo' },
+            'u': { categoria: 'alfabeto', archivo: 'u' },
+            'un cuarto': { categoria: 'general', archivo: 'un cuarto' },
+            'un minuto': { categoria: 'general', archivo: 'un minuto' },
+            'un segundo': { categoria: 'general', archivo: 'un segundo' },
+            'una hora': { categoria: 'general', archivo: 'una hora' },
+            'usar': { categoria: 'verbos', archivo: 'usar' },
+            'ustedes': { categoria: 'pronombres', archivo: 'ustedes' },
+            'v': { categoria: 'alfabeto', archivo: 'v' },
+            'vendedor': { categoria: 'profesiones', archivo: 'vendedor' },
+            'vendedors': { categoria: 'profesiones', archivo: 'vendedor' },
+            'ver': { categoria: 'verbos', archivo: 'ver' },
+            'verbo': { categoria: 'verbos', archivo: 'verbo' },
+            'vestir': { categoria: 'verbos', archivo: 'vestir' },
+            'viejo': { categoria: 'personas', archivo: 'viejo' },
+            'viernes': { categoria: 'tiempo', archivo: 'viernes' },
+            'vigilante': { categoria: 'profesiones', archivo: 'vigilante' },
+            'vigilantes': { categoria: 'profesiones', archivo: 'vigilante' },
+            'viudo': { categoria: 'estado_civil', archivo: 'viudo' },
+            'vivir': { categoria: 'verbos', archivo: 'vivir' },
+            'w': { categoria: 'alfabeto', archivo: 'w' },
+            'x': { categoria: 'alfabeto', archivo: 'x' },
+            'y': { categoria: 'alfabeto', archivo: 'y' },
+            'yo': { categoria: 'pronombres', archivo: 'yo' },
+            'z': { categoria: 'alfabeto', archivo: 'z' },
+            'ñ': { categoria: 'alfabeto', archivo: 'ñ' }
         };
 
-        // ============================================
-        // INTEGRACIÓN CON API DE IA
-        // ============================================
-        const API_URL = 'http://localhost:5000/api/translate';
-        const useAPI = true; // Cambiar a false para usar solo diccionario local
-
-        /**
-         * Función para traducir texto usando la API con IA
-         * La API maneja automáticamente el deletreo de palabras desconocidas
-         */
-        async function traducirConAPI(texto) {
-            try {
-                console.log('🌐 Consultando API con IA...');
-                const response = await fetch(API_URL, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        texto: texto,
-                        deletrear_desconocidas: true, // Habilitar deletreo automático
-                        duracion_deletreo: 1.2 // Animaciones de deletreo más rápidas
-                    })
-                });
-
-                if (!response.ok) {
-                    throw new Error(`API error: ${response.status}`);
-                }
-
-                const data = await response.json();
-                console.log('✅ Respuesta de API:', data);
-                return data;
-            } catch (error) {
-                console.error('❌ Error en API:', error);
-                return null;
+        // Exponer función para React Native
+        window.animarPalabras = async function(texto, avatar = 'Nancy') {
+            if (avatar !== avatarActual) {
+                await cargarAvatar(avatar);
             }
-        }
-        
-        // Configuración de avatares
-        const AVATARES_CONFIG = {
-            'Nancy': { nombre: '👩 Nancy', color: '#f093fb' },
-            'Duvall': { nombre: '👨 Duvall', color: '#4facfe' },
-            'Luis': { nombre: '👦 Luis', color: '#43e97b' },
-            'Nina': { nombre: '👧 Nina', color: '#ee5a6f' },
-            'Carla': { nombre: '👩 Carla', color: '#FF6B9D' },
-            'Argenis': { nombre: '👨 Argenis', color: '#2ECC71' }
+            await traducirYAnimar(texto);
         };
 
         async function init() {
             setupScene();
-            crearSelectorAvatares();
+            setupControls();
             
-            // Inicializar sistema de gestos faciales
-            facialSystem = new FacialExpressionSystem();
-            await facialSystem.loadConfig('facial_expressions_config.json');
-            console.log('✅ Sistema de gestos faciales inicializado');
+            // Crear instancia única de loader para reutilizar
+            loaderInstance = new GLTFLoader();
             
             // Obtener parámetros desde URL
             const params = new URLSearchParams(window.location.search);
             const avatarParam = params.get('avatar') || 'Nancy';
-            const textoParam = params.get('texto') || params.get('text') || '';
-            const autoplay = params.get('autoplay') === 'true';
+            const textoParam = params.get('text') || '';
             
             await cargarAvatar(avatarParam);
-            setupEventListeners();
             
-            // Si hay texto en URL, cargarlo y opcionalmente reproducir
+            // Precargar animaciones comunes en background
+            precargarAnimacionesComunes();
+            
+            // Si hay texto en URL, animarlo automáticamente
             if (textoParam) {
-                document.getElementById('text-input-bottom').value = textoParam;
-                if (autoplay) {
-                    setTimeout(() => {
-                        const texto = textoParam.trim();
-                        if (texto && !isAnimating) {
-                            traducirYAnimar(texto);
-                        }
-                    }, 500);
-                }
+                document.getElementById('textInput').value = textoParam;
+                setTimeout(() => {
+                    traducirYAnimar(textoParam);
+                }, 500);
             }
             
             animate();
         }
-        
-        function crearSelectorAvatares() {
-            const container = document.getElementById('avatar-selector');
-            Object.keys(AVATARES_CONFIG).forEach(nombre => {
-                const btn = document.createElement('button');
-                btn.className = `avatar-btn ${nombre === avatarActual ? 'active' : ''}`;
-                btn.textContent = AVATARES_CONFIG[nombre].nombre;
-                btn.id = `btn-${nombre}`;
-                btn.onclick = () => cambiarAvatar(nombre);
-                container.appendChild(btn);
+
+        function setupControls() {
+            const textInput = document.getElementById('textInput');
+            const animateBtn = document.getElementById('animateBtn');
+            const pauseBtn = document.getElementById('pauseBtn');
+            const replayBtn = document.getElementById('replayBtn');
+            const resetCameraBtn = document.getElementById('resetCameraBtn');
+
+            // Botón Animar
+            animateBtn.addEventListener('click', () => {
+                const texto = textInput.value.trim();
+                if (texto && !isAnimating) {
+                    traducirYAnimar(texto);
+                }
             });
+
+            // Enter en el input
+            textInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    const texto = textInput.value.trim();
+                    if (texto && !isAnimating) {
+                        traducirYAnimar(texto);
+                    }
+                }
+            });
+
+            // Botón Pausar/Reanudar
+            pauseBtn.addEventListener('click', () => {
+                if (!currentAction) return;
+
+                isPaused = !isPaused;
+                
+                if (isPaused) {
+                    currentAction.paused = true;
+                    pauseBtn.classList.add('paused');
+                    document.getElementById('pauseIcon').textContent = '▶️';
+                    document.getElementById('pauseText').textContent = 'Reanudar';
+                    document.getElementById('status').textContent = '⏸️ Pausado';
+                } else {
+                    currentAction.paused = false;
+                    pauseBtn.classList.remove('paused');
+                    document.getElementById('pauseIcon').textContent = '⏸️';
+                    document.getElementById('pauseText').textContent = 'Pausar';
+                    document.getElementById('status').textContent = `▶️ ${ultimoTexto}`;
+                }
+            });
+
+            // Botón Repetir
+            replayBtn.addEventListener('click', () => {
+                if (ultimoTexto && !isAnimating) {
+                    traducirYAnimar(ultimoTexto);
+                }
+            });
+            
+            // Botón Resetear Cámara
+            resetCameraBtn.addEventListener('click', () => {
+                resetCamera();
+            });
+            
+            console.log('🤖 Modo API activado permanentemente - Corrección con IA');
         }
         
-        async function cambiarAvatar(nuevoAvatar) {
-            if (nuevoAvatar === avatarActual) return;
+        function resetCamera() {
+            if (!camera || !controls) return;
             
-            document.getElementById('status').textContent = `🔄 Cambiando a ${nuevoAvatar}...`;
+            // SOLUCIÓN: Deshabilitar OrbitControls durante el reset para evitar interferencia
+            controls.enabled = false;
             
-            // Actualizar botones
-            document.querySelectorAll('.avatar-btn').forEach(btn => {
-                btn.classList.remove('active');
-            });
-            document.getElementById(`btn-${nuevoAvatar}`).classList.add('active');
+            const startPos = camera.position.clone();
+            const startTarget = controls.target.clone();
+            const duration = 800; // ms
+            const startTime = Date.now();
             
-            await cargarAvatar(nuevoAvatar);
+            // Valores objetivo fijos (nunca cambian)
+            const targetPosX = INITIAL_CAMERA_POSITION.x;
+            const targetPosY = INITIAL_CAMERA_POSITION.y;
+            const targetPosZ = INITIAL_CAMERA_POSITION.z;
+            const targetLookX = INITIAL_CAMERA_TARGET.x;
+            const targetLookY = INITIAL_CAMERA_TARGET.y;
+            const targetLookZ = INITIAL_CAMERA_TARGET.z;
+            
+            function animateCameraReset() {
+                const elapsed = Date.now() - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                
+                // Easing suave (ease-out)
+                const eased = 1 - Math.pow(1 - progress, 3);
+                
+                // Interpolar hacia valores ABSOLUTOS (no acumulativos)
+                camera.position.x = startPos.x + (targetPosX - startPos.x) * eased;
+                camera.position.y = startPos.y + (targetPosY - startPos.y) * eased;
+                camera.position.z = startPos.z + (targetPosZ - startPos.z) * eased;
+                
+                controls.target.x = startTarget.x + (targetLookX - startTarget.x) * eased;
+                controls.target.y = startTarget.y + (targetLookY - startTarget.y) * eased;
+                controls.target.z = startTarget.z + (targetLookZ - startTarget.z) * eased;
+                
+                if (progress < 1) {
+                    requestAnimationFrame(animateCameraReset);
+                } else {
+                    // Forzar valores exactos al final
+                    camera.position.set(targetPosX, targetPosY, targetPosZ);
+                    controls.target.set(targetLookX, targetLookY, targetLookZ);
+                    
+                    // Reactivar OrbitControls después del reset
+                    controls.enabled = true;
+                    controls.update();
+                    
+                    console.log('🎯 Cámara reseteada a posición inicial');
+                }
+            }
+            
+            animateCameraReset();
         }
 
         function setupScene() {
@@ -626,7 +1266,8 @@
             const canvas = document.getElementById('canvas-3d');
             
             scene = new THREE.Scene();
-            scene.background = new THREE.Color(0x1a1a2e);
+            //color de fondo
+            scene.background = new THREE.Color(0xffffff);
             
             camera = new THREE.PerspectiveCamera(
                 50,
@@ -634,654 +1275,857 @@
                 0.1,
                 1000
             );
-            camera.position.set(0, 1.6, 3);
+            camera.position.set(INITIAL_CAMERA_POSITION.x, INITIAL_CAMERA_POSITION.y, INITIAL_CAMERA_POSITION.z);
             
             renderer = new THREE.WebGLRenderer({ 
                 canvas: canvas,
-                antialias: true
+                antialias: true,
+                alpha: true
             });
             renderer.setSize(container.clientWidth, container.clientHeight);
             renderer.setPixelRatio(window.devicePixelRatio);
+            renderer.outputColorSpace = THREE.SRGBColorSpace;
+            renderer.toneMapping = THREE.ACESFilmicToneMapping;
+            renderer.toneMappingExposure = 1.2;
             
             controls = new OrbitControls(camera, canvas);
-            controls.target.set(0, 1.2, 0);
+            controls.target.set(INITIAL_CAMERA_TARGET.x, INITIAL_CAMERA_TARGET.y, INITIAL_CAMERA_TARGET.z);
             controls.update();
             
-            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+            // Sistema de iluminación igual que avatar_static.html
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
             scene.add(ambientLight);
             
-            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
-            directionalLight.position.set(5, 10, 5);
-            scene.add(directionalLight);
+            const directionalLight1 = new THREE.DirectionalLight(0xffffff, 1.2);
+            directionalLight1.position.set(5, 5, 5);
+            scene.add(directionalLight1);
             
-            const backLight = new THREE.DirectionalLight(0xf093fb, 0.4);
-            backLight.position.set(-5, 5, -5);
-            scene.add(backLight);
+            const directionalLight2 = new THREE.DirectionalLight(0xffffff, 0.6);
+            directionalLight2.position.set(-5, 3, -5);
+            scene.add(directionalLight2);
+            
+            const fillLight = new THREE.DirectionalLight(0xffffff, 0.4);
+            fillLight.position.set(0, -2, 5);
+            scene.add(fillLight);
             
             clock = new THREE.Clock();
             
+            // LOGGING INICIAL - Posición al iniciar
+            logToExpo('🟢 CÁMARA INICIAL:', {
+                position: { x: camera.position.x, y: camera.position.y, z: camera.position.z },
+                target: { x: controls.target.x, y: controls.target.y, z: controls.target.z },
+                zoom: camera.zoom,
+                fov: camera.fov
+            });
+            
+            // Mejorado: Detectar teclado virtual y CONGELAR controles completamente
             window.addEventListener('resize', () => {
-                camera.aspect = container.clientWidth / container.clientHeight;
-                camera.updateProjectionMatrix();
-                renderer.setSize(container.clientWidth, container.clientHeight);
+                const currentHeight = window.innerHeight;
+                const currentWidth = window.innerWidth;
+                const heightDifference = initialViewportHeight - currentHeight;
+                
+                logToExpo('📏 RESIZE DETECTADO:', {
+                    initialHeight: initialViewportHeight,
+                    currentHeight: currentHeight,
+                    currentWidth: currentWidth,
+                    difference: heightDifference,
+                    aspect: currentWidth / currentHeight,
+                    isKeyboardOpen: isKeyboardOpen
+                });
+                
+                // Detectar si el teclado virtual se abrió (altura reducida significativamente)
+                if (heightDifference > 150 && !isKeyboardOpen) {
+                    // Teclado abierto
+                    isKeyboardOpen = true;
+                    
+                    // Guardar estado actual de la cámara
+                    if (camera && controls) {
+                        savedCameraState = {
+                            position: camera.position.clone(),
+                            target: controls.target.clone(),
+                            zoom: camera.zoom,
+                            fov: camera.fov
+                        };
+                        
+                        logToExpo('🔴 TECLADO ABIERTO - Estado guardado:', {
+                            position: { x: savedCameraState.position.x, y: savedCameraState.position.y, z: savedCameraState.position.z },
+                            target: { x: savedCameraState.target.x, y: savedCameraState.target.y, z: savedCameraState.target.z },
+                            zoom: savedCameraState.zoom,
+                            fov: savedCameraState.fov
+                        });
+                        
+                        // CONGELAR OrbitControls completamente
+                        controls.enabled = false;
+                        logToExpo('⛔ OrbitControls DESHABILITADO');
+                    }
+                } else if (heightDifference < 100 && isKeyboardOpen) {
+                    // Teclado cerrado
+                    isKeyboardOpen = false;
+                    
+                    logToExpo('🟢 TECLADO CERRADO - Antes de restaurar:', {
+                        currentPosition: { x: camera.position.x, y: camera.position.y, z: camera.position.z },
+                        currentTarget: { x: controls.target.x, y: controls.target.y, z: controls.target.z },
+                        currentZoom: camera.zoom,
+                        currentFov: camera.fov
+                    });
+                    
+                    // Restaurar posición exacta de la cámara después de un breve delay
+                    setTimeout(() => {
+                        if (savedCameraState && camera && controls) {
+                            // Restaurar TODOS los valores guardados
+                            camera.position.set(
+                                savedCameraState.position.x,
+                                savedCameraState.position.y,
+                                savedCameraState.position.z
+                            );
+                            controls.target.set(
+                                savedCameraState.target.x,
+                                savedCameraState.target.y,
+                                savedCameraState.target.z
+                            );
+                            camera.zoom = savedCameraState.zoom;
+                            camera.fov = savedCameraState.fov;
+                            camera.updateProjectionMatrix();
+                            
+                            // Reactivar OrbitControls
+                            controls.enabled = true;
+                            controls.update();
+                            
+                            logToExpo('✅ Cámara RESTAURADA:', {
+                                restoredPosition: { x: camera.position.x, y: camera.position.y, z: camera.position.z },
+                                restoredTarget: { x: controls.target.x, y: controls.target.y, z: controls.target.z },
+                                restoredZoom: camera.zoom,
+                                restoredFov: camera.fov
+                            });
+                            logToExpo('✅ OrbitControls REACTIVADO');
+                        }
+                    }, 100);
+                }
+                
+                // NO actualizar aspect ratio ni renderer cuando el input está enfocado (savedCameraState existe)
+                if (camera && renderer && !savedCameraState) {
+                    const container = document.getElementById('viewer-container');
+                    const newWidth = container.clientWidth;
+                    const newHeight = container.clientHeight;
+                    const newAspect = newWidth / newHeight;
+                    
+                    logToExpo('📐 Calculando nuevo aspect:', {
+                        containerWidth: newWidth,
+                        containerHeight: newHeight,
+                        newAspect: newAspect,
+                        currentAspect: camera.aspect,
+                        willUpdate: Math.abs(camera.aspect - newAspect) > 0.01
+                    });
+                    
+                    if (Math.abs(camera.aspect - newAspect) > 0.01) {
+                        camera.aspect = newAspect;
+                        camera.updateProjectionMatrix();
+                        logToExpo('🔄 Aspect ratio actualizado:', { aspect: newAspect });
+                    }
+                    renderer.setSize(newWidth, newHeight);
+                } else if (savedCameraState) {
+                    logToExpo('⏸️ Aspect ratio bloqueado (input enfocado)');
+                }
+            });
+            
+            // Actualizar altura inicial cuando la página carga completamente
+            window.addEventListener('load', () => {
+                initialViewportHeight = window.innerHeight;
+                logToExpo('🟢 Altura inicial establecida:', { height: initialViewportHeight });
             });
         }
 
         async function cargarAvatar(nombreAvatar) {
-            return new Promise(async (resolve, reject) => {
-                const loader = new GLTFLoader();
-                const loadingText = document.getElementById('loading-text');
-                const loadingDiv = document.getElementById('loading');
-                
-                loadingDiv.classList.remove('hidden');
-                loadingText.textContent = `Cargando ${nombreAvatar}...`;
-                
-                // Determinar género según el avatar
-                const genero = (nombreAvatar === 'Nancy' || nombreAvatar === 'Nina' || nombreAvatar === 'Carla') ? 'Mujer' : 'Hombre';
-                
-                // Rutas a intentar: primero individual, luego género
-                const rutasIntento = [
-                    `output/glb/${nombreAvatar}/${nombreAvatar}.glb`,  // Prioridad: carpeta individual
-                    `output/glb/${genero}/${nombreAvatar}.glb`  // Fallback: estructura por género
-                ];
-                
-                let cargado = false;
-                
-                for (const ruta of rutasIntento) {
-                    if (cargado) break;
+            const loadingText = document.getElementById('loading-text');
+            const loadingDiv = document.getElementById('loading');
+            
+            loadingDiv.classList.remove('hidden');
+            loadingText.textContent = `Cargando ${nombreAvatar}...`;
+            
+            // Reutilizar loader si existe, sino crear uno nuevo
+            const loader = loaderInstance || new GLTFLoader();
+            if (!loaderInstance) loaderInstance = loader;
+            
+            // Construir URL base para GitHub Pages o local
+            const baseUrl = window.location.hostname.includes('github.io') 
+                ? 'https://usm-argenis.github.io/STT_LSV/test/'
+                : '';
+            
+            // Determinar género del avatar
+            const genero = (nombreAvatar === 'Nancy' || nombreAvatar === 'Nina') ? 'Mujer' : 'Hombre';
+            
+            // Intentar múltiples rutas
+            const rutasAvatar = [
+                `${baseUrl}output/glb/${nombreAvatar}/${nombreAvatar}.glb`,
+                `${baseUrl}output/glb/${genero}/${nombreAvatar}.glb`
+            ];
+            
+            for (const ruta of rutasAvatar) {
+                try {
+                    const gltf = await new Promise((res, rej) => {
+                        loader.load(
+                            ruta,
+                            (result) => res(result),
+                            (progress) => {
+                                const percent = (progress.loaded / progress.total) * 100;
+                                loadingText.textContent = `Cargando ${nombreAvatar}... ${percent.toFixed(0)}%`;
+                            },
+                            (error) => rej(error)
+                        );
+                    });
                     
-                    try {
-                        const gltf = await new Promise((res, rej) => {
-                            loader.load(
-                                ruta,
-                                (result) => res(result),
-                                (progress) => {
-                                    const percent = (progress.loaded / progress.total) * 100;
-                                    loadingText.textContent = `Cargando ${nombreAvatar}... ${percent.toFixed(0)}%`;
-                                },
-                                (error) => rej(error)
-                            );
+                    console.log(`✅ Avatar cargado desde: ${ruta}`);
+                    
+                    if (avatarModel) {
+                        // Limpieza eficiente del avatar anterior
+                        scene.remove(avatarModel);
+                        avatarModel.traverse((child) => {
+                            if (child.geometry) {
+                                child.geometry.dispose();
+                            }
+                            if (child.material) {
+                                if (Array.isArray(child.material)) {
+                                    child.material.forEach(m => m.dispose());
+                                } else {
+                                    child.material.dispose();
+                                }
+                            }
                         });
-                        
-                        console.log(`✅ Avatar cargado desde: ${ruta}`);
-                        
-                        // Remover avatar anterior si existe
-                        if (nancyModel) {
-                            scene.remove(nancyModel);
-                            nancyModel.traverse((child) => {
-                                if (child.geometry) child.geometry.dispose();
-                                if (child.material) child.material.dispose();
-                            });
-                        }
-                        
-                        // Agregar nuevo avatar
-                        nancyModel = gltf.scene;
-                        scene.add(nancyModel);
-                        
-                        // Centrar modelo
-                        const box = new THREE.Box3().setFromObject(nancyModel);
-                        const center = box.getCenter(new THREE.Vector3());
-                        nancyModel.position.sub(center);
-                        nancyModel.position.y = 0;
-                        
-                        // Crear mixer
-                        mixer = new THREE.AnimationMixer(nancyModel);
-                        
-                        // Inicializar sistema de gestos faciales con el nuevo modelo
-                        if (facialSystem) {
-                            facialSystem.initializeWithModel(nancyModel);
-                            facialSystem.reset(); // Expresión neutral por defecto
-                            console.log('✅ Sistema de gestos faciales vinculado al modelo');
-                        }
-                        
-                        // Limpiar caché de animaciones
-                        animationCache.clear();
-                        
-                        // Actualizar estado
-                        avatarActual = nombreAvatar;
-                        
-                        // Actualizar UI
-                        document.getElementById('header-title').textContent = 
-                            `${AVATARES_CONFIG[nombreAvatar].nombre} - Sistema de Animaciones LSV`;
-                        document.getElementById('header-title').style.color = 
-                            AVATARES_CONFIG[nombreAvatar].color;
-                        
-                        loadingDiv.classList.add('hidden');
-                        document.getElementById('status').textContent = 
-                            `✅ ${nombreAvatar} cargado - Listo para animar`;
-                        
-                        cargado = true;
-                        resolve();
-                        
-                    } catch (error) {
-                        console.log(`⚠️ No se pudo cargar desde: ${ruta}`);
-                        // Continuar con siguiente ruta
                     }
+                    
+                    avatarModel = gltf.scene;
+                    scene.add(avatarModel);
+                    
+                    const box = new THREE.Box3().setFromObject(avatarModel);
+                    const center = box.getCenter(new THREE.Vector3());
+                    avatarModel.position.sub(center);
+                    avatarModel.position.y = 0;
+                    
+                    // Verificar y habilitar morph targets
+                    let morphTargetMeshes = 0;
+                    const nodeNameMap = {};
+                    
+                    avatarModel.traverse((child) => {
+                        if (child.isMesh && child.morphTargetInfluences && child.morphTargetInfluences.length > 0) {
+                            morphTargetMeshes++;
+                            console.log(`🎭 Morph targets en ${child.name}: ${child.morphTargetInfluences.length}`);
+                            
+                            // Crear mapping bidireccional de nombres
+                            const baseName = child.name.replace(/\.\d+$/, ''); // Quitar sufijos .001, .004, etc
+                            
+                            // Mapear DESDE nombre base (del GLB) HACIA nombre real (del avatar)
+                            nodeNameMap[baseName] = child.name;
+                            
+                            if (baseName !== child.name) {
+                                console.log(`📝 Mapping: ${baseName} → ${child.name}`);
+                            }
+                            
+                            // Asegurar que el material actualiza los morph targets
+                            if (child.material) {
+                                child.material.morphTargets = true;
+                                child.material.needsUpdate = true;
+                            }
+                        }
+                    });
+                    
+                    // Guardar el mapping en el modelo para uso posterior
+                    avatarModel.userData.nodeNameMap = nodeNameMap;
+                    
+                    if (morphTargetMeshes > 0) {
+                        console.log(`✅ ${morphTargetMeshes} meshes con morph targets habilitados`);
+                    }
+                    
+                    mixer = new THREE.AnimationMixer(avatarModel);
+                    
+                    // Limpiar caché de animaciones al cambiar avatar
+                    animationCache.clear();
+                    avatarActual = nombreAvatar;
+                    
+                    loadingDiv.classList.add('hidden');
+                    //cambio
+                    //document.getElementById('status').textContent = `✅ ${nombreAvatar} listo`;
+                    console.log(`✅ ${nombreAvatar} cargado exitosamente`);
+                    return;
+                    
+                } catch (error) {
+                    console.log(`⚠️ No se pudo cargar desde: ${ruta}`);
+                }
+            }
+            
+            // Si no se pudo cargar desde ninguna ruta
+            console.error(`❌ No se pudo cargar ${nombreAvatar} desde ninguna ubicación`);
+            document.getElementById('status').textContent = `❌ Error al cargar ${nombreAvatar}`;
+            loadingDiv.classList.add('hidden');
+            throw new Error(`No se pudo cargar ${nombreAvatar}`);
+        }
+
+        // Función para llamar al backend API
+        async function traducirConBackend(texto) {
+            try {
+                console.log('🌐 Llamando a backend API...');
+                const response = await fetch(`${BACKEND_URL}/api/translate`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        texto: texto,
+                        avatar: avatarActual,
+                        deletrear_desconocidas: true,
+                        corregir_ortografia: true,
+                        velocidad_deletreo: 1.2
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Error HTTP: ${response.status}`);
+                }
+
+                const resultado = await response.json();
+                
+                // Mostrar correcciones si las hay
+                if (resultado.correcciones && resultado.correcciones.length > 0) {
+                    console.log('✏️ Correcciones aplicadas:');
+                    resultado.correcciones.forEach(corr => {
+                        console.log(`  "${corr.original}" → "${corr.corregida}" (${corr.tipo}, ${corr.confianza}% confianza)`);
+                    });
                 }
                 
-                if (!cargado) {
-                    console.error(`❌ Error cargando ${nombreAvatar} desde todas las rutas`);
-                    document.getElementById('status').textContent = `❌ Error al cargar ${nombreAvatar}`;
-                    loadingDiv.classList.add('hidden');
-                    reject(new Error(`No se pudo cargar ${nombreAvatar}`));
-                }
-            });
+                console.log(`📊 Backend: ${resultado.total_animaciones} animaciones generadas`);
+                console.log(`📝 Texto corregido: "${resultado.texto_corregido}"`);
+                
+                return resultado;
+                
+            } catch (error) {
+                console.error('❌ Error conectando con backend:', error);
+                console.log('🔄 Usando modo local como fallback');
+                return null; // Indica que debe usar modo local
+            }
         }
 
         async function traducirYAnimar(texto) {
             if (isAnimating) return;
             
-            console.log(`🎭 Traducir: "${texto}"`);
             isAnimating = true;
+            ultimoTexto = texto;
+            isPaused = false;
+            
+            // Habilitar controles
+            document.getElementById('pauseBtn').disabled = false;
+            document.getElementById('replayBtn').disabled = false;
+            document.getElementById('animateBtn').disabled = true;
             
             let animacionesValidas = [];
-            let palabrasDeletreadas = [];
             
-            // PRIMERO: Intentar con API (IA + deletreo automático)
-            if (useAPI) {
-                const resultadoAPI = await traducirConAPI(texto);
+            // Si está activado el modo API, intentar usar backend
+            if (useBackendAPI) {
+                const resultadoBackend = await traducirConBackend(texto);
                 
-                if (resultadoAPI && resultadoAPI.animaciones && resultadoAPI.animaciones.length > 0) {
-                    console.log('✅ Usando traducciones de API con IA');
-                    
-                    // Convertir formato API al formato interno
-                    animacionesValidas = resultadoAPI.animaciones.map(anim => ({
+                if (resultadoBackend && resultadoBackend.animaciones) {
+                    // El backend YA devuelve las frases combinadas correctamente
+                    // Solo necesitamos convertir a formato de animaciones válidas
+                    animacionesValidas = resultadoBackend.animaciones.map(anim => ({
                         texto: anim.nombre,
-                        palabra: anim.nombre,
-                        categoria: anim.categoria,
-                        archivo: anim.archivo,
-                        es_deletreo: anim.es_deletreo || false,
-                        duracion: anim.duracion || null
+                        palabra: anim.nombre.toLowerCase()
                     }));
                     
-                    palabrasDeletreadas = resultadoAPI.palabras_deletreadas || [];
+                    console.log(`🤖 Usando ${animacionesValidas.length} animaciones del backend`);
+                    console.log(`📋 Secuencia: ${animacionesValidas.map(a => a.texto).join(' → ')}`);
                     
-                } else {
-                    console.log('⚠️ API no disponible, usando diccionario local');
-                }
-            }
-            
-            // FALLBACK: Si API falló o useAPI=false, usar diccionario local
-            if (animacionesValidas.length === 0) {
-                const palabras = texto.toLowerCase().trim().split(/\s+/);
-                
-                // Buscar frases compuestas primero (ej: "buenos dias", "muchas gracias")
-                let i = 0;
-                while (i < palabras.length) {
-                    let encontrada = false;
-                    
-                    // Intentar frases de 3 palabras
-                    if (i + 2 < palabras.length) {
-                        const frase3 = palabras.slice(i, i + 3).join(' ');
-                        if (DICCIONARIO[frase3]) {
-                            animacionesValidas.push({ 
-                                texto: frase3, 
-                                palabra: frase3,
-                                categoria: DICCIONARIO[frase3].categoria,
-                                archivo: DICCIONARIO[frase3].archivo,
-                                es_deletreo: false,
-                                duracion: null
-                            });
-                            i += 3;
-                            encontrada = true;
-                        }
-                    }
-                    
-                    // Intentar frases de 2 palabras
-                    if (!encontrada && i + 1 < palabras.length) {
-                        const frase2 = palabras.slice(i, i + 2).join(' ');
-                        if (DICCIONARIO[frase2]) {
-                            animacionesValidas.push({ 
-                                texto: frase2, 
-                                palabra: frase2,
-                                categoria: DICCIONARIO[frase2].categoria,
-                                archivo: DICCIONARIO[frase2].archivo,
-                                es_deletreo: false,
-                                duracion: null
-                            });
-                            i += 2;
-                            encontrada = true;
-                        }
-                    }
-                    
-                    // Palabra individual
-                    if (!encontrada) {
-                        if (DICCIONARIO[palabras[i]]) {
-                            animacionesValidas.push({ 
-                                texto: palabras[i], 
-                                palabra: palabras[i],
-                                categoria: DICCIONARIO[palabras[i]].categoria,
-                                archivo: DICCIONARIO[palabras[i]].archivo,
-                                es_deletreo: false,
-                                duracion: null
-                            });
-                        } else {
-                            console.warn(`⚠️ Palabra no encontrada: ${palabras[i]}`);
-                        }
-                        i++;
+                    // Si el backend procesó el texto, saltamos el procesamiento local
+                    if (animacionesValidas.length > 0) {
+                        // Ir directamente a reproducción
+                        await reproducirSecuencia(animacionesValidas);
+                        return;
                     }
                 }
-            }
-            
-            if (animacionesValidas.length === 0) {
-                document.getElementById('status').textContent = '⚠️ No se encontraron animaciones';
-                isAnimating = false;
-                return;
-            }
-            
-            console.log(`🎬 Secuencia: ${animacionesValidas.map(a => a.texto).join(' → ')}`);
-            
-            // Guardar secuencia actual
-            animacionesActuales = animacionesValidas;
-            
-            // Mostrar chips
-            mostrarChips(animacionesValidas);
-            
-            // Reproducir secuencia con indicador de progreso
-            for (let idx = 0; idx < animacionesValidas.length; idx++) {
-                const anim = animacionesValidas[idx];
-                activarChip(idx);
+                // Si falló el backend, continuar con modo local
+                console.log('⚡ Procesando localmente...');
+            } else {
+                // Usar traductor LSV local (GitHub Pages)
+                console.log('📚 Usando traductor LSV local...');
                 
-                // 🎭 APLICAR GESTO FACIAL basado en la palabra
-                if (facialSystem) {
-                    const expresionPalabra = facialSystem.getExpressionForWord(anim.palabra);
-                    if (expresionPalabra !== 'neutral') {
-                        console.log(`😊 Aplicando expresión: ${expresionPalabra} para "${anim.palabra}"`);
-                        facialSystem.setExpression(expresionPalabra, 0.3); // Transición de 0.3s
-                    }
-                }
-                
-                // Mostrar icono especial para deletreo
-                const icono = anim.es_deletreo ? '🔡' : '▶️';
-                document.getElementById('status').textContent = 
-                    `${icono} [${idx + 1}/${animacionesValidas.length}] ${anim.texto}`;
-                console.log(`🎬 [${idx + 1}/${animacionesValidas.length}] Reproduciendo: ${anim.texto}`);
-                
-                // Usar la nueva función con parámetros
-                await cargarYReproducirAnimacion(
-                    anim.palabra,
-                    anim.categoria,
-                    anim.archivo,
-                    anim.duracion
-                );
-                
-                // Volver a expresión neutral al final
-                if (facialSystem && idx < animacionesValidas.length - 1) {
-                    facialSystem.setExpression('neutral', 0.2);
-                }
-                
-                console.log(`✅ [${idx + 1}/${animacionesValidas.length}] Completado: ${anim.texto}`);
-            }
-            
-            // Mensaje final con información de palabras deletreadas
-            let mensajeFinal = '✅ Secuencia completada';
-            if (palabrasDeletreadas.length > 0) {
-                mensajeFinal += ` (Palabras deletreadas: ${palabrasDeletreadas.join(', ')})`;
-            }
-            document.getElementById('status').textContent = mensajeFinal;
-            isAnimating = false;
-        }
-
-        function mostrarChips(animaciones) {
-            const container = document.getElementById('chips');
-            container.innerHTML = '';
-            animaciones.forEach((anim, idx) => {
-                const chip = document.createElement('div');
-                chip.className = 'chip';
-                chip.id = `chip-${idx}`;
-                chip.textContent = anim.texto;
-                container.appendChild(chip);
-            });
-        }
-
-        function activarChip(index) {
-            document.querySelectorAll('.chip').forEach((chip, idx) => {
-                chip.classList.toggle('active', idx === index);
-            });
-        }
-
-        async function cargarYReproducirAnimacion(palabra, categoria = null, archivo = null, duracionCustom = null) {
-            const palabraNormalizada = palabra.toLowerCase().trim();
-            
-            // Si no se proporciona categoria/archivo, buscar en diccionario local
-            if (!categoria || !archivo) {
-                if (!DICCIONARIO[palabraNormalizada]) {
-                    return;
-                }
-                const info = DICCIONARIO[palabraNormalizada];
-                categoria = info.categoria;
-                archivo = info.archivo;
-            }
-            
-            document.getElementById('status').textContent = `▶️ ${palabra}`;
-            
-            // Verificar si ya está en caché (solo para animaciones sin duracion custom)
-            if (!duracionCustom && animationCache.has(palabraNormalizada)) {
-                console.log(`📦 Caché: ${palabra}`);
-                await reproducirAnimacion(animationCache.get(palabraNormalizada), palabra, duracionCustom);
-                return;
-            }
-            
-            // Cargar archivo completo original (modelo + animación)
-            const loader = new GLTFLoader();
-            
-            console.log(`🔍 Buscando: "${palabra}" en categoría: ${categoria}`);
-            
-            // Probar diferentes patrones de nombre
-            const patronesNombre = [
-                `${avatarActual}_resultado_${archivo}`,  // Nancy_resultado_hola
-                `${categoria}_${avatarActual}_resultado_${archivo}`,  // saludos_Nancy_resultado_hola
-            ];
-            
-            // Intentar cargar desde carpeta del avatar directamente
-            let cargado = false;
-            for (const patron of patronesNombre) {
-                if (cargado) break;
-                
-                const rutaCompleta = `output/glb/${avatarActual}/${categoria}/${patron}.glb`;
-                console.log(`🔄 Intentando: ${rutaCompleta}`);
-                
-                try {
-                    const gltf = await new Promise((resolve, reject) => {
-                        const timeout = setTimeout(() => reject(new Error('Timeout')), 3000);
-                        loader.load(
-                            rutaCompleta,
-                            (result) => {
-                                clearTimeout(timeout);
-                                resolve(result);
-                            },
-                            undefined,
-                            (error) => {
-                                clearTimeout(timeout);
-                                reject(error);
-                            }
-                        );
+                if (typeof window.LSV_TRANSLATOR !== 'undefined') {
+                    const resultado = window.LSV_TRANSLATOR.translate(texto, {
+                        deletrearDesconocidas: true,
+                        velocidadDeletreo: 1.2
                     });
                     
-                    // ¡Encontrado!
-                    console.log(`✅ Cargado: ${rutaCompleta}`);
-                    
-                    // Remover modelo actual
-                    if (nancyModel) {
-                        scene.remove(nancyModel);
+                    if (resultado.palabrasDeletreadas.length > 0) {
+                        console.log(`✏️ Palabras deletreadas: ${resultado.palabrasDeletreadas.join(', ')}`);
                     }
                     
-                    // Agregar nuevo modelo con animación
-                    nancyModel = gltf.scene;
-                    scene.add(nancyModel);
+                    animacionesValidas = resultado.animaciones.map(anim => ({
+                        texto: anim.nombre,
+                        palabra: anim.nombre.toLowerCase()
+                    }));
                     
-                    // Configurar mixer
-                    mixer = new THREE.AnimationMixer(nancyModel);
+                    console.log(`🎯 LSV: ${resultado.totalAnimaciones} animaciones generadas`);
+                    console.log(`📋 Secuencia: ${animacionesValidas.map(a => a.texto).join(' → ')}`);
                     
-                    if (gltf.animations && gltf.animations.length > 0) {
-                        const clip = gltf.animations[0];
-                        // Esperar a que termine la animación (con duracion custom si aplica)
-                        await reproducirAnimacion(clip, palabra, duracionCustom);
+                    if (animacionesValidas.length > 0) {
+                        await reproducirSecuencia(animacionesValidas);
+                        return;
                     }
-                    
-                    cargado = true;
-                } catch (error) {
-                    // Continuar con siguiente patrón
+                } else {
+                    console.error('❌ Traductor LSV no disponible');
                 }
             }
             
-            // Si no se cargó, intentar con otros avatares del mismo género
-            if (!cargado) {
-                const genero = (avatarActual === 'Nancy' || avatarActual === 'Nina' || avatarActual === 'Carla') ? 'Mujer' : 'Hombre';
-                const avataresToTry = genero === 'Mujer' ? ['Nancy', 'Nina', 'Carla'] : ['Duvall', 'Luis', 'Argenis'];
+            // Modo local antiguo (fallback si LSV falló)
+            const palabras = texto.toLowerCase().trim().split(/\s+/);
+            
+            let i = 0;
+            while (i < palabras.length) {
+                let encontrada = false;
                 
-                for (const avatarIndividual of avataresToTry) {
-                    if (cargado) break;
+                // Frases de 3 palabras
+                if (i + 2 < palabras.length) {
+                    const frase3 = palabras.slice(i, i + 3).join(' ');
+                    const frase3Normalizada = normalizarPalabra(frase3);
                     
-                    for (const patron of patronesNombre) {
-                        if (cargado) break;
-                        
-                        const rutaFallback = `output/glb/${avatarIndividual}/${categoria}/${patron}.glb`;
-                        console.log(`🔄 Intentando ${avatarIndividual}: ${rutaFallback}`);
-                        
-                        try {
-                            const gltf = await new Promise((resolve, reject) => {
-                                const timeout = setTimeout(() => reject(new Error('Timeout')), 3000);
-                                loader.load(
-                                    rutaFallback,
-                                    (result) => {
-                                        clearTimeout(timeout);
-                                        resolve(result);
-                                    },
-                                    undefined,
-                                    (error) => {
-                                        clearTimeout(timeout);
-                                        reject(error);
-                                    }
-                                );
-                            });
-                            
-                            console.log(`✅ Cargado: ${rutaFallback}`);
-                            
-                            // Remover modelo actual
-                            if (nancyModel) {
-                                scene.remove(nancyModel);
+                    // Si la frase debe omitirse (null)
+                    if (frase3Normalizada === null) {
+                        i++;
+                        continue;
+                    }
+                    
+                    // Buscar la frase directamente o normalizada en el diccionario
+                    if (DICCIONARIO[frase3Normalizada] || DICCIONARIO[frase3]) {
+                        const palabraFinal = DICCIONARIO[frase3Normalizada] ? frase3Normalizada : frase3;
+                        animacionesValidas.push({ texto: frase3, palabra: palabraFinal });
+                        i += 3;
+                        encontrada = true;
+                    }
+                }
+                
+                // Frases de 2 palabras
+                if (!encontrada && i + 1 < palabras.length) {
+                    const frase2 = palabras.slice(i, i + 2).join(' ');
+                    const frase2Normalizada = normalizarPalabra(frase2);
+                    
+                    // Si la frase debe omitirse (null)
+                    if (frase2Normalizada === null) {
+                        i++;
+                        continue;
+                    }
+                    
+                    // Buscar la frase directamente o normalizada en el diccionario
+                    if (DICCIONARIO[frase2Normalizada] || DICCIONARIO[frase2]) {
+                        const palabraFinal = DICCIONARIO[frase2Normalizada] ? frase2Normalizada : frase2;
+                        animacionesValidas.push({ texto: frase2, palabra: palabraFinal });
+                        i += 2;
+                        encontrada = true;
+                    }
+                }
+                
+                // Palabra individual
+                if (!encontrada) {
+                    const palabraNormalizada = normalizarPalabra(palabras[i]);
+                    
+                    // Si la palabra debe omitirse (null)
+                    if (palabraNormalizada === null) {
+                        console.log(`⊘ Omitida: "${palabras[i]}" (no se usa en LSV)`);
+                        i++;
+                        continue;
+                    }
+                    
+                    // Verificar si es un número
+                    if (/^\d+$/.test(palabraNormalizada)) {
+                        const glosasNumero = numeroAGlosas(palabraNormalizada);
+                        if (glosasNumero) {
+                            console.log(`🔢 Número: "${palabraNormalizada}" → ${glosasNumero.join(' ')}`);
+                            // Agregar cada glosa del número
+                            for (const glosa of glosasNumero) {
+                                if (DICCIONARIO[glosa]) {
+                                    animacionesValidas.push({ texto: glosa, palabra: glosa });
+                                } else {
+                                    console.warn(`⚠️ Glosa numérica no encontrada: ${glosa}`);
+                                }
                             }
-                            
-                            // Agregar nuevo modelo con animación
-                            nancyModel = gltf.scene;
-                            scene.add(nancyModel);
-                            
-                            // Configurar mixer
-                            mixer = new THREE.AnimationMixer(nancyModel);
-                            
-                            if (gltf.animations && gltf.animations.length > 0) {
-                                const clip = gltf.animations[0];
-                                // Esperar a que termine la animación (con duracion custom si aplica)
-                                await reproducirAnimacion(clip, palabra, duracionCustom);
-                            }
-                            
-                            cargado = true;
-                        } catch (error) {
-                            // Continuar con siguiente patrón o avatar
+                            i++;
+                            continue;
                         }
                     }
+                    
+                    if (DICCIONARIO[palabraNormalizada]) {
+                        // Palabra encontrada (puede ser normalizada o no)
+                        if (palabraNormalizada !== palabras[i]) {
+                            console.log(`🔄 Normalizada: "${palabras[i]}" → "${palabraNormalizada}"`);
+                        }
+                        animacionesValidas.push({ texto: palabras[i], palabra: palabraNormalizada });
+                    } else {
+                        // Palabra no encontrada - deletrear
+                        console.warn(`⚠️ Palabra no encontrada, deletreando: ${palabras[i]}`);
+                        
+                        // Agregar animación de "deletrear"
+                        if (DICCIONARIO['deletrear']) {
+                            animacionesValidas.push({ texto: 'deletrear', palabra: 'deletrear' });
+                        }
+                        
+                        // Separar la palabra en letras
+                        const letras = palabras[i].split('');
+                        for (const letra of letras) {
+                            const letraLower = letra.toLowerCase();
+                            // Verificar si la letra existe en el alfabeto
+                            if (DICCIONARIO[letraLower]) {
+                                animacionesValidas.push({ texto: letraLower, palabra: letraLower });
+                            } else {
+                                console.warn(`⚠️ Letra no encontrada en alfabeto: ${letraLower}`);
+                            }
+                        }
+                    }
+                    i++;
                 }
             }
             
-            if (!cargado) {
-                console.error(`❌ No se encontró: ${palabra} en ninguna ubicación`);
+            if (animacionesValidas.length === 0) {
+                //cambio
+                //document.getElementById('status').textContent = '⚠️ No se encontraron animaciones';
+                isAnimating = false;
+                document.getElementById('animateBtn').disabled = false;
+                return;
             }
             
-            return Promise.resolve();
+            await reproducirSecuencia(animacionesValidas);
+        }
+        
+        // Función reutilizable para reproducir secuencia de animaciones
+        async function reproducirSecuencia(animacionesValidas) {
+            console.log(`🎬 Secuencia: ${animacionesValidas.map(a => a.texto).join(' → ')}`);
+            console.log(`🎯 Animaciones: ${animacionesValidas.map(a => a.palabra).join(' → ')}`);
+            
+            // Guardar secuencia actual
+            currentSequence = animacionesValidas.map(a => a.palabra);
+            currentIndex = 0;
+            
+            // Precargar las primeras animaciones
+            precargarSiguientes(0);
+            
+            // Reproducir secuencia sin delays
+            for (let idx = 0; idx < animacionesValidas.length; idx++) {
+                const { palabra } = animacionesValidas[idx];
+                currentIndex = idx;
+                
+                // Precargar siguientes mientras reproduce actual
+                if (idx + 1 < animacionesValidas.length) {
+                    precargarSiguientes(idx + 1);
+                }
+                
+                await cargarYReproducirAnimacion(palabra);
+            }
+            
+            document.getElementById('status').textContent = '✅ Secuencia completada';
+            isAnimating = false;
+            document.getElementById('animateBtn').disabled = false;
+            
+            // Resetear botón de pausa a estado inicial (verde)
+            const pauseBtn = document.getElementById('pauseBtn');
+            pauseBtn.classList.remove('paused');
+            document.getElementById('pauseIcon').textContent = '⏸️';
+            document.getElementById('pauseText').textContent = 'Pausar';
         }
 
-        // Variables para animación facial
-        let facialAnimationData = null;
-        let facialAnimationFrame = 0;
-        let facialAnimationPlaying = false;
-
-        // Cargar animación facial
-        async function cargarAnimacionFacial(palabra) {
-            const palabraNormalizada = palabra.toLowerCase().trim();
-            const rutaFacial = `output/glb/Rostro/${palabraNormalizada}.json`;
+        // Función para precargar las siguientes N animaciones
+        function precargarSiguientes(startIdx) {
+            const endIdx = Math.min(startIdx + LOOKAHEAD, currentSequence.length);
+            
+            for (let i = startIdx; i < endIdx; i++) {
+                const palabra = currentSequence[i];
+                const palabraNormalizada = palabra.toLowerCase().trim();
+                
+                // Si ya está en caché, continuar
+                if (animationCache.has(palabraNormalizada)) {
+                    continue;
+                }
+                
+                // Precargar en background sin bloquear
+                precargarAnimacionSilenciosa(palabraNormalizada);
+            }
+        }
+        
+        // Precarga silenciosa sin bloquear la ejecución
+        async function precargarAnimacionSilenciosa(palabraNormalizada) {
+            if (!DICCIONARIO[palabraNormalizada] || animationCache.has(palabraNormalizada)) {
+                return;
+            }
             
             try {
-                const response = await fetch(rutaFacial);
-                if (!response.ok) {
-                    console.log(`ℹ️ No hay animación facial para: ${palabra}`);
-                    return null;
-                }
+                const loader = loaderInstance || new GLTFLoader();
+                const { categoria, archivo } = DICCIONARIO[palabraNormalizada];
+                const baseUrl = window.location.hostname.includes('github.io') 
+                    ? 'https://usm-argenis.github.io/STT_LSV/test/'
+                    : '';
                 
-                const data = await response.json();
-                console.log(`😊 Animación facial cargada: ${palabra} (${data.frames.length} frames)`);
-                return data;
+                let nombreArchivo = avatarActual === 'Remy' 
+                    ? archivo.replace(/ /g, '_') 
+                    : archivo;
+                
+                const rutaCompleta = `${baseUrl}output/glb/${avatarActual}/${categoria}/${avatarActual}_resultado_${nombreArchivo}.glb`;
+                
+                const gltf = await new Promise((resolve, reject) => {
+                    const timeoutId = setTimeout(() => reject(new Error('Timeout')), 5000);
+                    loader.load(
+                        rutaCompleta,
+                        (result) => { clearTimeout(timeoutId); resolve(result); },
+                        undefined,
+                        (error) => { clearTimeout(timeoutId); reject(error); }
+                    );
+                });
+                
+                if (gltf.animations && gltf.animations.length > 0) {
+                    const clip = gltf.animations[0];
+                    procesarTracksAnimacion(clip);
+                    
+                    if (animationCache.size >= MAX_CACHE_SIZE) {
+                        const firstKey = animationCache.keys().next().value;
+                        animationCache.delete(firstKey);
+                    }
+                    
+                    animationCache.set(palabraNormalizada, clip);
+                    console.log(`📦 Precargada anticipadamente: ${palabraNormalizada}`);
+                    
+                    if (gltf.scene) {
+                        gltf.scene.traverse((child) => {
+                            if (child.geometry) child.geometry.dispose();
+                            if (child.material) {
+                                if (Array.isArray(child.material)) {
+                                    child.material.forEach(m => m.dispose());
+                                } else {
+                                    child.material.dispose();
+                                }
+                            }
+                        });
+                    }
+                }
             } catch (error) {
-                console.log(`ℹ️ Sin expresión facial para: ${palabra}`);
-                return null;
+                // Ignorar errores de precarga silenciosa
             }
         }
-
-        // Aplicar frame de animación facial
-        function aplicarFrameFacial(frameData) {
-            if (!nancyModel || !frameData) return;
+        
+        async function cargarYReproducirAnimacion(palabra) {
+            const palabraNormalizada = palabra.toLowerCase().trim();
             
-            nancyModel.traverse((child) => {
-                if (child.isMesh && child.morphTargetInfluences && child.morphTargetDictionary) {
-                    const shapeKeys = frameData.shape_keys || {};
-                    
-                    // Aplicar cada shape key
-                    for (const [shapeKeyName, value] of Object.entries(shapeKeys)) {
-                        const index = child.morphTargetDictionary[shapeKeyName];
-                        if (index !== undefined) {
-                            child.morphTargetInfluences[index] = value;
+            if (!DICCIONARIO[palabraNormalizada]) {
+                return;
+            }
+            //cambio
+            //document.getElementById('status').textContent = `▶️ ${palabra}`;
+            
+            if (animationCache.has(palabraNormalizada)) {
+                console.log(`⚡ Instantánea desde caché: ${palabra}`);
+                const clip = animationCache.get(palabraNormalizada);
+                await reproducirAnimacion(clip, palabra);
+                return;
+            }
+            
+            console.log(`⏳ Cargando: ${palabra}`);
+            
+            // Reutilizar loader global
+            const loader = loaderInstance || new GLTFLoader();
+            const { categoria, archivo } = DICCIONARIO[palabraNormalizada];
+            const baseUrl = window.location.hostname.includes('github.io') 
+                ? 'https://usm-argenis.github.io/STT_LSV/test/'
+                : '';
+            
+            // Construir el nombre del archivo según el avatar
+            // Remy usa underscores, los demás usan espacios
+            let nombreArchivo;
+            if (avatarActual === 'Remy') {
+                nombreArchivo = archivo.replace(/ /g, '_');
+            } else {
+                nombreArchivo = archivo;
+            }
+            
+            const rutaCompleta = `${baseUrl}output/glb/${avatarActual}/${categoria}/${avatarActual}_resultado_${nombreArchivo}.glb`;
+            
+            console.log(`🔄 Cargando: ${rutaCompleta}`);
+            
+            return new Promise((resolve, reject) => {
+                const timeout = isMobile ? 8000 : 15000; // Timeout más corto en móvil
+                const timeoutId = setTimeout(() => {
+                    console.error(`⏱️ Timeout cargando: ${palabra}`);
+                    resolve(); // Continuar con siguiente palabra
+                }, timeout);
+                
+                loader.load(
+                    rutaCompleta,
+                    async (gltf) => {
+                        clearTimeout(timeoutId);
+                        if (gltf.animations && gltf.animations.length > 0) {
+                            const clip = gltf.animations[0];
+                            
+                            // Optimización: Procesar tracks una sola vez
+                            procesarTracksAnimacion(clip);
+                            
+                            // Gestión de caché con límite
+                            if (animationCache.size >= MAX_CACHE_SIZE) {
+                                // Eliminar la animación más antigua
+                                const firstKey = animationCache.keys().next().value;
+                                animationCache.delete(firstKey);
+                                console.log(`🗑️ Caché lleno, eliminada: ${firstKey}`);
+                            }
+                            
+                            animationCache.set(palabraNormalizada, clip);
+                            console.log(`✅ Cargada: ${palabra} (${clip.duration.toFixed(2)}s) - Caché: ${animationCache.size}/${MAX_CACHE_SIZE}`);
+                            await reproducirAnimacion(clip, palabra);
+                            
+                            // Liberar memoria de geometrías del GLB
+                            if (gltf.scene) {
+                                gltf.scene.traverse((child) => {
+                                    if (child.geometry) child.geometry.dispose();
+                                    if (child.material) {
+                                        if (Array.isArray(child.material)) {
+                                            child.material.forEach(m => m.dispose());
+                                        } else {
+                                            child.material.dispose();
+                                        }
+                                    }
+                                });
+                            }
+                            
+                            resolve();
+                        } else {
+                            console.warn(`⚠️ Sin animaciones: ${palabra}`);
+                            resolve();
                         }
+                    },
+                    undefined,
+                    (error) => {
+                        clearTimeout(timeoutId);
+                        console.error(`❌ Error: ${palabra}`, error);
+                        resolve();
                     }
-                }
+                );
             });
         }
-
-        // Resetear expresión facial a neutral
-        function resetearExpresionFacial() {
-            if (!nancyModel) return;
+        
+        // Nueva función para procesar tracks una sola vez
+        function procesarTracksAnimacion(clip) {
+            // Verificar si hay tracks de morph targets
+            const morphTracks = clip.tracks.filter(t => t.name.includes('.morphTargetInfluences'));
+            if (morphTracks.length > 0) {
+                console.log(`🎭 Animación con ${morphTracks.length} tracks de morph targets`);
+            }
             
-            nancyModel.traverse((child) => {
-                if (child.isMesh && child.morphTargetInfluences) {
-                    for (let i = 0; i < child.morphTargetInfluences.length; i++) {
-                        child.morphTargetInfluences[i] = 0;
+            // Corregir nombres de tracks si hay mapping
+            if (avatarModel && avatarModel.userData.nodeNameMap) {
+                clip.tracks.forEach((track, index) => {
+                    const trackNodeName = track.name.split('.')[0];
+                    const mappedName = avatarModel.userData.nodeNameMap[trackNodeName];
+                    
+                    if (mappedName) {
+                        const newTrackName = track.name.replace(trackNodeName, mappedName);
+                        track.name = newTrackName;
                     }
-                }
-            });
+                });
+            }
         }
-
-        async function reproducirAnimacion(clip, palabra, duracionCustom = null) {
-            return new Promise(async (resolve) => {
-                // Cargar animación facial si existe
-                facialAnimationData = await cargarAnimacionFacial(palabra);
-                facialAnimationFrame = 0;
-                facialAnimationPlaying = !!facialAnimationData;
-                
-                // Si hay animación facial JSON, desactivar sistema de expresiones
-                if (facialAnimationData && facialSystem) {
-                    facialSystem.disable();
-                    console.log('🎭 Sistema de expresiones desactivado (usando JSON)');
-                }
-                
+        async function reproducirAnimacion(clip, palabra) {
+            return new Promise((resolve) => {
                 // Detener animación actual SIN transición para fluidez
                 if (currentAction) {
                     currentAction.stop();
                 }
-                
-                // Resetear expresión facial antes de empezar
-                resetearExpresionFacial();
                 
                 // Reproducir nueva animación inmediatamente
                 const action = mixer.clipAction(clip);
                 action.reset();
                 action.setLoop(THREE.LoopOnce);
                 action.clampWhenFinished = true;
-                
-                // Si hay duración custom (deletreo rápido), ajustar timeScale
-                if (duracionCustom && duracionCustom > 0) {
-                    const duracionOriginal = clip.duration;
-                    const timeScale = duracionOriginal / duracionCustom;
-                    action.timeScale = timeScale;
-                    console.log(`⏩ Velocidad ajustada: ${timeScale.toFixed(2)}x (${duracionOriginal.toFixed(2)}s → ${duracionCustom.toFixed(2)}s)`);
-                }
-                
                 action.play();
                 
                 currentAction = action;
                 
-                // Actualizar expresión facial sincronizada con animación
-                const startTime = Date.now();
-                
-                // Esperar a que termine la animación
-                const checkFinished = () => {
-                    if (isPaused) {
-                        // Si está pausado, seguir esperando
-                        setTimeout(checkFinished, 100);
-                        return;
-                    }
-                    
-                    // Actualizar frame facial basado en tiempo transcurrido
-                    if (facialAnimationPlaying && facialAnimationData) {
-                        const elapsed = (Date.now() - startTime) / 1000; // segundos
-                        const targetFrame = Math.floor(elapsed * facialAnimationData.fps);
-                        
-                        if (targetFrame < facialAnimationData.frames.length) {
-                            const frameData = facialAnimationData.frames[targetFrame];
-                            aplicarFrameFacial(frameData);
-                            facialAnimationFrame = targetFrame;
-                        }
-                    }
-                    
-                    // Verificar si la animación terminó
-                    if (action.time >= clip.duration - 0.05 || !action.isRunning()) {
-                        // Resetear expresión al terminar
-                        facialAnimationPlaying = false;
-                        resetearExpresionFacial();
-                        
-                        // Reactivar sistema de expresiones si estaba desactivado
-                        if (facialAnimationData && facialSystem) {
-                            facialSystem.enable();
-                            console.log('🎭 Sistema de expresiones reactivado');
-                        }
-                        
+                const onFinished = (e) => {
+                    if (e.action === action) {
                         console.log(`✅ Completada: ${palabra}`);
+                        mixer.removeEventListener('finished', onFinished);
                         resolve();
-                    } else {
-                        // Seguir esperando
-                        setTimeout(checkFinished, 50);
                     }
                 };
-                
-                checkFinished();
+                mixer.addEventListener('finished', onFinished);
             });
         }
-
-        function setupEventListeners() {
-            const inputBottom = document.getElementById('text-input-bottom');
-            const btnAnimate = document.getElementById('animate-btn');
-            const btnPause = document.getElementById('pause-btn');
-            const btnReplay = document.getElementById('replay-btn');
+        
+        // Nueva función: Precargar animaciones más comunes en background
+        async function precargarAnimacionesComunes() {
+            // En móvil, precargar menos animaciones
+            const animacionesComunes = isMobile 
+                ? ['hola', 'gracias', 'si'] // Solo 3 en móvil
+                : ['hola', 'buenos dias', 'gracias', 'por favor', 'adios', 'si', 'no', 'bien', 'mal', 'mucho gusto'];
             
-            // Botón Animar (barra inferior)
-            btnAnimate.addEventListener('click', () => {
-                const texto = inputBottom.value.trim();
-                if (texto && !isAnimating) {
-                    ultimoTexto = texto;
-                    traducirYAnimar(texto);
-                }
-            });
+            console.log('🔄 Iniciando precarga de animaciones comunes...');
             
-            // Enter en input (barra inferior)
-            inputBottom.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') {
-                    const texto = inputBottom.value.trim();
-                    if (texto && !isAnimating) {
-                        ultimoTexto = texto;
-                        traducirYAnimar(texto);
-                    }
-                }
-            });
-            
-            // Botón Pausar/Reanudar
-            btnPause.addEventListener('click', () => {
-                if (!mixer || !currentAction) return;
+            for (const palabra of animacionesComunes) {
+                if (animationCache.has(palabra)) continue;
                 
-                isPaused = !isPaused;
+                const palabraNormalizada = palabra.toLowerCase().trim();
+                if (!DICCIONARIO[palabraNormalizada]) continue;
                 
-                if (isPaused) {
-                    mixer.timeScale = 0;
-                    btnPause.textContent = '▶️ Reanudar';
-                } else {
-                    mixer.timeScale = 1;
-                    btnPause.textContent = '⏸️ Pausar';
+                try {
+                    const loader = loaderInstance || new GLTFLoader();
+                    const { categoria, archivo } = DICCIONARIO[palabraNormalizada];
+                    const baseUrl = window.location.hostname.includes('github.io') 
+                        ? 'https://usm-argenis.github.io/STT_LSV/test/'
+                        : '';
+                    
+                    let nombreArchivo = avatarActual === 'Remy' 
+                        ? archivo.replace(/ /g, '_') 
+                        : archivo;
+                    
+                    const rutaCompleta = `${baseUrl}output/glb/${avatarActual}/${categoria}/${avatarActual}_resultado_${nombreArchivo}.glb`;
+                    
+                    await new Promise((resolve) => {
+                        const timeout = isMobile ? 10000 : 15000; // Timeout más corto en móvil
+                        const timeoutId = setTimeout(() => {
+                            console.log(`⏱️ Timeout precargando: ${palabra}`);
+                            resolve();
+                        }, timeout);
+                        
+                        loader.load(
+                            rutaCompleta,
+                            (gltf) => {
+                                clearTimeout(timeoutId);
+                                if (gltf.animations && gltf.animations.length > 0) {
+                                    const clip = gltf.animations[0];
+                                    procesarTracksAnimacion(clip);
+                                    animationCache.set(palabraNormalizada, clip);
+                                    console.log(`✅ Precargada: ${palabra}`);
+                                    
+                                    // Liberar recursos del GLB
+                                    if (gltf.scene) {
+                                        gltf.scene.traverse((child) => {
+                                            if (child.geometry) child.geometry.dispose();
+                                            if (child.material) {
+                                                if (Array.isArray(child.material)) {
+                                                    child.material.forEach(m => m.dispose());
+                                                } else {
+                                                    child.material.dispose();
+                                                }
+                                            }
+                                        });
+                                    }
+                                }
+                                resolve();
+                            },
+                            undefined,
+                            () => {
+                                clearTimeout(timeoutId);
+                                resolve(); // Ignorar errores en precarga
+                            }
+                        );
+                    });
+                    
+                    // Pausa adaptativa según dispositivo
+                    await new Promise(r => setTimeout(r, LOAD_DELAY));
+                    
+                } catch (error) {
+                    console.log(`⚠️ No se pudo precargar: ${palabra}`);
                 }
-            });
+            }
             
-            // Botón Repetir
-            btnReplay.addEventListener('click', () => {
-                if (ultimoTexto && !isAnimating) {
-                    traducirYAnimar(ultimoTexto);
-                }
-            });
+            console.log(`✅ Precarga completada: ${animationCache.size} animaciones en caché`);
         }
 
         function animate() {
@@ -1289,18 +2133,78 @@
             
             const delta = clock.getDelta();
             
-            if (mixer) {
+            if (mixer && !isPaused) {
                 mixer.update(delta);
-            }
-            
-            // Actualizar sistema de gestos faciales
-            if (facialSystem) {
-                facialSystem.update(delta);
+                
+                // Asegurar que los morph targets se actualicen
+                if (avatarModel) {
+                    avatarModel.traverse((child) => {
+                        if (child.isMesh && child.morphTargetInfluences) {
+                            // El material ya debería estar configurado, pero forzar update si es necesario
+                            if (child.material && !child.material.morphTargets) {
+                                child.material.morphTargets = true;
+                                child.material.needsUpdate = true;
+                            }
+                        }
+                    });
+                }
             }
             
             controls.update();
             renderer.render(scene, camera);
         }
+
+        // Detectar eventos de focus/blur que también indican teclado virtual
+        window.addEventListener('focusin', () => {
+            logToExpo('🔍 FOCUSIN detectado');
+            if (isMobile && camera && controls && !savedCameraState) {
+                savedCameraState = {
+                    position: camera.position.clone(),
+                    target: controls.target.clone(),
+                    zoom: camera.zoom,
+                    fov: camera.fov
+                };
+                logToExpo('🔴 Input enfocado - estado guardado:', {
+                    position: { x: savedCameraState.position.x, y: savedCameraState.position.y, z: savedCameraState.position.z },
+                    target: { x: savedCameraState.target.x, y: savedCameraState.target.y, z: savedCameraState.target.z }
+                });
+                
+                // CONGELAR OrbitControls
+                controls.enabled = false;
+                logToExpo('⛔ OrbitControls DESHABILITADO (focusin)');
+            }
+        });
+        
+        window.addEventListener('focusout', (e) => {
+            // Solo actuar si el foco sale completamente del documento (teclado cerrado)
+            setTimeout(() => {
+                const activeElement = document.activeElement;
+                const isInputActive = activeElement && activeElement.tagName === 'INPUT';
+                
+                logToExpo('🔓 FOCUSOUT detectado', { 
+                    isMobile, 
+                    hasSavedState: !!savedCameraState,
+                    isInputStillActive: isInputActive,
+                    activeElement: activeElement ? activeElement.tagName : 'none'
+                });
+                
+                // Solo restaurar si el input ya NO está activo (teclado realmente cerrado)
+                if (isMobile && savedCameraState && !isInputActive) {
+                    logToExpo('⏰ Ejecutando restauración con resetCamera()');
+                    
+                    // Usar la función resetCamera() que ya existe
+                    resetCamera();
+                    
+                    // Limpiar estado guardado
+                    savedCameraState = null;
+                    logToExpo('✅ Estado limpiado');
+                } else {
+                    logToExpo('⚠️ No se restaura:', { 
+                        razon: !isMobile ? 'No es móvil' : (!savedCameraState ? 'No hay estado guardado' : 'Input aún activo')
+                    });
+                }
+            }, 100); // Pequeño delay para que activeElement se actualice
+        });
 
         window.addEventListener('DOMContentLoaded', init);
     </script>

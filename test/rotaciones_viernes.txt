@@ -1,0 +1,5 @@
+# VIERNES
+# Datos extraídos de las primeras 2 imágenes
+
+LeftForeArm 0.770 0.005 -0.045 0.657
+LeftHand 0.982 -0.034 -0.103 0.154

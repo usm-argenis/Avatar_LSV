@@ -1,0 +1,29 @@
+# Dependencias MÍNIMAS para Backend LSV Translator API
+# Solo lo necesario para traducción español → LSV
+
+# API Framework
+fastapi==0.118.2
+uvicorn==0.37.0
+
+# Validación de datos
+pydantic==2.12.0
+pydantic_core==2.41.1
+
+# Dependencias de FastAPI
+starlette==0.48.0
+anyio==4.11.0
+sniffio==1.3.1
+idna==3.10
+h11==0.16.0
+typing_extensions==4.15.0
+
+# Opcional: Conexión a base de datos (si la usas)
+# asyncpg==0.30.0
+# SQLAlchemy==2.0.43
+
+# ELIMINADAS (NO SE USAN EN EL BACKEND):
+# mediapipe - Solo para procesamiento de video/manos
+# opencv - Solo para procesamiento de imágenes
+# matplotlib - Solo para gráficos
+# numpy, scipy - No se usan en el traductor
+# jax, jaxlib - No se usan

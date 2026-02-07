@@ -1,22 +1,83 @@
 {
-  "C:/Users/andre/OneDrive/Documentos/tesis/test/output/glb/Carla/expresiones/Carla_resultado_mal.glb": {
+  "C:/Users/andre/OneDrive/Documentos/tesis/test/output/glb/Carla/nuevo/Carla_resultado_fumar.glb": {
     "alcance": {
-      "min": 18,
-      "max": 43,
-      "retencion": 21
+    "min": 0,
+    "max": "fin",
+    "retencion": "fin"
+  },
+  
+  "Spine": {
+    "w": 1.000,
+    "x": 0.000644,
+    "y": -0.013,
+    "z": 0.001
+  },"Hips": {
+      "w": 0.998,
+      "x": 0.024,
+      "y": 0.062,
+      "z": 0.006
+    }   ,
+
+  "LeftUpLeg": {
+      "w": 0.997,
+      "x": 0.072,
+      "y": -0.002,
+      "z": -0.031
+    }   ,
+    "RightUpLeg": {
+      "w": 0.996,
+      "x": 0.082,
+      "y": 0.002,
+      "z": 0.032
+    }   ,"RightLeg": {
+      "w": 0.986,
+      "x": -0.168,
+      "y": 0.000056,
+      "z": -0.000737
+    }   ,"LeftLeg": {
+      "w": 0.989,
+      "x": -0.148,
+      "y": -0.002,
+      "z": 0.000932
+    }   ,
+
+
+    "RightFoot": {
+      "w": 1.000,
+      "x": 0.004,
+      "y": -0.005,
+      "z": -0.023
     },
-    "RightHand": {
-      "w": 0.906,
-      "x": -0.301,
-      "y": -0.208,
-      "z": -0.212
+    "LeftFoot": {
+      "w": 1.000,
+      "x": -0.007,
+      "y": -0.010,
+      "z": 0.008
+    },"LeftToe_End": {
+      "w": 1.000,
+      "x": -0.000000,
+      "y": 0.000,
+      "z": -0.000000
     },
- 
-    "RightHandThumb1": {
-      "w": 0.959,
-      "x": -0.095,
-      "y": -0.244,
-      "z": 0.108
+    
+    "LeftToeBase": {
+      "w": 0.954,
+      "x": 0.297,
+      "y": -0.013,
+      "z": -0.034
+    },
+    "RightToe_End": {
+      "w": 1.000,
+      "x": 0.000000,
+      "y": -0.000002,
+      "z": 0.000000
+    },
+    
+    "RightToeBase": {
+      "w": 0.954,
+      "x": 0.297,
+      "y": 0.013,
+      "z": 0.034
     }
   }
 }

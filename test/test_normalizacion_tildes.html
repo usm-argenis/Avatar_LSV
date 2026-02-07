@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Normalización de Tildes</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-case {
+            margin: 10px 0;
+            padding: 10px;
+            border-left: 4px solid #4CAF50;
+            background: #f9f9f9;
+        }
+        .result {
+            margin-top: 5px;
+            padding: 5px;
+            font-family: monospace;
+        }
+        .success { color: #4CAF50; }
+        .error { color: #f44336; }
+        button {
+            background: #2196F3;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background: #0b7dda;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 Test de Normalización de Tildes</h1>
+    
+    <div class="test-section">
+        <h2>Función de Normalización</h2>
+        <button onclick="runTests()">Ejecutar Tests</button>
+        <div id="results"></div>
+    </div>
+
+    <script>
+        // Simular diccionario simplificado
+        const DICCIONARIO = {
+            'buenos dias': true,
+            'adios': true,
+            'jose': true,
+            'maria': true,
+            'hola': true,
+            'como estas': true,
+            'a': true, 'b': true, 'i': true, 'd': true, 'o': true, 's': true
+        };
+
+        // Función de normalización (la misma del código)
+        function normalizarPalabra(palabra) {
+            const palabraLower = palabra.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+            return palabraLower;
+        }
+
+        function runTests() {
+            const tests = [
+                { input: 'buenos días', expected: 'buenos dias', shouldFind: true },
+                { input: 'Buenos Días', expected: 'buenos dias', shouldFind: true },
+                { input: 'BUENOS DÍAS', expected: 'buenos dias', shouldFind: true },
+                { input: 'adiós', expected: 'adios', shouldFind: true },
+                { input: 'José', expected: 'jose', shouldFind: true },
+                { input: 'María', expected: 'maria', shouldFind: true },
+                { input: 'cómo estás', expected: 'como estas', shouldFind: true },
+                { input: 'días', expected: 'dias', shouldFind: false },
+                { input: 'á', expected: 'a', shouldFind: true },
+                { input: 'é', expected: 'e', shouldFind: false },
+                { input: 'í', expected: 'i', shouldFind: true },
+                { input: 'ó', expected: 'o', shouldFind: true },
+                { input: 'ú', expected: 'u', shouldFind: false }
+            ];
+
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '';
+
+            let passed = 0;
+            let failed = 0;
+
+            tests.forEach((test, index) => {
+                const normalized = normalizarPalabra(test.input);
+                const found = DICCIONARIO[normalized];
+                const normalizationCorrect = normalized === test.expected;
+                const foundCorrect = (found === true) === test.shouldFind;
+                const testPassed = normalizationCorrect && foundCorrect;
+
+                if (testPassed) passed++;
+                else failed++;
+
+                const testDiv = document.createElement('div');
+                testDiv.className = 'test-case';
+                testDiv.innerHTML = `
+                    <div><strong>Test ${index + 1}:</strong> "${test.input}"</div>
+                    <div class="result ${normalizationCorrect ? 'success' : 'error'}">
+                        Normalizado: "${normalized}" ${normalizationCorrect ? '✅' : '❌ (esperado: "' + test.expected + '")'}
+                    </div>
+                    <div class="result ${foundCorrect ? 'success' : 'error'}">
+                        En diccionario: ${found ? 'Sí' : 'No'} ${foundCorrect ? '✅' : '❌ (esperado: ' + (test.shouldFind ? 'Sí' : 'No') + ')'}
+                    </div>
+                `;
+                resultsDiv.appendChild(testDiv);
+            });
+
+            // Resumen
+            const summaryDiv = document.createElement('div');
+            summaryDiv.className = 'test-section';
+            summaryDiv.innerHTML = `
+                <h3>Resumen</h3>
+                <div class="${failed === 0 ? 'success' : 'error'}">
+                    ✅ Pasados: ${passed}<br>
+                    ${failed > 0 ? '❌ Fallados: ' + failed : ''}
+                </div>
+            `;
+            resultsDiv.appendChild(summaryDiv);
+
+            // Test de deletreo
+            testDeletreo();
+        }
+
+        function testDeletreo() {
+            const resultsDiv = document.getElementById('results');
+            
+            const deletreoDiv = document.createElement('div');
+            deletreoDiv.className = 'test-section';
+            deletreoDiv.innerHTML = '<h3>Test de Deletreo con Tildes</h3>';
+            
+            const palabrasTest = ['días', 'José', 'María', 'adiós'];
+            
+            palabrasTest.forEach(palabra => {
+                const letras = palabra.split('');
+                const letrasNormalizadas = [];
+                const letrasEncontradas = [];
+                
+                for (const letra of letras) {
+                    const letraLower = letra.toLowerCase();
+                    const letraNormalizada = letraLower.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+                    letrasNormalizadas.push(letraNormalizada);
+                    letrasEncontradas.push(DICCIONARIO[letraNormalizada] ? '✅' : '❌');
+                }
+                
+                const testDiv = document.createElement('div');
+                testDiv.className = 'test-case';
+                testDiv.innerHTML = `
+                    <div><strong>Palabra:</strong> "${palabra}"</div>
+                    <div class="result">Letras originales: ${letras.join(' - ')}</div>
+                    <div class="result">Letras normalizadas: ${letrasNormalizadas.join(' - ')}</div>
+                    <div class="result">Estado: ${letrasEncontradas.join(' ')}</div>
+                `;
+                deletreoDiv.appendChild(testDiv);
+            });
+            
+            resultsDiv.appendChild(deletreoDiv);
+        }
+
+        // Auto-ejecutar al cargar
+        window.onload = runTests;
+    </script>
+</body>
+</html>

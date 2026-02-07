@@ -83,7 +83,7 @@
 <script>
 async function optimizarTextoAPI(texto) {
     try {
-        const response = await fetch('http://localhost:8000/api/optimizar', {
+        const response = await fetch('http://192.168.86.27:8000/api/optimizar', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ texto: texto })

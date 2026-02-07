@@ -19,8 +19,8 @@ class AvatarLoader {
         
         // URL base del servidor HTTP que sirve los archivos GLB
         // Puede ser sobreescrita pasando customBaseURL en el constructor
-        // Por defecto: http://192.168.10.93:8000/
-        this.BASE_URL = customBaseURL || 'http://192.168.10.93:8000/';
+        // Por defecto: http://192.168.86.27:8000/
+        this.BASE_URL = customBaseURL || 'http://192.168.86.27:8000/';
         
         console.log(`🌐 AvatarLoader configurado con BASE_URL: ${this.BASE_URL}`);
     }

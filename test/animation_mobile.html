@@ -363,8 +363,8 @@
         let isAnimating = false;
         
         // Control de API backend
-        let useBackendAPI = false;  // DESACTIVADO para GitHub Pages (usar traductor local)
-        const BACKEND_URL = 'http://localhost:5000';
+        let useBackendAPI = true;  // ACTIVADO - Usar API con traducción conceptual LSV
+        const BACKEND_URL = 'http://192.168.86.27:5000';
         
         // Control de teclado virtual y viewport
         let initialViewportHeight = window.innerHeight;
@@ -378,6 +378,36 @@
         
         // Detección de dispositivo móvil
         const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        
+        /**
+         * Normaliza texto español: quita tildes pero MANTIENE ñ
+         * Equivalente a la función normalizar_texto_espanol del backend Python
+         * 
+         * @param {string} texto - Texto a normalizar
+         * @returns {string} - Texto normalizado (sin tildes, con ñ)
+         * 
+         * Ejemplos:
+         * - "día" → "dia"
+         * - "niño" → "niño"  (mantiene ñ)
+         * - "José" → "jose"
+         * - "señor" → "señor" (mantiene ñ)
+         */
+        function normalizarTextoEspanol(texto) {
+            // Placeholder temporal para preservar ñ y Ñ
+            const textoConPlaceholder = texto
+                .replace(/ñ/g, '\x01')
+                .replace(/Ñ/g, '\x02');
+            
+            // Normalizar NFD y eliminar diacríticos
+            const textoNormalizado = textoConPlaceholder
+                .normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '');
+            
+            // Restaurar ñ y Ñ
+            return textoNormalizado
+                .replace(/\x01/g, 'ñ')
+                .replace(/\x02/g, 'Ñ');
+        }
         const MAX_CACHE_SIZE = isMobile ? 15 : 50; // Menos caché en móvil
         const PRELOAD_COUNT = isMobile ? 3 : 10; // Menos precarga en móvil
         const LOAD_DELAY = isMobile ? 300 : 100; // Mayor delay entre cargas en móvil
@@ -683,7 +713,9 @@
         
         // Función para normalizar palabras (convertir conjugaciones a infinitivos)
         function normalizarPalabra(palabra) {
-            const palabraLower = palabra.toLowerCase();
+            // PRIMERO: Normalizar tildes y convertir a minúsculas (preservando ñ)
+            // Esto convierte "días" → "dias", "José" → "jose", "niño" → "niño"
+            const palabraLower = normalizarTextoEspanol(palabra.toLowerCase());
             
             // 0. Verificar si es un número
             if (/^\d+$/.test(palabraLower)) {
@@ -1135,48 +1167,75 @@
         // 🗂️ MAPEO DE CATEGORÍAS: Diccionario → Carpetas Duvall
         // Las categorías en el diccionario no siempre coinciden con los nombres de carpetas
         const MAPEO_CATEGORIAS = {
-            // Categorías que coinciden exactamente
-            'alfabeto': 'alfabeto',
-            'verbos': 'verbos',
-            'numero': 'numero',
-            'expresiones': 'expresiones',
-            'cortesia': 'cortesia',
-            'saludos': 'saludos',
-            'personas': 'personas',
-            'pronombres': 'pronombres',
+            // Categorías con una sola carpeta
+            'alfabeto': ['alfabeto'],
+            'numero': ['numero'],
+            'expresiones': ['expresiones'],
+            'cortesia': ['cortesia'],
+            'saludos': ['saludos'],
+            'personas': ['personas'],
+            'pronombres': ['pronombres'],
+            'ordinales': ['numeros ordinales'],
+            'profesiones': ['profesion'],
+            'adverbios': ['adverbios lugares'],
+            'lugares': ['adverbios lugares'],
+            'viviendas': ['tipos de vivienda'],
+            'estado_civil': ['estado civil'],
+            'interrogantes': ['preguntas'],
+            'preposiciones': ['preposicion'],
+            'dias_semana': ['dias_semana'],
+            'transporte': ['medios transporte'],
             
-            // Categorías que necesitan mapeo
-            'ordinales': 'numeros ordinales',         // ordinales → numeros ordinales
-            'profesiones': 'profesion',               // profesiones → profesion
-            'adverbios': 'adverbios lugares',         // adverbios → adverbios lugares
-            'viviendas': 'tipos de vivienda',         // viviendas → tipos de vivienda
-            'estado_civil': 'estado civil',           // estado_civil → estado civil
-            'interrogantes': 'preguntas',             // interrogantes → preguntas
-            'preposiciones': 'preposicion',           // preposiciones → preposicion
-            
-            // Días de la semana y tiempo
-            'dias_semana': 'dias_semana',
-            'tiempo': 'tiempo',                       // tiempo → tiempo (pero algunos días están en dias_semana)
-            
-            // Lugares
-            'lugares': 'lugares',
-            
-            // Medios de transporte
-            'transporte': 'medios transporte',
-            
-            // Horario y palabras generales nuevas
-            'general': 'horario'                      // general → horario (para palabras de tiempo)
+            // Categorías con archivos en MÚLTIPLES carpetas
+            'verbos': ['verbos', 'nuevo'],        // Mayoría en verbos, algunos en nuevo
+            'tiempo': ['tiempo', 'nuevo'],        // Mayoría en tiempo, algunos en nuevo
+            'general': ['horario', 'nuevo'],      // Algunos en horario, algunos en nuevo
+            'familia': ['nuevo']                  // TODAS en nuevo
         };
 
-        // Función para obtener el nombre correcto de la carpeta
-        // Incluye lógica especial para días de la semana
-        function obtenerNombreCarpeta(categoria) {
-            // Si la categoría ya tiene mapeo, usarlo
-            if (MAPEO_CATEGORIAS[categoria]) {
-                return MAPEO_CATEGORIAS[categoria];
+        // Función para obtener las carpetas donde buscar archivos de una categoría
+        // Ahora retorna ARRAY de carpetas (algunas categorías tienen archivos en múltiples ubicaciones)
+        function obtenerCarpetas(categoria) {
+            const carpetas = MAPEO_CATEGORIAS[categoria];
+            if (carpetas) {
+                return Array.isArray(carpetas) ? carpetas : [carpetas];
             }
-            // Si no, retornar la categoría original
-            return categoria;
+            // Si no hay mapeo, retornar categoria original como fallback
+            return [categoria];
+        }
+
+        // Función helper para cargar GLB intentando múltiples carpetas
+        async function cargarGLBDesdeCarpetas(loader, categoria, archivo, avatarActual) {
+            const carpetas = obtenerCarpetas(categoria);
+            let ultimoError = null;
+            
+            // Intentar cargar de cada carpeta posible
+            for (const carpetaCategoria of carpetas) {
+                const rutaCompleta = `output/glb/${avatarActual}/${carpetaCategoria}/${avatarActual}_resultado_${archivo}.glb`;
+                
+                try {
+                    const gltf = await new Promise((resolve, reject) => {
+                        const timeoutId = setTimeout(() => reject(new Error('Timeout')), 5000);
+                        loader.load(
+                            rutaCompleta,
+                            (result) => { clearTimeout(timeoutId); resolve(result); },
+                            undefined,
+                            (error) => { clearTimeout(timeoutId); reject(error); }
+                        );
+                    });
+                    
+                    // Si llegamos aquí, la carga fue exitosa
+                    console.log(`✅ GLB cargado desde: ${carpetaCategoria}`);
+                    return { gltf, rutaCompleta };
+                    
+                } catch (error) {
+                    ultimoError = error;
+                    // Continuar con la siguiente carpeta
+                }
+            }
+            
+            // Si llegamos aquí, ninguna carpeta funcionó
+            throw ultimoError || new Error(`No se encontró GLB en ninguna carpeta: ${carpetas.join(', ')}`);
         }
 
         // Exponer función para React Native
@@ -1514,31 +1573,13 @@
             const loader = loaderInstance || new GLTFLoader();
             if (!loaderInstance) loaderInstance = loader;
             
-            // Construir URL base según el entorno
-            const isGithubPages = window.location.hostname.includes('github.io');
-            const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+            // Usar rutas desde test/output/glb
+            const baseUrl = `output/glb/${nombreAvatar}/`;
             
-            let baseUrl;
-            if (isGithubPages) {
-                // Usar jsDelivr CDN para archivos del repositorio (con CORS habilitado)
-                baseUrl = 'https://cdn.jsdelivr.net/gh/usm-argenis/Avatar_LSV@main/assets/models/';
-            } else if (isLocalhost) {
-                // Servidor local
-                baseUrl = '../assets/models/';
-            } else {
-                // Fallback a ruta relativa
-                baseUrl = '../assets/models/';
-            }
-            
-            // Intentar múltiples rutas
-            const rutasAvatar = isGithubPages 
-                ? [
-                    `${baseUrl}${nombreAvatar}.glb`  // GitHub Releases
-                ]
-                : [
-                    `output/glb/${nombreAvatar}/${nombreAvatar}.glb`,  // Local
-                    `../output/glb/${nombreAvatar}/${nombreAvatar}.glb`
-                ];
+            // Ruta directa a los avatares en output/glb/{Avatar}/{Avatar}.glb
+            const rutasAvatar = [
+                `${baseUrl}${nombreAvatar}.glb`  // Local: output/glb/Carla/Carla.glb
+            ];
             
             for (const ruta of rutasAvatar) {
                 try {
@@ -1703,10 +1744,14 @@
                 
                 if (resultadoBackend && resultadoBackend.animaciones) {
                     // El backend YA devuelve las frases combinadas correctamente
-                    // Solo necesitamos convertir a formato de animaciones válidas
+                    // Los nombres YA vienen normalizados (sin tildes pero con ñ) - NO normalizar de nuevo
                     animacionesValidas = resultadoBackend.animaciones.map(anim => ({
                         texto: anim.nombre,
-                        palabra: anim.nombre.toLowerCase()
+                        // Usar nombre directamente del backend (ya normalizado correctamente)
+                        palabra: anim.nombre.toLowerCase(),
+                        // Incluir categoria y archivo del backend
+                        categoria: anim.categoria,
+                        archivo: anim.archivo
                     }));
                     
                     console.log(`🤖 Usando ${animacionesValidas.length} animaciones del backend`);
@@ -1737,6 +1782,7 @@
                     
                     animacionesValidas = resultado.animaciones.map(anim => ({
                         texto: anim.nombre,
+                        // Usar nombre directamente (traductor LSV ya normaliza correctamente)
                         palabra: anim.nombre.toLowerCase()
                     }));
                     
@@ -1847,11 +1893,14 @@
                         const letras = palabras[i].split('');
                         for (const letra of letras) {
                             const letraLower = letra.toLowerCase();
+                            // Normalizar tildes para deletreo (í→i, á→a, mantiene ñ)
+                            const letraNormalizada = normalizarTextoEspanol(letraLower);
                             // Verificar si la letra existe en el alfabeto
-                            if (DICCIONARIO[letraLower]) {
-                                animacionesValidas.push({ texto: letraLower, palabra: letraLower });
+                            if (DICCIONARIO[letraNormalizada]) {
+                                animacionesValidas.push({ texto: letraLower, palabra: letraNormalizada });
+                                console.log(`🔤 Deletreando: "${letraLower}" → "${letraNormalizada}"`);
                             } else {
-                                console.warn(`⚠️ Letra no encontrada en alfabeto: ${letraLower}`);
+                                console.warn(`⚠️ Letra no encontrada en alfabeto: ${letraNormalizada}`);
                             }
                         }
                     }
@@ -1875,8 +1924,8 @@
             console.log(`🎬 Secuencia: ${animacionesValidas.map(a => a.texto).join(' → ')}`);
             console.log(`🎯 Animaciones: ${animacionesValidas.map(a => a.palabra).join(' → ')}`);
             
-            // Guardar secuencia actual
-            currentSequence = animacionesValidas.map(a => a.palabra);
+            // Guardar secuencia actual (ahora guarda objetos completos)
+            currentSequence = animacionesValidas;
             currentIndex = 0;
             
             // Precargar las primeras animaciones
@@ -1884,7 +1933,7 @@
             
             // Reproducir secuencia sin delays
             for (let idx = 0; idx < animacionesValidas.length; idx++) {
-                const { palabra } = animacionesValidas[idx];
+                const animacion = animacionesValidas[idx];
                 currentIndex = idx;
                 
                 // Precargar siguientes mientras reproduce actual
@@ -1892,7 +1941,12 @@
                     precargarSiguientes(idx + 1);
                 }
                 
-                await cargarYReproducirAnimacion(palabra);
+                // Pasar categoria y archivo si vienen del backend
+                await cargarYReproducirAnimacion(
+                    animacion.palabra, 
+                    animacion.categoria, 
+                    animacion.archivo
+                );
             }
             
             document.getElementById('status').textContent = '✅ Secuencia completada';
@@ -1911,8 +1965,10 @@
             const endIdx = Math.min(startIdx + LOOKAHEAD, currentSequence.length);
             
             for (let i = startIdx; i < endIdx; i++) {
-                const palabra = currentSequence[i];
-                const palabraNormalizada = palabra.toLowerCase().trim();
+                const animacion = currentSequence[i];
+                const palabra = animacion.palabra;
+                // Normalizar palabra para búsqueda (mantiene ñ)
+                const palabraNormalizada = normalizarTextoEspanol(palabra.toLowerCase().trim());
                 
                 // Si ya está en caché, continuar
                 if (animationCache.has(palabraNormalizada)) {
@@ -1920,43 +1976,41 @@
                 }
                 
                 // Precargar en background sin bloquear
-                precargarAnimacionSilenciosa(palabraNormalizada);
+                // Pasar categoria y archivo si están disponibles
+                precargarAnimacionSilenciosa(
+                    palabraNormalizada, 
+                    animacion.categoria, 
+                    animacion.archivo
+                );
             }
         }
         
         // Precarga silenciosa sin bloquear la ejecución
-        async function precargarAnimacionSilenciosa(palabraNormalizada) {
-            if (!DICCIONARIO[palabraNormalizada] || animationCache.has(palabraNormalizada)) {
+        async function precargarAnimacionSilenciosa(palabraNormalizada, categoriaBackend = null, archivoBackend = null) {
+            if (animationCache.has(palabraNormalizada)) {
+                return;
+            }
+            
+            // Determinar categoria y archivo
+            let categoria, archivo;
+            if (categoriaBackend && archivoBackend) {
+                // Usar datos del backend
+                categoria = categoriaBackend;
+                archivo = archivoBackend;
+            } else if (DICCIONARIO[palabraNormalizada]) {
+                // Buscar en diccionario local
+                categoria = DICCIONARIO[palabraNormalizada].categoria;
+                archivo = DICCIONARIO[palabraNormalizada].archivo;
+            } else {
+                // No hay datos disponibles
                 return;
             }
             
             try {
                 const loader = loaderInstance || new GLTFLoader();
-                const { categoria, archivo } = DICCIONARIO[palabraNormalizada];
                 
-                // Determinar URL base según entorno
-                const isGithubPages = window.location.hostname.includes('github.io');
-                // Animaciones en repositorio
-                const baseUrlAnimacion = isGithubPages
-                    ? 'https://cdn.jsdelivr.net/gh/usm-argenis/Avatar_LSV@main/assets/models/animaciones/'
-                    : '../assets/models/animaciones/';
-                
-                let nombreArchivo = avatarActual === 'Remy' 
-                    ? archivo.replace(/ /g, '_') 
-                    : archivo;
-                
-                // Construir ruta de animación
-                const rutaCompleta = `${baseUrlAnimacion}${avatarActual}_resultado_${nombreArchivo}.glb`;
-                
-                const gltf = await new Promise((resolve, reject) => {
-                    const timeoutId = setTimeout(() => reject(new Error('Timeout')), 5000);
-                    loader.load(
-                        rutaCompleta,
-                        (result) => { clearTimeout(timeoutId); resolve(result); },
-                        undefined,
-                        (error) => { clearTimeout(timeoutId); reject(error); }
-                    );
-                });
+                // Intentar cargar desde múltiples carpetas posibles
+                const { gltf } = await cargarGLBDesdeCarpetas(loader, categoria, archivo, avatarActual);
                 
                 if (gltf.animations && gltf.animations.length > 0) {
                     const clip = gltf.animations[0];
@@ -1970,6 +2024,7 @@
                     animationCache.set(palabraNormalizada, clip);
                     console.log(`📦 Precargada anticipadamente: ${palabraNormalizada}`);
                     
+                    // Liberar recursos
                     if (gltf.scene) {
                         gltf.scene.traverse((child) => {
                             if (child.geometry) child.geometry.dispose();
@@ -1988,12 +2043,27 @@
             }
         }
         
-        async function cargarYReproducirAnimacion(palabra) {
-            const palabraNormalizada = palabra.toLowerCase().trim();
+        async function cargarYReproducirAnimacion(palabra, categoriaBackend = null, archivoBackend = null) {
+            // Normalizar tildes antes de buscar en diccionario (mantiene ñ)
+            const palabraNormalizada = normalizarTextoEspanol(palabra.toLowerCase().trim());
             
-            if (!DICCIONARIO[palabraNormalizada]) {
+            // Si no viene del backend, buscar en diccionario local
+            let categoria, archivo;
+            if (categoriaBackend && archivoBackend) {
+                // Usar datos del backend
+                categoria = categoriaBackend;
+                archivo = archivoBackend;
+                console.log(`🌐 Usando datos del backend para: ${palabra} (${categoria})`);
+            } else if (DICCIONARIO[palabraNormalizada]) {
+                // Buscar en diccionario local
+                categoria = DICCIONARIO[palabraNormalizada].categoria;
+                archivo = DICCIONARIO[palabraNormalizada].archivo;
+            } else {
+                // No hay datos disponibles
+                console.warn(`⚠️ No se encontró: ${palabra}`);
                 return;
             }
+            
             //cambio
             //document.getElementById('status').textContent = `▶️ ${palabra}`;
             
@@ -2008,85 +2078,62 @@
             
             // Reutilizar loader global
             const loader = loaderInstance || new GLTFLoader();
-            const { categoria, archivo } = DICCIONARIO[palabraNormalizada];
             
-            // Determinar URL base según entorno
-            const isGithubPages = window.location.hostname.includes('github.io');
-            // Usar jsDelivr CDN para archivos del repositorio
-            const baseUrlAnimacion = isGithubPages
-                ? 'https://cdn.jsdelivr.net/gh/usm-argenis/Avatar_LSV@main/assets/models/animaciones/'
-                : '../assets/models/animaciones/';
-            
-            // Construir el nombre del archivo según el avatar
-            // Remy usa underscores, los demás usan espacios
-            let nombreArchivo;
-            if (avatarActual === 'Remy') {
-                nombreArchivo = archivo.replace(/ /g, '_');
-            } else {
-                nombreArchivo = archivo;
-            }
-            
-            // Construir ruta de animación
-            const rutaCompleta = `${baseUrlAnimacion}${avatarActual}_resultado_${nombreArchivo}.glb`;
-            
-            console.log(`🔄 Cargando: ${rutaCompleta}`);
-            
-            return new Promise((resolve, reject) => {
+            return new Promise(async (resolve, reject) => {
                 const timeout = isMobile ? 8000 : 15000; // Timeout más corto en móvil
                 const timeoutId = setTimeout(() => {
                     console.error(`⏱️ Timeout cargando: ${palabra}`);
                     resolve(); // Continuar con siguiente palabra
                 }, timeout);
                 
-                loader.load(
-                    rutaCompleta,
-                    async (gltf) => {
-                        clearTimeout(timeoutId);
-                        if (gltf.animations && gltf.animations.length > 0) {
-                            const clip = gltf.animations[0];
-                            
-                            // Optimización: Procesar tracks una sola vez
-                            procesarTracksAnimacion(clip);
-                            
-                            // Gestión de caché con límite
-                            if (animationCache.size >= MAX_CACHE_SIZE) {
-                                // Eliminar la animación más antigua
-                                const firstKey = animationCache.keys().next().value;
-                                animationCache.delete(firstKey);
-                                console.log(`🗑️ Caché lleno, eliminada: ${firstKey}`);
-                            }
-                            
-                            animationCache.set(palabraNormalizada, clip);
-                            console.log(`✅ Cargada: ${palabra} (${clip.duration.toFixed(2)}s) - Caché: ${animationCache.size}/${MAX_CACHE_SIZE}`);
-                            await reproducirAnimacion(clip, palabra);
-                            
-                            // Liberar memoria de geometrías del GLB
-                            if (gltf.scene) {
-                                gltf.scene.traverse((child) => {
-                                    if (child.geometry) child.geometry.dispose();
-                                    if (child.material) {
-                                        if (Array.isArray(child.material)) {
-                                            child.material.forEach(m => m.dispose());
-                                        } else {
-                                            child.material.dispose();
-                                        }
-                                    }
-                                });
-                            }
-                            
-                            resolve();
-                        } else {
-                            console.warn(`⚠️ Sin animaciones: ${palabra}`);
-                            resolve();
+                try {
+                    // Intentar cargar desde múltiples carpetas posibles
+                    const { gltf, rutaCompleta } = await cargarGLBDesdeCarpetas(loader, categoria, archivo, avatarActual);
+                    console.log(`🔄 Cargada desde: ${rutaCompleta}`);
+                    
+                    clearTimeout(timeoutId);
+                    if (gltf.animations && gltf.animations.length > 0) {
+                        const clip = gltf.animations[0];
+                        
+                        // Optimización: Procesar tracks una sola vez
+                        procesarTracksAnimacion(clip);
+                        
+                        // Gestión de caché con límite
+                        if (animationCache.size >= MAX_CACHE_SIZE) {
+                            // Eliminar la animación más antigua
+                            const firstKey = animationCache.keys().next().value;
+                            animationCache.delete(firstKey);
+                            console.log(`🗑️ Caché lleno, eliminada: ${firstKey}`);
                         }
-                    },
-                    undefined,
-                    (error) => {
-                        clearTimeout(timeoutId);
-                        console.error(`❌ Error: ${palabra}`, error);
+                        
+                        animationCache.set(palabraNormalizada, clip);
+                        console.log(`✅ Cargada: ${palabra} (${clip.duration.toFixed(2)}s) - Caché: ${animationCache.size}/${MAX_CACHE_SIZE}`);
+                        await reproducirAnimacion(clip, palabra);
+                        
+                        // Liberar memoria de geometrías del GLB
+                        if (gltf.scene) {
+                            gltf.scene.traverse((child) => {
+                                if (child.geometry) child.geometry.dispose();
+                                if (child.material) {
+                                    if (Array.isArray(child.material)) {
+                                        child.material.forEach(m => m.dispose());
+                                    } else {
+                                        child.material.dispose();
+                                    }
+                                }
+                            });
+                        }
+                        
+                        resolve();
+                    } else {
+                        console.warn(`⚠️ Sin animaciones: ${palabra}`);
                         resolve();
                     }
-                );
+                } catch (error) {
+                    clearTimeout(timeoutId);
+                    console.error(`❌ Error cargando: ${palabra}`, error);
+                    resolve(); // Continuar incluso si falla
+                }
             });
         }
         
@@ -2150,67 +2197,37 @@
             for (const palabra of animacionesComunes) {
                 if (animationCache.has(palabra)) continue;
                 
-                const palabraNormalizada = palabra.toLowerCase().trim();
+                // Normalizar tildes antes de buscar en diccionario (mantiene ñ)
+                const palabraNormalizada = normalizarTextoEspanol(palabra.toLowerCase().trim());
                 if (!DICCIONARIO[palabraNormalizada]) continue;
                 
                 try {
                     const loader = loaderInstance || new GLTFLoader();
                     const { categoria, archivo } = DICCIONARIO[palabraNormalizada];
                     
-                    let nombreArchivo = avatarActual === 'Remy' 
-                        ? archivo.replace(/ /g, '_') 
-                        : archivo;
+                    // Intentar cargar desde múltiples carpetas posibles
+                    const { gltf } = await cargarGLBDesdeCarpetas(loader, categoria, archivo, avatarActual);
                     
-                    // Determinar URL base según entorno
-                    const isGithubPages = window.location.hostname.includes('github.io');
-                    // Animaciones en repositorio
-                    const baseUrlAnimacion = isGithubPages
-                        ? 'https://cdn.jsdelivr.net/gh/usm-argenis/Avatar_LSV@main/assets/models/animaciones/'
-                        : '../assets/models/animaciones/';
-                    
-                    // Construir ruta de animación
-                    const rutaCompleta = `${baseUrlAnimacion}${avatarActual}_resultado_${nombreArchivo}.glb`;
-                    
-                    await new Promise((resolve) => {
-                        const timeout = isMobile ? 10000 : 15000; // Timeout más corto en móvil
-                        const timeoutId = setTimeout(() => {
-                            console.log(`⏱️ Timeout precargando: ${palabra}`);
-                            resolve();
-                        }, timeout);
+                    if (gltf.animations && gltf.animations.length > 0) {
+                        const clip = gltf.animations[0];
+                        procesarTracksAnimacion(clip);
+                        animationCache.set(palabraNormalizada, clip);
+                        console.log(`✅ Precargada: ${palabra}`);
                         
-                        loader.load(
-                            rutaCompleta,
-                            (gltf) => {
-                                clearTimeout(timeoutId);
-                                if (gltf.animations && gltf.animations.length > 0) {
-                                    const clip = gltf.animations[0];
-                                    procesarTracksAnimacion(clip);
-                                    animationCache.set(palabraNormalizada, clip);
-                                    console.log(`✅ Precargada: ${palabra}`);
-                                    
-                                    // Liberar recursos del GLB
-                                    if (gltf.scene) {
-                                        gltf.scene.traverse((child) => {
-                                            if (child.geometry) child.geometry.dispose();
-                                            if (child.material) {
-                                                if (Array.isArray(child.material)) {
-                                                    child.material.forEach(m => m.dispose());
-                                                } else {
-                                                    child.material.dispose();
-                                                }
-                                            }
-                                        });
+                        // Liberar recursos del GLB
+                        if (gltf.scene) {
+                            gltf.scene.traverse((child) => {
+                                if (child.geometry) child.geometry.dispose();
+                                if (child.material) {
+                                    if (Array.isArray(child.material)) {
+                                        child.material.forEach(m => m.dispose());
+                                    } else {
+                                        child.material.dispose();
                                     }
                                 }
-                                resolve();
-                            },
-                            undefined,
-                            () => {
-                                clearTimeout(timeoutId);
-                                resolve(); // Ignorar errores en precarga
-                            }
-                        );
-                    });
+                            });
+                        }
+                    }
                     
                     // Pausa adaptativa según dispositivo
                     await new Promise(r => setTimeout(r, LOAD_DELAY));
@@ -2299,6 +2316,32 @@
                     });
                 }
             }, 100); // Pequeño delay para que activeElement se actualice
+        });
+
+        // Listener para mensajes de React Native WebView
+        window.addEventListener('message', function(event) {
+            try {
+                const data = JSON.parse(event.data);
+                if (data.type === 'changeAvatar' && data.avatar) {
+                    console.log('📱 Mensaje recibido: cambiar a avatar', data.avatar);
+                    cargarAvatar(data.avatar);
+                }
+            } catch (e) {
+                // Ignorar mensajes mal formados
+            }
+        });
+
+        // Listener adicional para Android
+        document.addEventListener('message', function(event) {
+            try {
+                const data = JSON.parse(event.data);
+                if (data.type === 'changeAvatar' && data.avatar) {
+                    console.log('📱 Mensaje recibido (Android): cambiar a avatar', data.avatar);
+                    cargarAvatar(data.avatar);
+                }
+            } catch (e) {
+                // Ignorar mensajes mal formados
+            }
         });
 
         window.addEventListener('DOMContentLoaded', init);

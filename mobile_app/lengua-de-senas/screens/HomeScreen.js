@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import {
   StyleSheet,
   View,
@@ -24,7 +24,7 @@ const getWebUrl = () => {
   if (__DEV__) {
     // Para Expo Go en tu teléfono, usar la IP de tu PC en el puerto 8000
     // Servidor corriendo desde /test/, entonces la URL es directa
-    return 'http://192.168.10.93:8000/prueba.html';
+    return 'http://192.168.86.27:8000/prueba.html';
   }
   return 'https://usm-argenis.github.io/STT_LSV/';
 };
@@ -541,6 +541,11 @@ export default function HomeScreen({ navigation }) {
             scalesPageToFit={true}
             bounces={false}
             originWhitelist={['*']}
+            cacheEnabled={true}
+            cacheMode="LOAD_CACHE_ELSE_NETWORK"
+            androidLayerType="hardware"
+            androidHardwareAccelerationDisabled={false}
+            nestedScrollEnabled={false}
           />
         </View>
       </Modal>

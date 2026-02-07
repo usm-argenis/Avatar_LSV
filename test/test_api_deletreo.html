@@ -84,7 +84,7 @@
     </div>
 
     <script>
-        const API_URL = 'http://localhost:5000/api/translate';
+        const API_URL = 'http://192.168.86.27:5000/api/translate';
         
         function test(texto) {
             document.getElementById('texto').value = texto;
@@ -139,7 +139,7 @@
                 
             } catch (error) {
                 status.innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;
-                resultado.textContent = `Error: ${error}\n\nVerificar que la API esté corriendo en http://localhost:8000`;
+                resultado.textContent = `Error: ${error}\n\nVerificar que la API esté corriendo en http://192.168.86.27:8000`;
             }
         }
         

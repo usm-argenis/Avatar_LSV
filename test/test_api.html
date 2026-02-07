@@ -108,7 +108,7 @@
             const texto = document.getElementById('texto').value;
             
             try {
-                const response = await fetch('http://localhost:5000/api/optimizar', {
+                const response = await fetch('http://192.168.86.27:5000/api/optimizar', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -161,7 +161,7 @@
                 document.getElementById('json').textContent = JSON.stringify(data, null, 2);
                 
             } catch (error) {
-                alert('Error: ' + error.message + '\n\nAsegúrate de que la API esté corriendo en http://localhost:5000');
+                alert('Error: ' + error.message + '\n\nAsegúrate de que la API esté corriendo en http://192.168.86.27:5000');
                 console.error('Error:', error);
             }
         }

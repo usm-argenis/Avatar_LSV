@@ -1,0 +1,7 @@
+# SÁBADO
+# Datos extraídos de las imágenes 3, 4, 5, 6
+
+RightHandThumb3 0.997 -0.074 -0.00043 -0.024
+RightHandThumb2 0.986 -0.055 -0.007 -0.156
+RightHandThumb1 0.974 0.142 0.003 0.175
+RightHand 0.902 0.126 0.391 -0.128

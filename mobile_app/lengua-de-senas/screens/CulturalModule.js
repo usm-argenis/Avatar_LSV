@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import {
   View,
   Text,
@@ -30,6 +30,7 @@ const CulturalModule = ({ navigation, route }) => {
   const [answeredQuestions, setAnsweredQuestions] = useState({}); // Preguntas ya respondidas (desactivadas)
   const [missionAnswered, setMissionAnswered] = useState(false); // Si ya contestó la misión
   const webViewRef = useRef(null);
+  const scrollViewRef = useRef(null); // Referencia para el ScrollView de cada sección
 
   // Datos de las secciones del módulo
   const sections = moduleData.sections || [];
@@ -52,6 +53,11 @@ const CulturalModule = ({ navigation, route }) => {
   };
 
   React.useEffect(() => {
+    // Scroll al inicio cuando cambia de sección
+    if (scrollViewRef.current) {
+      scrollViewRef.current.scrollTo({ y: 0, animated: false });
+    }
+    
     Animated.timing(fadeAnim, {
       toValue: 1,
       duration: 500,
@@ -79,7 +85,7 @@ const CulturalModule = ({ navigation, route }) => {
   // Renderizar sección narrativa (historia)
   const renderNarrativeSection = (section) => {
     return (
-      <ScrollView style={styles.sectionContent}>
+      <ScrollView ref={scrollViewRef} style={styles.sectionContent}>
         <View style={styles.narrativeHeader}>
           <Text style={styles.sectionTitle}>{section.title}</Text>
           <Text style={styles.narrativeSubtitle}>Historia de la Lengua de Señas Venezolana</Text>
@@ -121,7 +127,7 @@ const CulturalModule = ({ navigation, route }) => {
     const answeredQuestions = Object.keys(quizAnswers).length;
 
     return (
-      <ScrollView style={styles.sectionContent}>
+      <ScrollView ref={scrollViewRef} style={styles.sectionContent}>
         <View style={styles.triviaHeader}>
           <Text style={styles.sectionTitle}>{section.title}</Text>
           <Text style={styles.triviaSubtitle}>
@@ -238,7 +244,7 @@ const CulturalModule = ({ navigation, route }) => {
     };
 
     return (
-      <ScrollView style={styles.sectionContent}>
+      <ScrollView ref={scrollViewRef} style={styles.sectionContent}>
         <View style={styles.missionHeader}>
           <Text style={styles.sectionTitle}>{section.title}</Text>
           <Text style={styles.missionSubtitle}>Interacción con Avatar 3D</Text>
@@ -256,7 +262,7 @@ const CulturalModule = ({ navigation, route }) => {
         <View style={styles.avatarContainer}>
           <WebView
             ref={webViewRef}
-            source={{ uri: `http://192.168.10.93:8000/escena_simple.html?avatar=${selectedAvatar}` }}
+            source={{ uri: `http://192.168.86.27:8000/escena_simple.html?avatar=${selectedAvatar}` }}
             style={styles.webViewAvatar}
             javaScriptEnabled={true}
             domStorageEnabled={true}
@@ -271,6 +277,12 @@ const CulturalModule = ({ navigation, route }) => {
               const { nativeEvent } = syntheticEvent;
               console.error('Error en WebView:', nativeEvent);
             }}
+            cacheEnabled={true}
+            cacheMode="LOAD_CACHE_ELSE_NETWORK"
+            androidLayerType="hardware"
+            androidHardwareAccelerationDisabled={false}
+            scalesPageToFit={true}
+            nestedScrollEnabled={false}
           />
         </View>
 
@@ -322,7 +334,7 @@ const CulturalModule = ({ navigation, route }) => {
     const totalScore = starsEarned;
 
     return (
-      <ScrollView style={styles.sectionContent}>
+      <ScrollView ref={scrollViewRef} style={styles.sectionContent}>
         <View style={styles.summaryHeader}>
           <Text style={styles.congratsIcon}>🎊</Text>
           <Text style={styles.congratsTitle}>¡Felicitaciones!</Text>

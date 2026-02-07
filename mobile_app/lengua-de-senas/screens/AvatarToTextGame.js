@@ -576,7 +576,7 @@ const AvatarToTextGame = ({ route, navigation }) => {
     // Agregar timestamp para forzar actualización de caché
     const cacheVersion = '20260207a'; // Actualizar esta fecha cuando cambies el HTML
     // NO incluir autoplay para que espere el mensaje de React Native con la velocidad correcta
-    const baseUrl = GLB_SERVER_URL || 'http://192.168.10.93:8000/';
+    const baseUrl = GLB_SERVER_URL || 'http://192.168.86.27:8000/';
     const url = `${baseUrl}avatar_spelling_optimized.html?avatar=${selectedAvatar}&v=${cacheVersion}`;
     console.log(`🌐 [AvatarToTextGame] URL del WebView: ${url}`);
     return url;

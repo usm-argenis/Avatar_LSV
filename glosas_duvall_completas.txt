@@ -1,0 +1,503 @@
+GLOSAS COMPLETAS DEL AVATAR DUVALL
+====================================
+
+TOTAL: 336 glosas
+
+====================================
+ADVERBIOS LUGARES (9 glosas)
+====================================
+adverbios
+al lado
+atras
+cerca
+derecha
+frente
+izquierda
+lejos
+lugares
+
+====================================
+ALFABETO (27 glosas)
+====================================
+a
+b
+c
+d
+e
+f
+g
+h
+i
+j
+k
+l
+m
+n
+ñ
+o
+p
+q
+r
+s
+t
+u
+v
+w
+x
+y
+z
+
+====================================
+CORTESIA (7 glosas)
+====================================
+a la orden
+buen provecho
+cortesia
+gracias
+muchas gracias
+mucho gusto
+permiso
+
+====================================
+DIAS SEMANA (7 glosas)
+====================================
+domingo
+jueves
+lunes
+martes
+miercoles
+sabado
+viernes
+
+====================================
+ESTADO CIVIL (6 glosas)
+====================================
+casado
+concubino
+divorciado
+separado
+soltero
+viudo
+
+====================================
+EXPRESIONES (30 glosas)
+====================================
+abril
+agosto
+bien
+como
+cual
+cuando
+cuantos
+de nada
+diciembre
+donde
+donde (especifico)
+enero
+expresiones
+febrero
+interrogantes
+julio
+junio
+mal
+marzo
+mayo
+no
+noviembre
+octubre
+porque
+que
+quien
+regular
+saludas a
+septiembre
+si
+
+====================================
+HORARIO (8 glosas)
+====================================
+en punto
+hora
+horario
+media hora
+un cuarto
+un minuto
+un segundo
+una hora
+
+====================================
+MEDIOS TRANSPORTE - AEREO (8 glosas)
+====================================
+aeropuerto
+aterrizar
+avion
+avioneta
+boleto
+despegar
+helicoptero
+piloto
+
+====================================
+MEDIOS TRANSPORTE - MARITIMO (4 glosas)
+====================================
+barco
+canoa
+ferri
+lancha
+
+====================================
+MEDIOS TRANSPORTE - TERRESTRE (13 glosas)
+====================================
+autobus
+bicicleta
+cabletren
+camioneta
+carro
+estacion
+ferrocarril
+metro
+metrobus
+moto
+parada
+taxi
+tren
+
+====================================
+NUEVO (33 glosas)
+====================================
+abuelo
+antes
+correr
+cuñado
+dividir
+entrar
+familia
+fumar
+habia una vez
+hace rato
+hermano
+hijo
+madre
+madrina
+mama
+multiplicar
+nieto
+nombre
+padre
+padrino
+papa
+permitir
+primo
+prohibir
+respetar
+restar
+seña
+sobrino
+stro
+suegro
+sumar
+tio
+viajar
+
+====================================
+NUMEROS (12 glosas)
+====================================
+0
+1
+1M
+2
+3
+4
+5
+6
+7
+8
+9
+10
+
+====================================
+NUMEROS ORDINALES (10 glosas)
+====================================
+1_o
+2_o
+3_o
+4_o
+5_o
+6_o
+7_o
+8_o
+9_o
+10_o
+
+====================================
+PERSONAS (22 glosas)
+====================================
+adulto
+amigo
+anciano
+bebe
+ciego
+compañero
+hombre
+joven
+mayor
+mayor de edad
+menor de edad
+mujer
+niño
+novio
+oyente
+persona
+personas
+señor
+señorita
+sordo
+sordociego
+viejo
+
+====================================
+PREGUNTAS (4 glosas)
+====================================
+como estas
+cual es tu nombre
+cual es tu seña
+que tal
+
+====================================
+PREPOSICION (15 glosas)
+====================================
+algo
+alguien
+algun
+bastante
+cualquier
+demasiado
+mas
+mucho
+nada
+nadie
+ningun
+otro
+poco
+quienquiera
+todo
+
+====================================
+PROFESION (47 glosas)
+====================================
+abogado
+administrador
+albañil
+analista
+auxiliar
+barbero
+carrera
+chef
+cocinero
+conductor
+constructor
+contador
+dentista
+detective
+dibujante
+dibujante tecnico
+director
+economista
+enfermera
+escritor
+fotografo
+gerente
+informatica
+ingeniero
+inspector
+instructor
+interprete
+jefe
+licenciado
+maestro
+medico
+mensajero
+mesonero
+pasante
+peluquera
+pintor
+policia
+profesion
+profesor
+psicologo
+secretaria
+sistema
+supervisor
+tecnico
+traductor
+vendedor
+vigilante
+
+====================================
+PRONOMBRES (12 glosas)
+====================================
+el
+ella
+ellas
+ellos
+mio
+nosotros
+nuestro
+suyo
+tu
+tuyo
+ustedes
+yo
+
+====================================
+SALUDOS (7 glosas)
+====================================
+adios
+bienvenido
+buenas noches
+buenas tardes
+buenos dias
+chao
+hola
+
+====================================
+TIEMPO (10 glosas)
+====================================
+anteayer
+ayer
+calendario
+dia
+fin de semana
+hoy
+mañana
+mes
+pasado mañana
+semana
+
+====================================
+TIPOS DE VIVIENDA (10 glosas)
+====================================
+apartamento
+baño
+casa
+cocina
+comedor
+cuarto
+edificio
+piso
+rancho
+sala
+
+====================================
+VERBOS (35 glosas)
+====================================
+agarrar
+amar
+atraer
+ayudar
+burlar
+calmar
+cansar
+comer
+conocer
+decir
+deletrear
+dormir
+engañar
+estar
+estudiar
+guardar
+invitar
+llevar
+pelear
+preguntar
+presentar
+querer
+regalar
+responder
+saludar
+sentir
+ser
+sufrir
+trabajar
+traer
+usar
+ver
+verbo
+vestir
+vivir
+
+====================================
+RESUMEN POR CATEGORÍA
+====================================
+Adverbios lugares: 9
+Alfabeto: 27
+Cortesía: 7
+Días semana: 7
+Estado civil: 6
+Expresiones: 30
+Horario: 8
+Medios transporte (aéreo): 8
+Medios transporte (marítimo): 4
+Medios transporte (terrestre): 13
+Nuevo: 33
+Números: 12
+Números ordinales: 10
+Personas: 22
+Preguntas: 4
+Preposición: 15
+Profesión: 47
+Pronombres: 12
+Saludos: 7
+Tiempo: 10
+Tipos de vivienda: 10
+Verbos: 35
+
+TOTAL: 336 glosas
+
+====================================
+PALABRAS EXTRA EN DICCIONARIO (136)
+====================================
+Estas palabras están en data.json pero NO en las 336 glosas base.
+Son variantes, plurales, conjugaciones y palabras adicionales para la defensa del TEG.
+
+PLURALES DE PROFESIONES (49):
+aboga, abogados, administradors, albañils, analistas, auxiliars, barberos,
+carreras, chefs, cocineros, conductors, constructors, contadors, dentistas,
+detectives, dibujante tecnicos, dibujantes, directors, economistas, enfermeras,
+escritors, fotografos, gerentes, informaticas, ingenieros, inspectors,
+instructors, interpretes, jefes, licenciados, maestros, medicos, mensajeros,
+mesoneros, pasantes, peluqueras, pintors, policias, profesions, profesors,
+psicologos, secretarias, señas, senas, sistemas, sordos, supervisors,
+tecnicos, traductors, vendedors, vigilantes
+
+CONJUGACIONES VERBOS COMUNES (28):
+busca, buscamos, buscan, buscar, buscas
+entender, entiende, entiendes, entiendo
+eres, esta, este, soy (ser/estar)
+facilita, facilitamos, facilitan, facilitar, facilitas, facilite
+integrar, integracion
+llamar, llamo
+mejorar, mejora, mejor
+participar
+tener, tengo, tiene, tienes
+
+VERBOS IR/VER (5):
+ir, va, vamos, van, vas, voy
+
+PALABRAS DEFENSA TEG (15):
+teg, defensa, presentacion, proyecto, objetivo, grado, jurado,
+universidad, comunidad, social, aporte, evaluar, miembro, miembros, junto
+
+TECNOLOGÍA Y LSV (7):
+computadora, computadoras, tecnologia, tecnologico, lsv, lengua, traduccion, traducir
+
+SALUDOS/EXPRESIONES EXTRAS (8):
+bienvenir, buenasnoches, buenastardes, buenosdias, holi, holiwis, horita, mañanita
+
+OTROS IMPORTANTES (24):
+año, años, comunicacion, crear, cual es tu sena, doc, edad, enganar,
+especial, existir, importante, inge, profe, sordas, trabajo, 
+venezuela, venezolano
+
+TOTAL DICCIONARIO: 336 glosas base + 136 extras = 472 palabras

@@ -364,7 +364,7 @@
         
         // Control de API backend
         let useBackendAPI = false;  // DESACTIVADO para GitHub Pages (usar traductor local)
-        const BACKEND_URL = 'http://localhost:5000';
+        const BACKEND_URL = 'http://192.168.86.27:5000';
         
         // Control de teclado virtual y viewport
         let initialViewportHeight = window.innerHeight;
@@ -771,8 +771,8 @@
         }
         
         // Diccionario de mapeo
-                                const DICCIONARIO = {
-            // 📌 Generado automáticamente desde backend/scripts/data.json (357 palabras)
+                                        const DICCIONARIO = {
+            // Generado automaticamente desde backend/scripts/data.json (445 palabras)
             '0': { categoria: 'numero', archivo: '0' },
             '1': { categoria: 'numero', archivo: '1' },
             '10': { categoria: 'numero', archivo: '10' },
@@ -801,6 +801,7 @@
             'abogado': { categoria: 'profesiones', archivo: 'abogado' },
             'abogados': { categoria: 'profesiones', archivo: 'abogado' },
             'abril': { categoria: 'expresiones', archivo: 'abril' },
+            'abuelo': { categoria: 'familia', archivo: 'abuelo' },
             'adios': { categoria: 'saludos', archivo: 'adios' },
             'administrador': { categoria: 'profesiones', archivo: 'administrador' },
             'administradors': { categoria: 'profesiones', archivo: 'administrador' },
@@ -820,13 +821,17 @@
             'analistas': { categoria: 'profesiones', archivo: 'analista' },
             'anciano': { categoria: 'personas', archivo: 'anciano' },
             'anteayer': { categoria: 'tiempo', archivo: 'anteayer' },
+            'antes': { categoria: 'tiempo', archivo: 'antes' },
             'apartamento': { categoria: 'viviendas', archivo: 'apartamento' },
+            'aporte': { categoria: 'general', archivo: 'aporte' },
             'atraer': { categoria: 'verbos', archivo: 'atraer' },
             'atras': { categoria: 'adverbios', archivo: 'atras' },
             'auxiliar': { categoria: 'profesiones', archivo: 'auxiliar' },
             'auxiliars': { categoria: 'profesiones', archivo: 'auxiliar' },
             'ayer': { categoria: 'tiempo', archivo: 'ayer' },
             'ayudar': { categoria: 'verbos', archivo: 'ayudar' },
+            'año': { categoria: 'tiempo', archivo: 'año' },
+            'años': { categoria: 'tiempo', archivo: 'año' },
             'b': { categoria: 'alfabeto', archivo: 'b' },
             'barbero': { categoria: 'profesiones', archivo: 'barbero' },
             'barberos': { categoria: 'profesiones', archivo: 'barbero' },
@@ -835,6 +840,7 @@
             'bebe': { categoria: 'personas', archivo: 'bebe' },
             'bien': { categoria: 'expresiones', archivo: 'bien' },
             'bienvenido': { categoria: 'saludos', archivo: 'bienvenido' },
+            'bienvenir': { categoria: 'saludos', archivo: 'bienvenido' },
             'buen provecho': { categoria: 'cortesia', archivo: 'buen provecho' },
             'buenas noches': { categoria: 'saludos', archivo: 'buenas noches' },
             'buenas tardes': { categoria: 'saludos', archivo: 'buenas tardes' },
@@ -843,6 +849,11 @@
             'buenos dias': { categoria: 'saludos', archivo: 'buenos dias' },
             'buenosdias': { categoria: 'saludos', archivo: 'buenos dias' },
             'burlar': { categoria: 'verbos', archivo: 'burlar' },
+            'busca': { categoria: 'verbos', archivo: 'buscar' },
+            'buscamos': { categoria: 'verbos', archivo: 'buscar' },
+            'buscan': { categoria: 'verbos', archivo: 'buscar' },
+            'buscar': { categoria: 'verbos', archivo: 'buscar' },
+            'buscas': { categoria: 'verbos', archivo: 'buscar' },
             'c': { categoria: 'alfabeto', archivo: 'c' },
             'calendario': { categoria: 'tiempo', archivo: 'calendario' },
             'calmar': { categoria: 'verbos', archivo: 'calmar' },
@@ -864,6 +875,10 @@
             'como': { categoria: 'expresiones', archivo: 'como' },
             'como estas': { categoria: 'interrogantes', archivo: 'como estas' },
             'compañero': { categoria: 'personas', archivo: 'compañero' },
+            'computadora': { categoria: 'tecnologia', archivo: 'computadora' },
+            'computadoras': { categoria: 'tecnologia', archivo: 'computadora' },
+            'comunicacion': { categoria: 'verbos', archivo: 'comunicacion' },
+            'comunidad': { categoria: 'general', archivo: 'comunidad' },
             'concubino': { categoria: 'estado_civil', archivo: 'concubino' },
             'conductor': { categoria: 'profesiones', archivo: 'conductor' },
             'conductors': { categoria: 'profesiones', archivo: 'conductor' },
@@ -872,7 +887,9 @@
             'constructors': { categoria: 'profesiones', archivo: 'constructor' },
             'contador': { categoria: 'profesiones', archivo: 'contador' },
             'contadors': { categoria: 'profesiones', archivo: 'contador' },
+            'correr': { categoria: 'verbos', archivo: 'correr' },
             'cortesia': { categoria: 'cortesia', archivo: 'cortesia' },
+            'crear': { categoria: 'verbos', archivo: 'crear' },
             'cual': { categoria: 'expresiones', archivo: 'cual' },
             'cual es tu nombre': { categoria: 'interrogantes', archivo: 'cual es tu nombre' },
             'cual es tu sena': { categoria: 'interrogantes', archivo: 'cual es tu sena' },
@@ -880,9 +897,11 @@
             'cuando': { categoria: 'expresiones', archivo: 'cuando' },
             'cuantos': { categoria: 'expresiones', archivo: 'cuantos' },
             'cuarto': { categoria: 'viviendas', archivo: 'cuarto' },
+            'cuñado': { categoria: 'familia', archivo: 'cunado' },
             'd': { categoria: 'alfabeto', archivo: 'd' },
             'de nada': { categoria: 'expresiones', archivo: 'de nada' },
             'decir': { categoria: 'verbos', archivo: 'decir' },
+            'defensa': { categoria: 'general', archivo: 'defensa' },
             'deletrear': { categoria: 'verbos', archivo: 'deletrear' },
             'demasiado': { categoria: 'preposiciones', archivo: 'demasiado' },
             'dentista': { categoria: 'profesiones', archivo: 'dentista' },
@@ -898,6 +917,7 @@
             'diciembre': { categoria: 'expresiones', archivo: 'diciembre' },
             'director': { categoria: 'profesiones', archivo: 'director' },
             'directors': { categoria: 'profesiones', archivo: 'director' },
+            'dividir': { categoria: 'verbos', archivo: 'dividir' },
             'divorciado': { categoria: 'estado_civil', archivo: 'divorciado' },
             'doc': { categoria: 'profesiones', archivo: 'medico' },
             'domingo': { categoria: 'dias_semana', archivo: 'domingo' },
@@ -907,6 +927,7 @@
             'e': { categoria: 'alfabeto', archivo: 'e' },
             'economista': { categoria: 'profesiones', archivo: 'economista' },
             'economistas': { categoria: 'profesiones', archivo: 'economista' },
+            'edad': { categoria: 'general', archivo: 'edad' },
             'edificio': { categoria: 'viviendas', archivo: 'edificio' },
             'el': { categoria: 'pronombres', archivo: 'el' },
             'ella': { categoria: 'pronombres', archivo: 'ella' },
@@ -917,23 +938,47 @@
             'enfermera': { categoria: 'profesiones', archivo: 'enfermera' },
             'enfermeras': { categoria: 'profesiones', archivo: 'enfermera' },
             'enganar': { categoria: 'verbos', archivo: 'enganar' },
+            'entender': { categoria: 'verbos', archivo: 'entender' },
+            'entiende': { categoria: 'verbos', archivo: 'entender' },
+            'entiendes': { categoria: 'verbos', archivo: 'entender' },
+            'entiendo': { categoria: 'verbos', archivo: 'entender' },
+            'entrar': { categoria: 'verbos', archivo: 'entrar' },
+            'eres': { categoria: 'verbos', archivo: 'ser' },
             'escritor': { categoria: 'profesiones', archivo: 'escritor' },
             'escritors': { categoria: 'profesiones', archivo: 'escritor' },
+            'especial': { categoria: 'general', archivo: 'especial' },
+            'esta': { categoria: 'general', archivo: 'este' },
             'estar': { categoria: 'verbos', archivo: 'estar' },
+            'este': { categoria: 'general', archivo: 'este' },
             'estudiar': { categoria: 'verbos', archivo: 'estudiar' },
+            'evaluar': { categoria: 'verbos', archivo: 'evaluar' },
+            'existir': { categoria: 'verbos', archivo: 'existir' },
             'expresiones': { categoria: 'expresiones', archivo: 'expresiones' },
             'f': { categoria: 'alfabeto', archivo: 'f' },
+            'facilita': { categoria: 'verbos', archivo: 'facilitar' },
+            'facilitamos': { categoria: 'verbos', archivo: 'facilitar' },
+            'facilitan': { categoria: 'verbos', archivo: 'facilitar' },
+            'facilitar': { categoria: 'verbos', archivo: 'facilitar' },
+            'facilitas': { categoria: 'verbos', archivo: 'facilitar' },
+            'facilite': { categoria: 'verbos', archivo: 'facilitar' },
+            'familia': { categoria: 'familia', archivo: 'familia' },
             'febrero': { categoria: 'expresiones', archivo: 'febrero' },
             'fin de semana': { categoria: 'tiempo', archivo: 'fin de semana' },
             'fotografo': { categoria: 'profesiones', archivo: 'fotografo' },
             'fotografos': { categoria: 'profesiones', archivo: 'fotografo' },
             'frente': { categoria: 'adverbios', archivo: 'frente' },
+            'fumar': { categoria: 'verbos', archivo: 'fumar' },
             'g': { categoria: 'alfabeto', archivo: 'g' },
             'gerente': { categoria: 'profesiones', archivo: 'gerente' },
             'gerentes': { categoria: 'profesiones', archivo: 'gerente' },
             'gracias': { categoria: 'cortesia', archivo: 'gracias' },
+            'grado': { categoria: 'general', archivo: 'grado' },
             'guardar': { categoria: 'verbos', archivo: 'guardar' },
             'h': { categoria: 'alfabeto', archivo: 'h' },
+            'habia una vez': { categoria: 'tiempo', archivo: 'habia una vez' },
+            'hace rato': { categoria: 'tiempo', archivo: 'hace_rato' },
+            'hermano': { categoria: 'familia', archivo: 'hermano' },
+            'hijo': { categoria: 'familia', archivo: 'hijo' },
             'hola': { categoria: 'saludos', archivo: 'hola' },
             'holi': { categoria: 'saludos', archivo: 'hola' },
             'holiwis': { categoria: 'saludos', archivo: 'hola' },
@@ -943,6 +988,7 @@
             'horita': { categoria: 'tiempo', archivo: 'hoy' },
             'hoy': { categoria: 'tiempo', archivo: 'hoy' },
             'i': { categoria: 'alfabeto', archivo: 'i' },
+            'importante': { categoria: 'general', archivo: 'importante' },
             'informatica': { categoria: 'profesiones', archivo: 'informatica' },
             'informaticas': { categoria: 'profesiones', archivo: 'informatica' },
             'inge': { categoria: 'profesiones', archivo: 'ingeniero' },
@@ -952,10 +998,13 @@
             'inspectors': { categoria: 'profesiones', archivo: 'inspector' },
             'instructor': { categoria: 'profesiones', archivo: 'instructor' },
             'instructors': { categoria: 'profesiones', archivo: 'instructor' },
+            'integracion': { categoria: 'general', archivo: 'integracion' },
+            'integrar': { categoria: 'verbos', archivo: 'integrar' },
             'interprete': { categoria: 'profesiones', archivo: 'interprete' },
             'interpretes': { categoria: 'profesiones', archivo: 'interprete' },
             'interrogantes': { categoria: 'expresiones', archivo: 'interrogantes' },
             'invitar': { categoria: 'verbos', archivo: 'invitar' },
+            'ir': { categoria: 'verbos', archivo: 'ir' },
             'izquierda': { categoria: 'adverbios', archivo: 'izquierda' },
             'j': { categoria: 'alfabeto', archivo: 'j' },
             'jefe': { categoria: 'profesiones', archivo: 'jefe' },
@@ -964,18 +1013,27 @@
             'jueves': { categoria: 'dias_semana', archivo: 'jueves' },
             'julio': { categoria: 'expresiones', archivo: 'julio' },
             'junio': { categoria: 'expresiones', archivo: 'junio' },
+            'junto': { categoria: 'general', archivo: 'junto' },
+            'jurado': { categoria: 'general', archivo: 'jurado' },
             'k': { categoria: 'alfabeto', archivo: 'k' },
             'l': { categoria: 'alfabeto', archivo: 'l' },
             'lejos': { categoria: 'adverbios', archivo: 'lejos' },
+            'lengua': { categoria: 'general', archivo: 'lengua' },
             'licenciado': { categoria: 'profesiones', archivo: 'licenciado' },
             'licenciados': { categoria: 'profesiones', archivo: 'licenciado' },
+            'llamar': { categoria: 'verbos', archivo: 'llamar' },
+            'llamo': { categoria: 'verbos', archivo: 'llamar' },
             'llevar': { categoria: 'verbos', archivo: 'llevar' },
+            'lsv': { categoria: 'general', archivo: 'lsv' },
             'lugares': { categoria: 'adverbios', archivo: 'lugares' },
             'lunes': { categoria: 'dias_semana', archivo: 'lunes' },
             'm': { categoria: 'alfabeto', archivo: 'm' },
+            'madre': { categoria: 'familia', archivo: 'madre' },
+            'madrina': { categoria: 'familia', archivo: 'madrina' },
             'maestro': { categoria: 'profesiones', archivo: 'maestro' },
             'maestros': { categoria: 'profesiones', archivo: 'maestro' },
             'mal': { categoria: 'expresiones', archivo: 'mal' },
+            'mama': { categoria: 'familia', archivo: 'mama' },
             'martes': { categoria: 'dias_semana', archivo: 'martes' },
             'marzo': { categoria: 'expresiones', archivo: 'marzo' },
             'mas': { categoria: 'preposiciones', archivo: 'mas' },
@@ -987,33 +1045,46 @@
             'media hora': { categoria: 'general', archivo: 'media hora' },
             'medico': { categoria: 'profesiones', archivo: 'medico' },
             'medicos': { categoria: 'profesiones', archivo: 'medico' },
+            'mejor': { categoria: 'expresiones', archivo: 'mejor' },
+            'mejora': { categoria: 'verbos', archivo: 'mejorar' },
+            'mejorar': { categoria: 'verbos', archivo: 'mejorar' },
             'menor de edad': { categoria: 'personas', archivo: 'menor de edad' },
             'mensajero': { categoria: 'profesiones', archivo: 'mensajero' },
             'mensajeros': { categoria: 'profesiones', archivo: 'mensajero' },
             'mes': { categoria: 'tiempo', archivo: 'mes' },
             'mesonero': { categoria: 'profesiones', archivo: 'mesonero' },
             'mesoneros': { categoria: 'profesiones', archivo: 'mesonero' },
+            'miembro': { categoria: 'general', archivo: 'miembro' },
+            'miembros': { categoria: 'general', archivo: 'miembro' },
             'miercoles': { categoria: 'dias_semana', archivo: 'miercoles' },
             'mio': { categoria: 'pronombres', archivo: 'mio' },
             'muchas gracias': { categoria: 'cortesia', archivo: 'muchas gracias' },
             'mucho': { categoria: 'preposiciones', archivo: 'mucho' },
             'mucho gusto': { categoria: 'cortesia', archivo: 'mucho gusto' },
             'mujer': { categoria: 'personas', archivo: 'mujer' },
+            'multiplicar': { categoria: 'verbos', archivo: 'multiplicar' },
             'n': { categoria: 'alfabeto', archivo: 'n' },
             'nada': { categoria: 'preposiciones', archivo: 'nada' },
             'nadie': { categoria: 'preposiciones', archivo: 'nadie' },
+            'nieto': { categoria: 'familia', archivo: 'nieto' },
             'ningun': { categoria: 'preposiciones', archivo: 'ningun' },
             'niño': { categoria: 'personas', archivo: 'niño' },
             'no': { categoria: 'expresiones', archivo: 'no' },
+            'nombre': { categoria: 'general', archivo: 'nombre' },
             'nosotros': { categoria: 'pronombres', archivo: 'nosotros' },
             'noviembre': { categoria: 'expresiones', archivo: 'noviembre' },
             'novio': { categoria: 'personas', archivo: 'novio' },
             'nuestro': { categoria: 'pronombres', archivo: 'nuestro' },
             'o': { categoria: 'alfabeto', archivo: 'o' },
+            'objetivo': { categoria: 'educacion', archivo: 'objetivo' },
             'octubre': { categoria: 'expresiones', archivo: 'octubre' },
             'otro': { categoria: 'preposiciones', archivo: 'otro' },
             'oyente': { categoria: 'personas', archivo: 'oyente' },
             'p': { categoria: 'alfabeto', archivo: 'p' },
+            'padre': { categoria: 'familia', archivo: 'padre' },
+            'padrino': { categoria: 'familia', archivo: 'padrino' },
+            'papa': { categoria: 'familia', archivo: 'papa' },
+            'participar': { categoria: 'verbos', archivo: 'participar' },
             'pasado mañana': { categoria: 'tiempo', archivo: 'pasado mañana' },
             'pasante': { categoria: 'profesiones', archivo: 'pasante' },
             'pasantes': { categoria: 'profesiones', archivo: 'pasante' },
@@ -1021,6 +1092,7 @@
             'peluquera': { categoria: 'profesiones', archivo: 'peluquera' },
             'peluqueras': { categoria: 'profesiones', archivo: 'peluquera' },
             'permiso': { categoria: 'cortesia', archivo: 'permiso' },
+            'permitir': { categoria: 'verbos', archivo: 'permitir' },
             'persona': { categoria: 'personas', archivo: 'persona' },
             'personas': { categoria: 'personas', archivo: 'personas' },
             'pintor': { categoria: 'profesiones', archivo: 'pintor' },
@@ -1031,12 +1103,16 @@
             'policias': { categoria: 'profesiones', archivo: 'policia' },
             'porque': { categoria: 'expresiones', archivo: 'porque' },
             'preguntar': { categoria: 'verbos', archivo: 'preguntar' },
+            'presentacion': { categoria: 'general', archivo: 'presentacion' },
             'presentar': { categoria: 'verbos', archivo: 'presentar' },
+            'primo': { categoria: 'familia', archivo: 'primo' },
             'profe': { categoria: 'profesiones', archivo: 'profesor' },
             'profesion': { categoria: 'profesiones', archivo: 'profesion' },
             'profesions': { categoria: 'profesiones', archivo: 'profesion' },
             'profesor': { categoria: 'profesiones', archivo: 'profesor' },
             'profesors': { categoria: 'profesiones', archivo: 'profesor' },
+            'prohibir': { categoria: 'verbos', archivo: 'prohibir' },
+            'proyecto': { categoria: 'sustantivos', archivo: 'proyecto' },
             'psicologo': { categoria: 'profesiones', archivo: 'psicologo' },
             'psicologos': { categoria: 'profesiones', archivo: 'psicologo' },
             'q': { categoria: 'alfabeto', archivo: 'q' },
@@ -1049,7 +1125,9 @@
             'rancho': { categoria: 'viviendas', archivo: 'rancho' },
             'regalar': { categoria: 'verbos', archivo: 'regalar' },
             'regular': { categoria: 'expresiones', archivo: 'regular' },
+            'respetar': { categoria: 'verbos', archivo: 'respetar' },
             'responder': { categoria: 'verbos', archivo: 'responder' },
+            'restar': { categoria: 'verbos', archivo: 'restar' },
             's': { categoria: 'alfabeto', archivo: 's' },
             'sabado': { categoria: 'dias_semana', archivo: 'sabado' },
             'sala': { categoria: 'viviendas', archivo: 'sala' },
@@ -1058,27 +1136,49 @@
             'secretaria': { categoria: 'profesiones', archivo: 'secretaria' },
             'secretarias': { categoria: 'profesiones', archivo: 'secretaria' },
             'semana': { categoria: 'tiempo', archivo: 'semana' },
+            'senas': { categoria: 'general', archivo: 'señas' },
             'sentir': { categoria: 'verbos', archivo: 'sentir' },
             'separado': { categoria: 'estado_civil', archivo: 'separado' },
             'septiembre': { categoria: 'expresiones', archivo: 'septiembre' },
             'ser': { categoria: 'verbos', archivo: 'ser' },
+            'seña': { categoria: 'general', archivo: 'sena' },
+            'señas': { categoria: 'general', archivo: 'señas' },
             'señor': { categoria: 'personas', archivo: 'señor' },
             'señorita': { categoria: 'personas', archivo: 'señorita' },
             'si': { categoria: 'expresiones', archivo: 'si' },
             'sistema': { categoria: 'profesiones', archivo: 'sistema' },
             'sistemas': { categoria: 'profesiones', archivo: 'sistema' },
+            'sobrino': { categoria: 'familia', archivo: 'sobrino' },
+            'social': { categoria: 'general', archivo: 'social' },
             'soltero': { categoria: 'estado_civil', archivo: 'soltero' },
+            'sordas': { categoria: 'personas', archivo: 'sordo' },
             'sordo': { categoria: 'personas', archivo: 'sordo' },
             'sordociego': { categoria: 'personas', archivo: 'sordociego' },
+            'sordos': { categoria: 'personas', archivo: 'sordo' },
+            'soy': { categoria: 'verbos', archivo: 'ser' },
+            'stro': { categoria: 'general', archivo: 'stro' },
+            'suegro': { categoria: 'familia', archivo: 'suegro' },
             'sufrir': { categoria: 'verbos', archivo: 'sufrir' },
+            'sumar': { categoria: 'verbos', archivo: 'sumar' },
             'supervisor': { categoria: 'profesiones', archivo: 'supervisor' },
             'supervisors': { categoria: 'profesiones', archivo: 'supervisor' },
             'suyo': { categoria: 'pronombres', archivo: 'suyo' },
             't': { categoria: 'alfabeto', archivo: 't' },
             'tecnico': { categoria: 'profesiones', archivo: 'tecnico' },
             'tecnicos': { categoria: 'profesiones', archivo: 'tecnico' },
+            'tecnologia': { categoria: 'general', archivo: 'tecnologia' },
+            'tecnologico': { categoria: 'general', archivo: 'tecnologico' },
+            'teg': { categoria: 'general', archivo: 'teg' },
+            'tener': { categoria: 'verbos', archivo: 'tener' },
+            'tengo': { categoria: 'verbos', archivo: 'tener' },
+            'tiene': { categoria: 'verbos', archivo: 'tener' },
+            'tienes': { categoria: 'verbos', archivo: 'tener' },
+            'tio': { categoria: 'familia', archivo: 'tio' },
             'todo': { categoria: 'preposiciones', archivo: 'todo' },
             'trabajar': { categoria: 'verbos', archivo: 'trabajar' },
+            'trabajo': { categoria: 'general', archivo: 'trabajo' },
+            'traduccion': { categoria: 'general', archivo: 'traduccion' },
+            'traducir': { categoria: 'verbos', archivo: 'traducir' },
             'traductor': { categoria: 'profesiones', archivo: 'traductor' },
             'traductors': { categoria: 'profesiones', archivo: 'traductor' },
             'traer': { categoria: 'verbos', archivo: 'traer' },
@@ -1089,47 +1189,35 @@
             'un minuto': { categoria: 'general', archivo: 'un minuto' },
             'un segundo': { categoria: 'general', archivo: 'un segundo' },
             'una hora': { categoria: 'general', archivo: 'una hora' },
+            'universidad': { categoria: 'lugares', archivo: 'universidad' },
             'usar': { categoria: 'verbos', archivo: 'usar' },
             'ustedes': { categoria: 'pronombres', archivo: 'ustedes' },
             'v': { categoria: 'alfabeto', archivo: 'v' },
+            'va': { categoria: 'verbos', archivo: 'ir' },
+            'vamos': { categoria: 'verbos', archivo: 'ir' },
+            'van': { categoria: 'verbos', archivo: 'ir' },
+            'vas': { categoria: 'verbos', archivo: 'ir' },
             'vendedor': { categoria: 'profesiones', archivo: 'vendedor' },
             'vendedors': { categoria: 'profesiones', archivo: 'vendedor' },
+            'venezolano': { categoria: 'general', archivo: 'venezolano' },
+            'venezuela': { categoria: 'lugares', archivo: 'venezuela' },
             'ver': { categoria: 'verbos', archivo: 'ver' },
             'verbo': { categoria: 'verbos', archivo: 'verbo' },
             'vestir': { categoria: 'verbos', archivo: 'vestir' },
+            'viajar': { categoria: 'verbos', archivo: 'viajar' },
             'viejo': { categoria: 'personas', archivo: 'viejo' },
             'viernes': { categoria: 'dias_semana', archivo: 'viernes' },
             'vigilante': { categoria: 'profesiones', archivo: 'vigilante' },
             'vigilantes': { categoria: 'profesiones', archivo: 'vigilante' },
             'viudo': { categoria: 'estado_civil', archivo: 'viudo' },
             'vivir': { categoria: 'verbos', archivo: 'vivir' },
+            'voy': { categoria: 'verbos', archivo: 'ir' },
             'w': { categoria: 'alfabeto', archivo: 'w' },
             'x': { categoria: 'alfabeto', archivo: 'x' },
             'y': { categoria: 'alfabeto', archivo: 'y' },
             'yo': { categoria: 'pronombres', archivo: 'yo' },
             'z': { categoria: 'alfabeto', archivo: 'z' },
-            'ñ': { categoria: 'alfabeto', archivo: 'ñ' },
-            'defensa': { categoria: 'general', archivo: 'defensa' },
-            'teg': { categoria: 'general', archivo: 'teg' },
-            'trabajo': { categoria: 'general', archivo: 'trabajo' },
-            'especial': { categoria: 'general', archivo: 'especial' },
-            'grado': { categoria: 'general', archivo: 'grado' },
-            'aporte': { categoria: 'general', archivo: 'aporte' },
-            'tecnologico': { categoria: 'general', archivo: 'tecnologico' },
-            'tecnologia': { categoria: 'general', archivo: 'tecnologia' },
-            'integracion': { categoria: 'general', archivo: 'integracion' },
-            'integrar': { categoria: 'verbos', archivo: 'integrar' },
-            'comunidad': { categoria: 'general', archivo: 'comunidad' },
-            'venezuela': { categoria: 'lugares', archivo: 'venezuela' },
-            'venezolano': { categoria: 'general', archivo: 'venezolano' },
-            'miembro': { categoria: 'general', archivo: 'miembro' },
-            'miembros': { categoria: 'general', archivo: 'miembro' },
-            'jurado': { categoria: 'general', archivo: 'jurado' },
-            'presentacion': { categoria: 'general', archivo: 'presentacion' },
-            'traduccion': { categoria: 'general', archivo: 'traduccion' },
-            'traducir': { categoria: 'verbos', archivo: 'traducir' },
-            'lsv': { categoria: 'general', archivo: 'lsv' },
-            'universidad': { categoria: 'lugares', archivo: 'universidad' }
+            'ñ': { categoria: 'alfabeto', archivo: 'ñ' }
         };
 
         // 🗂️ MAPEO DE CATEGORÍAS: Diccionario → Carpetas Duvall
@@ -1156,13 +1244,25 @@
             
             // Días de la semana y tiempo
             'dias_semana': 'dias_semana',
-            'tiempo': 'tiempo',                       // tiempo → tiempo (pero algunos días están en dias_semana)
+            'tiempo': 'tiempo',                       // tiempo → tiempo
             
             // Lugares
             'lugares': 'lugares',
             
-            // Medios de transporte
-            'transporte': 'medios transporte',
+            // Medios de transporte (CRÍTICO: palabras faltantes)
+            'transporte_aereo': 'medios transporte - aereo',
+            'transporte_maritimo': 'medios transporte - maritimo',
+            'transporte_terrestre': 'medios transporte - terrestre',
+            
+            // Categoría FAMILIA (antes NUEVO) - 16 palabras de familia
+            'familia': 'nuevo',
+            
+            // Tecnología - computadora, etc.
+            'tecnologia': 'horario',
+            
+            // Sustantivos y educación
+            'sustantivos': 'nuevo',
+            'educacion': 'nuevo',
             
             // Horario y palabras generales nuevas
             'general': 'horario'                      // general → horario (para palabras de tiempo)
@@ -1651,11 +1751,34 @@
 
                 const resultado = await response.json();
                 
+                // Mostrar glosa LSV
+                if (resultado.glosa_lsv) {
+                    console.log('🎯 GLOSA LSV:', resultado.glosa_lsv);
+                    logToExpo('GLOSA LSV', resultado.glosa_lsv);
+                }
+                
                 // Mostrar correcciones si las hay
                 if (resultado.correcciones && resultado.correcciones.length > 0) {
                     console.log('✏️ Correcciones aplicadas:');
                     resultado.correcciones.forEach(corr => {
                         console.log(`  "${corr.original}" → "${corr.corregida}" (${corr.tipo}, ${corr.confianza}% confianza)`);
+                    });
+                }
+                
+                // Mostrar observaciones lingüísticas
+                if (resultado.observaciones_linguisticas && resultado.observaciones_linguisticas.length > 0) {
+                    console.log('📚 OBSERVACIONES LINGÜÍSTICAS:');
+                    resultado.observaciones_linguisticas.forEach((obs, i) => {
+                        console.log(`  ${i+1}. ${obs}`);
+                    });
+                    logToExpo('Observaciones LSV', resultado.observaciones_linguisticas);
+                }
+                
+                // Mostrar alternativas si las hay
+                if (resultado.alternativas && resultado.alternativas.length > 0) {
+                    console.log('🔄 ALTERNATIVAS VÁLIDAS:');
+                    resultado.alternativas.forEach((alt, i) => {
+                        console.log(`  ${i+1}. ${alt}`);
                     });
                 }
                 
@@ -1699,6 +1822,13 @@
                     
                     console.log(`🤖 Usando ${animacionesValidas.length} animaciones del backend`);
                     console.log(`📋 Secuencia: ${animacionesValidas.map(a => a.texto).join(' → ')}`);
+                    
+                    // Actualizar status con glosa LSV si está disponible
+                    if (resultadoBackend.glosa_lsv) {
+                        document.getElementById('status').textContent = `🎯 ${resultadoBackend.glosa_lsv}`;
+                    } else {
+                        document.getElementById('status').textContent = `▶️ ${texto}`;
+                    }
                     
                     // Si el backend procesó el texto, saltamos el procesamiento local
                     if (animacionesValidas.length > 0) {

@@ -378,7 +378,7 @@
                 const isDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
                 // Para desarrollo local usa localhost:3000
                 // Para GitHub Pages cambia a tu URL de API remota cuando la tengas
-                return isDev ? 'http://localhost:3000' : '';
+                return isDev ? 'http://192.168.86.27:3000' : '';
             })(),
             // URL base para los GLB (desde GitHub Pages o servidor local)
             baseUrl: (() => {

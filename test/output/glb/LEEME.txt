@@ -1,0 +1,239 @@
+╔══════════════════════════════════════════════════════════════╗
+║                                                              ║
+║   🎭 SISTEMA DE EMOCIONES FACIALES PARA BLENDER 4.5+        ║
+║                                                              ║
+║   Scripts de Python para modelos GLB de DeepMotion          ║
+║   con ARKit Blendshapes                                     ║
+║                                                              ║
+╚══════════════════════════════════════════════════════════════╝
+
+┌──────────────────────────────────────────────────────────────┐
+│ 📁 ARCHIVOS CREADOS                                          │
+└──────────────────────────────────────────────────────────────┘
+
+  🎯 SCRIPTS PRINCIPALES:
+  
+  1. setup_facial_emotions_arkit.py      ⭐ PRINCIPAL
+     → Configura 6 controles de emociones
+     → Conecta 24 blendshapes ARKit
+     → Listo para usar
+  
+  2. inspect_arkit_shapekeys.py          🔍 INSPECTOR
+     → Analiza blendshapes disponibles
+     → Verifica compatibilidad
+     → Reporta cobertura
+  
+  3. example_animate_emotions.py         🎬 EJEMPLO
+     → Demuestra animación automática
+     → Crea secuencia de 300 frames
+     → Template para aprender
+  
+
+  📚 DOCUMENTACIÓN:
+  
+  4. README_FACIAL_SETUP.md              📖 MANUAL COMPLETO
+     → Guía paso a paso
+     → Casos de uso
+     → Troubleshooting
+  
+  5. GUIA_RAPIDA.bat                     ⚡ AYUDA RÁPIDA
+     → Muestra instrucciones
+     → Lista archivos
+     → Acceso rápido
+  
+  6. RESUMEN_SISTEMA.md                  📊 DOCUMENTACIÓN TÉCNICA
+     → Detalles de implementación
+     → Estadísticas
+     → Arquitectura
+
+
+┌──────────────────────────────────────────────────────────────┐
+│ 🚀 INICIO RÁPIDO (5 MINUTOS)                                 │
+└──────────────────────────────────────────────────────────────┘
+
+  PASO 1: Abrir Blender 4.5+
+  
+  PASO 2: Importar GLB
+          File → Import → glTF 2.0
+          Seleccionar: Remy_resultado_b.glb
+  
+  PASO 3: Scripting workspace
+          Clic en pestaña "Scripting"
+  
+  PASO 4: Cargar script
+          Text → Open
+          Seleccionar: setup_facial_emotions_arkit.py
+  
+  PASO 5: Ejecutar
+          Alt+P o "Run Script"
+  
+  PASO 6: Usar controles
+          Armature → Object Properties → Custom Properties
+          Ajustar los 6 sliders
+
+
+┌──────────────────────────────────────────────────────────────┐
+│ 🎭 CONTROLES MAESTROS CREADOS                                │
+└──────────────────────────────────────────────────────────────┘
+
+  1. EMOTION_SORPRESA     → 😮 Pregunta/Asombro
+     Controla: Cejas arriba + Ojos abiertos (5 blendshapes)
+  
+  2. EMOTION_IRA          → 😠 Enojo/Tensión
+     Controla: Cejas abajo + Boca fruncida (4 blendshapes)
+  
+  3. EMOTION_ALEGRIA      → 😊 Sonrisa/Risa
+     Controla: Sonrisa + Mejillas (3 blendshapes)
+  
+  4. EMOTION_ASCO         → 🤢 Desaprobación
+     Controla: Nariz arrugada + Labio superior (4 blendshapes)
+  
+  5. EMOTION_TRISTEZA     → 😢 Pena/Preocupación
+     Controla: Comisuras abajo + Labio inferior (4 blendshapes)
+  
+  6. BLINK_CONTROL        → 😑 Parpadeo
+     Controla: Ojos cerrados (2 blendshapes)
+  
+  Rango de cada control: 0.0 (sin efecto) a 1.0 (máximo)
+
+
+┌──────────────────────────────────────────────────────────────┐
+│ ✅ VERIFICACIÓN RÁPIDA                                       │
+└──────────────────────────────────────────────────────────────┘
+
+  Después de ejecutar el script:
+  
+  1. Seleccionar "Armature" en Outliner
+  
+  2. Object Properties → Custom Properties
+  
+  3. Mover BLINK_CONTROL a 1.0
+     ✓ Los ojos deben cerrarse
+  
+  4. Mover EMOTION_ALEGRIA a 1.0
+     ✓ Debe aparecer sonrisa
+  
+  Si ambos funcionan → ✅ Sistema configurado correctamente
+
+
+┌──────────────────────────────────────────────────────────────┐
+│ 📂 MODELOS GLB DISPONIBLES (42 archivos)                    │
+└──────────────────────────────────────────────────────────────┘
+
+  Todos los modelos en esta carpeta son compatibles:
+  
+  • Remy_resultado_[a-z].glb     (Abecedario LSV)
+  • Remy_resultado_yo.glb        (Pronombres)
+  • Remy_resultado_ustedes.glb
+  • Remy_resultado_nosotros.glb
+  • Leonard_resultado_*.glb      (Otros personajes)
+  • JH_final.glb
+  
+  Puedes aplicar el sistema a cualquiera de ellos
+
+
+┌──────────────────────────────────────────────────────────────┐
+│ 💡 EJEMPLOS DE USO                                           │
+└──────────────────────────────────────────────────────────────┘
+
+  EJEMPLO 1: Sorpresa
+  ────────────────────
+  EMOTION_SORPRESA = 1.0
+  (Resto en 0.0)
+  
+  
+  EJEMPLO 2: Sonrisa feliz
+  ────────────────────────
+  EMOTION_ALEGRIA = 0.9
+  EMOTION_SORPRESA = 0.2
+  
+  
+  EJEMPLO 3: Tristeza con enojo
+  ─────────────────────────────
+  EMOTION_TRISTEZA = 0.8
+  EMOTION_IRA = 0.3
+  
+  
+  EJEMPLO 4: Parpadeo animado
+  ───────────────────────────
+  Frame 0:  BLINK_CONTROL = 0.0
+  Frame 2:  BLINK_CONTROL = 1.0
+  Frame 4:  BLINK_CONTROL = 0.0
+
+
+┌──────────────────────────────────────────────────────────────┐
+│ 🎬 ANIMAR CON KEYFRAMES                                      │
+└──────────────────────────────────────────────────────────────┘
+
+  1. Seleccionar Armature
+  
+  2. Custom Properties → Hover sobre un slider
+  
+  3. Clic derecho → "Insert Keyframe"
+  
+  4. Mover timeline (ej: frame 30)
+  
+  5. Cambiar valor del slider
+  
+  6. Clic derecho → "Insert Keyframe" de nuevo
+  
+  7. ¡ESPACIO para reproducir!
+
+
+┌──────────────────────────────────────────────────────────────┐
+│ 📚 DOCUMENTACIÓN                                             │
+└──────────────────────────────────────────────────────────────┘
+
+  Para más información, ver:
+  
+  • README_FACIAL_SETUP.md    → Manual completo paso a paso
+  • RESUMEN_SISTEMA.md        → Detalles técnicos
+  • example_animate_emotions.py → Código de ejemplo
+
+
+┌──────────────────────────────────────────────────────────────┐
+│ 🐛 PROBLEMAS COMUNES                                         │
+└──────────────────────────────────────────────────────────────┘
+
+  Problema: "No se encontró Armature"
+  Solución: Verificar que el modelo GLB esté importado
+  
+  Problema: "No se encontró malla facial"
+  Solución: Ejecutar inspect_arkit_shapekeys.py primero
+  
+  Problema: "Los sliders no cambian la cara"
+  Solución: Verificar que estás viendo la malla en viewport
+  
+  Problema: "Shape Key XXX no encontrado"
+  Solución: Normal - el script crea drivers solo para presentes
+
+
+┌──────────────────────────────────────────────────────────────┐
+│ ✨ CARACTERÍSTICAS                                           │
+└──────────────────────────────────────────────────────────────┘
+
+  ✅ Detección automática de Armature y malla facial
+  ✅ Creación automática de 6 controles (0.0-1.0)
+  ✅ Configuración de 24 drivers ARKit
+  ✅ Mapeo 1:1 (slider → blendshape)
+  ✅ Logging detallado del proceso
+  ✅ Manejo elegante de blendshapes faltantes
+  ✅ Compatible con todos los GLB de DeepMotion
+  ✅ Animable con keyframes
+  ✅ Documentación completa incluida
+
+
+╔══════════════════════════════════════════════════════════════╗
+║                                                              ║
+║  🎉 SISTEMA LISTO PARA USAR                                 ║
+║                                                              ║
+║  Ejecuta: setup_facial_emotions_arkit.py                    ║
+║  Y empieza a animar emociones faciales en segundos          ║
+║                                                              ║
+╚══════════════════════════════════════════════════════════════╝
+
+
+Autor: Sistema LSV
+Fecha: Noviembre 2025
+Versión: 1.0
+Compatible: Blender 4.5+

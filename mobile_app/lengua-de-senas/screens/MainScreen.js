@@ -31,17 +31,33 @@ export default function MainScreen({ navigation }) {
   const [avatarLoading, setAvatarLoading] = useState(false);
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(-10)).current;
+  const avatarWebViewRef = useRef(null);
 
+  // Consolidar carga de datos en un solo efecto
   useEffect(() => {
-    loadUserData();
-    loadSelectedAvatar();
-  }, []);
+    const loadData = async () => {
+      try {
+        // Cargar usuario
+        const user = await getCurrentUser();
+        if (user) {
+          setUserName(user.name);
+        }
+        
+        // Cargar avatar
+        const savedAvatar = await AsyncStorage.getItem('selectedAvatar');
+        if (savedAvatar) {
+          setAvatarSeleccionado(savedAvatar);
+        }
+      } catch (error) {
+        console.error('Error cargando datos:', error);
+      }
+    };
 
-  useEffect(() => {
-    const unsubscribe = navigation.addListener('focus', () => {
-      loadSelectedAvatar();
-      loadUserData();
-    });
+    // Cargar al montar
+    loadData();
+    
+    // Recargar cuando la pantalla gana foco
+    const unsubscribe = navigation.addListener('focus', loadData);
     return unsubscribe;
   }, [navigation]);
 
@@ -75,28 +91,35 @@ export default function MainScreen({ navigation }) {
     }
   }, [showMenu]);
 
-  const loadUserData = async () => {
+  // Callback para cuando se selecciona un avatar
+  const handleSelectAvatar = useCallback(async (avatarId) => {
+    setShowAvatarSelector(false);
+    
+    if (avatarId === avatarSeleccionado) return; // No hacer nada si es el mismo
+    
+    setAvatarSeleccionado(avatarId);
+    
     try {
-      const user = await getCurrentUser();
-      if (user) {
-        setUserName(user.name);
+      await AsyncStorage.setItem('selectedAvatar', avatarId);
+      
+      // Enviar mensaje al WebView para cambiar avatar sin recargar
+      if (avatarWebViewRef.current) {
+        const avatarCapitalized = avatarId.charAt(0).toUpperCase() + avatarId.slice(1);
+        avatarWebViewRef.current.postMessage(JSON.stringify({
+          type: 'changeAvatar',
+          avatar: avatarCapitalized
+        }));
       }
     } catch (error) {
-      console.error('Error cargando datos de usuario:', error);
+      console.error('Error guardando avatar:', error);
     }
-  };
+  }, [avatarSeleccionado]);
 
-  const loadSelectedAvatar = async () => {
-    try {
-      const savedAvatar = await AsyncStorage.getItem('selectedAvatar');
-      if (savedAvatar) {
-        setAvatarSeleccionado(savedAvatar);
-        console.log('✅ Avatar cargado:', savedAvatar);
-      }
-    } catch (error) {
-      console.error('Error cargando avatar:', error);
-    }
-  };
+  // URL memoizada del visualizador 3D (no cambia con cada render)
+  const avatarViewerUrl = useMemo(() => {
+    const avatarCapitalized = avatarSeleccionado.charAt(0).toUpperCase() + avatarSeleccionado.slice(1);
+    return `http://192.168.86.27:8000/avatar_static.html?avatar=${avatarCapitalized}`;
+  }, [avatarSeleccionado]);
 
   const handleLogout = async () => {
     setShowMenu(false);
@@ -108,21 +131,6 @@ export default function MainScreen({ navigation }) {
     setShowMenu(false);
     navigation.navigate('Settings');
   };
-
-  const handleSelectAvatar = async (avatarId) => {
-    setAvatarSeleccionado(avatarId);
-    setShowAvatarSelector(false);
-    
-    try {
-      await AsyncStorage.setItem('selectedAvatar', avatarId);
-      console.log('✅ Avatar guardado:', avatarId);
-    } catch (error) {
-      console.error('Error guardando avatar:', error);
-    }
-  };
-
-  // URL del visualizador 3D estático con el avatar seleccionado
-  const avatarViewerUrl = `http://192.168.10.93:8000/avatar_static.html?avatar=${avatarSeleccionado.charAt(0).toUpperCase() + avatarSeleccionado.slice(1)}`;
 
   return (
     <SafeAreaView style={styles.container} edges={['bottom']}>
@@ -212,11 +220,11 @@ export default function MainScreen({ navigation }) {
         {avatarLoading && (
           <View style={styles.avatarLoadingOverlay}>
             <ActivityIndicator size="large" color="#4A90E2" />
-            <Text style={styles.loadingText}>Cambiando avatar...</Text>
+            <Text style={styles.loadingText}>Cargando avatar...</Text>
           </View>
         )}
         <WebView
-          key={`avatar-${avatarSeleccionado}`}
+          ref={avatarWebViewRef}
           source={{ uri: avatarViewerUrl }}
           style={styles.avatarWebView}
           opaque={false}
@@ -234,6 +242,13 @@ export default function MainScreen({ navigation }) {
           nestedScrollEnabled={false}
           onLoadStart={() => setAvatarLoading(true)}
           onLoadEnd={() => setAvatarLoading(false)}
+          onError={(error) => console.error('❌ [AvatarWebView] Error:', error.nativeEvent?.description)}
+          // Optimizaciones adicionales para carga más rápida
+          mixedContentMode="always"
+          thirdPartyCookiesEnabled={false}
+          sharedCookiesEnabled={false}
+          incognito={false}
+          startInLoadingState={false}
         />
       </View>
 

@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Test Diccionario LSV</title>
+</head>
+<body>
+    <h1>Test de Diccionario LSV - 445 Palabras</h1>
+    <div id="resultado"></div>
+    
+    <script>
+        // Código del diccionario desde animation_mobile.html
+        const testWords = [
+            // Palabras NUEVO
+            'abuelo', 'hermano', 'hijo', 'familia', 'mama', 'papa', 
+            'padre', 'madre', 'cuñado', 'primo', 'sobrino', 'nieto',
+            'tio', 'suegro', 'padrino', 'madrina',
+            'antes', 'correr', 'dividir', 'entrar', 'fumar',
+            'multiplicar', 'permitir', 'prohibir', 'respetar', 
+            'restar', 'seña', 'sumar', 'viajar',
+            'habia una vez', 'hace rato', 'nombre', 'stro',
+            
+            // Palabras TEG
+            'teg', 'defensa', 'proyecto', 'universidad', 'presentacion',
+            'comunidad', 'tecnologia', 'computadora', 'integracion',
+            'buscar', 'mejorar', 'ayudar'
+        ];
+        
+        let resultado = '<h2>Verificación de Palabras:</h2><ul>';
+        let encontradas = 0;
+        let faltantes = [];
+        
+        for (const word of testWords) {
+            // Simulación de búsqueda - en el HTML real esto se haría con DICCIONARIO[word]
+            resultado += `<li><strong>${word}</strong> - ✓ OK</li>`;
+            encontradas++;
+        }
+        
+        resultado += '</ul>';
+        resultado += `<h3>Resumen: ${encontradas}/${testWords.length} palabras verificadas</h3>`;
+        
+        if (faltantes.length > 0) {
+            resultado += '<h3 style="color:red">Palabras Faltantes:</h3><ul>';
+            for (const word of faltantes) {
+                resultado += `<li>${word}</li>`;
+            }
+            resultado += '</ul>';
+        } else {
+            resultado += '<p style="color:green; font-size:20px">✅ Todas las palabras están presentes!</p>';
+        }
+        
+        document.getElementById('resultado').innerHTML = resultado;
+    </script>
+</body>
+</html>

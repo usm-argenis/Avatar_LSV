@@ -380,7 +380,7 @@ export default function FallingSignsGame({ route, navigation }) {
                 <Image
                   source={letterImages[item.letter]}
                   style={styles.letterImage}
-                  resizeMode="cover"
+                  resizeMode="contain"
                 />
               )}
             </TouchableOpacity>
@@ -449,9 +449,9 @@ const styles = StyleSheet.create({
   game: { flex: 1 },
 
   bubble: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
+    width: 120,
+    height: 120,
+    borderRadius: 60,
     backgroundColor: '#CF142B',
     borderWidth: 4,
     borderColor: '#000000',
@@ -461,11 +461,9 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.6,
     shadowRadius: 10,
     elevation: 10,
-    overflow: 'hidden'
   },
   letterImage: {
-    width: 100,
-    height: 100,
-    borderRadius: 50
+    width: 110,
+    height: 110,
   }
 });

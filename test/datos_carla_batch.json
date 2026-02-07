@@ -1,6 +1,6 @@
 {
-  "carpeta_entrada": "C:/Users/andre/OneDrive/Documentos/tesis/test/output/glb/Carla/original/personas",
-  "carpeta_salida": "C:/Users/andre/OneDrive/Documentos/tesis/test/output/glb/Carla/personas",
+  "carpeta_entrada": "C:/Users/andre/Downloads/nuevo_c",
+  "carpeta_salida": "C:/Users/andre/Downloads/carla_nuevo",
   "patron": "*.glb",
   "excluir": ["*_modif.glb", "*_modificado.glb"],
   "sufijo_salida": "",

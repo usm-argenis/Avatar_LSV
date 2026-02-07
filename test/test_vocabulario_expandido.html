@@ -358,7 +358,7 @@
             document.getElementById('result').classList.remove('show');
             
             try {
-                const response = await fetch('http://localhost:5000/api/optimizar', {
+                const response = await fetch('http://192.168.86.27:5000/api/optimizar', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -420,7 +420,7 @@
                 
             } catch (error) {
                 document.getElementById('loading').classList.remove('show');
-                alert('Error al conectar con la API. Asegúrate de que el servidor esté corriendo en http://localhost:5000\n\nError: ' + error.message);
+                alert('Error al conectar con la API. Asegúrate de que el servidor esté corriendo en http://192.168.86.27:5000\n\nError: ' + error.message);
             }
         }
         
@@ -440,7 +440,7 @@
         // Cargar estadísticas al inicio
         async function cargarEstadisticas() {
             try {
-                const response = await fetch('http://localhost:5000/api/senas-disponibles');
+                const response = await fetch('http://192.168.86.27:5000/api/senas-disponibles');
                 const data = await response.json();
                 document.getElementById('totalSenas').textContent = data.total;
             } catch (error) {

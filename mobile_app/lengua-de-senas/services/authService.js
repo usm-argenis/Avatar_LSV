@@ -7,7 +7,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 // ⚠️ IMPORTANTE: Cambia según tu entorno
 
 // Para Expo Go en dispositivo físico (ambos en la misma WiFi):
-const API_URL = 'http://192.168.10.93:3000';
+const API_URL = 'http://192.168.86.27:3000';
 
 // Android Emulator: usa 'http://10.0.2.2:3000'
 // iOS Simulator: usa 'http://localhost:3000'
@@ -473,6 +473,49 @@ export const updateUserPassword = async (userId, { current_password, new_passwor
     return { 
       success: false, 
       mensaje: 'Error de conexión al actualizar contraseña' 
+    };
+  }
+};
+
+// ============================================
+// SOLICITAR RESTABLECIMIENTO DE CONTRASEÑA
+// ============================================
+export const requestPasswordReset = async (email) => {
+  try {
+    const response = await axios.post(`${API_URL}/api/forgot-password`, {
+      email
+    });
+
+    return response.data;
+  } catch (error) {
+    if (error.response) {
+      return error.response.data;
+    }
+    return { 
+      success: false, 
+      mensaje: 'Error de conexión al solicitar restablecimiento' 
+    };
+  }
+};
+
+// ============================================
+// RESTABLECER CONTRASEÑA CON TOKEN
+// ============================================
+export const resetPassword = async (token, newPassword) => {
+  try {
+    const response = await axios.post(`${API_URL}/api/reset-password`, {
+      token,
+      new_password: newPassword
+    });
+
+    return response.data;
+  } catch (error) {
+    if (error.response) {
+      return error.response.data;
+    }
+    return { 
+      success: false, 
+      mensaje: 'Error de conexión al restablecer contraseña' 
     };
   }
 };

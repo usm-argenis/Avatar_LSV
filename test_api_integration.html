@@ -50,7 +50,7 @@
 <body>
     <div class="container">
         <h1>🧪 Test de Integración con Backend API</h1>
-        <p>Prueba la conexión con el backend en <strong>http://localhost:3000</strong></p>
+        <p>Prueba la conexión con el backend en <strong>http://192.168.86.27:3000</strong></p>
         
         <div>
             <input type="text" id="textoInput" placeholder="Escribe un texto para traducir..." value="ola cmo estas traajo">
@@ -61,7 +61,7 @@
     </div>
 
     <script>
-        const BACKEND_URL = 'http://localhost:3000';
+        const BACKEND_URL = 'http://192.168.86.27:3000';
         
         async function probarAPI() {
             const texto = document.getElementById('textoInput').value;
@@ -117,7 +117,7 @@
                 
             } catch (error) {
                 resultado.innerHTML = `<span class="error">❌ Error: ${error.message}</span>\n\n`;
-                resultado.innerHTML += '<span class="info">Verifica que el backend esté corriendo en http://localhost:3000</span>';
+                resultado.innerHTML += '<span class="info">Verifica que el backend esté corriendo en http://192.168.86.27:3000</span>';
             }
         }
         

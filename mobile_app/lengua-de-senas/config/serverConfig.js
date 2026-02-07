@@ -6,10 +6,10 @@
 
 // URL del servidor HTTP que sirve los archivos GLB (puerto 8000)
 // Este servidor debe estar corriendo con: python -m http.server 8000
-export const GLB_SERVER_URL = 'http://192.168.10.93:8000/';
+export const GLB_SERVER_URL = 'http://192.168.86.27:8000/';
 
 // URL del API backend (Node.js/Express - puerto 3000)
-export const API_SERVER_URL = 'http://192.168.10.93:3000';
+export const API_SERVER_URL = 'http://192.168.86.27:3000';
 
 /**
  * Cómo encontrar tu IP local:
