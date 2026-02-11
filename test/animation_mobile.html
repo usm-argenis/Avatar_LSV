@@ -38,7 +38,7 @@
             height: 100%;
         }
 
-        /*.status {
+        .status {
             position: absolute;
             top: 15px;
             left: 15px;
@@ -50,7 +50,19 @@
             z-index: 50;
             box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
             border: 2px solid rgba(255, 255, 255, 0.2);
-        }*/
+            min-width: 120px;
+            text-align: center;
+        }
+        
+        .status.loading {
+            background: linear-gradient(135deg, rgba(245, 147, 251, 0.95) 0%, rgba(102, 126, 234, 0.95) 100%);
+            animation: pulse 2s ease-in-out infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 0.95; }
+            50% { opacity: 1; }
+        }
 
         #loading {
             position: fixed;
@@ -281,7 +293,6 @@
             <canvas id="canvas-3d"></canvas>
             
             <!-- Status -->
-            <div class="status" id="status">Cargando...</div>
             
             <!-- Botones superiores derechos -->
             <div class="top-bar">
@@ -330,7 +341,7 @@
     </script>
 
     <!-- Traductor LSV Standalone para GitHub Pages -->
-    <script src="./lsv-translator.js"></script>
+    <script src="./lsv-translator.js?v=2.4.0"></script>
 
     <script type="module">
         import * as THREE from 'three';
@@ -363,8 +374,8 @@
         let isAnimating = false;
         
         // Control de API backend
-        let useBackendAPI = true;  // ACTIVADO - Usar API con traducción conceptual LSV
-        const BACKEND_URL = 'http://192.168.86.27:5000';
+        let useBackendAPI = false;  // DESACTIVADO temporalmente - Red móvil muy lenta
+        const BACKEND_URL = 'http://10.171.95.217:5000';
         
         // Control de teclado virtual y viewport
         let initialViewportHeight = window.innerHeight;
@@ -378,6 +389,169 @@
         
         // Detección de dispositivo móvil
         const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        
+        // ================================================
+        // SISTEMA DE CACHÉ PERSISTENTE CON INDEXEDDB
+        // ================================================
+        let db = null;
+        const DB_NAME = 'LSVAnimacionesDB';
+        const DB_VERSION = 1;
+        const STORE_NAME = 'animaciones';
+        
+        // Inicializar IndexedDB al cargar
+        async function initIndexedDB() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open(DB_NAME, DB_VERSION);
+                
+                request.onerror = () => {
+                    console.warn('⚠️ IndexedDB no disponible, usando solo RAM');
+                    logToExpo('⚠️ IndexedDB no disponible');
+                    resolve(null);
+                };
+                
+                request.onsuccess = (event) => {
+                    db = event.target.result;
+                    console.log('✅ IndexedDB inicializado');
+                    logToExpo('✅ Caché persistente activa');
+                    resolve(db);
+                };
+                
+                request.onupgradeneeded = (event) => {
+                    const db = event.target.result;
+                    if (!db.objectStoreNames.contains(STORE_NAME)) {
+                        const store = db.createObjectStore(STORE_NAME, { keyPath: 'key' });
+                        store.createIndex('avatar', 'avatar', { unique: false });
+                        store.createIndex('timestamp', 'timestamp', { unique: false });
+                        console.log('✅ Base de datos creada');
+                    }
+                };
+            });
+        }
+        
+        // Guardar animación en IndexedDB
+        async function saveAnimationToDB(key, clipData, avatar) {
+            if (!db) return;
+            
+            try {
+                const transaction = db.transaction([STORE_NAME], 'readwrite');
+                const store = transaction.objectStore(STORE_NAME);
+                
+                const data = {
+                    key: key,
+                    avatar: avatar,
+                    clipData: clipData,
+                    timestamp: Date.now()
+                };
+                
+                await store.put(data);
+                console.log(`💾 Guardado en DB: ${key}`);
+            } catch (error) {
+                console.warn('⚠️ Error guardando en DB:', error);
+            }
+        }
+        
+        // Eliminar entrada específica de IndexedDB (para forzar recarga)
+        async function deleteAnimationFromDB(key) {
+            if (!db) return;
+            
+            return new Promise((resolve) => {
+                try {
+                    const transaction = db.transaction([STORE_NAME], 'readwrite');
+                    const store = transaction.objectStore(STORE_NAME);
+                    const request = store.delete(key);
+                    
+                    request.onsuccess = () => {
+                        console.log(`🗑️ Cache eliminado: ${key}`);
+                        resolve(true);
+                    };
+                    
+                    request.onerror = () => resolve(false);
+                } catch (error) {
+                    console.warn('⚠️ Error eliminando cache:', error);
+                    resolve(false);
+                }
+            });
+        }
+        
+        // Cargar animación desde IndexedDB
+        async function loadAnimationFromDB(key) {
+            if (!db) return null;
+            
+            return new Promise((resolve) => {
+                try {
+                    const transaction = db.transaction([STORE_NAME], 'readonly');
+                    const store = transaction.objectStore(STORE_NAME);
+                    const request = store.get(key);
+                    
+                    request.onsuccess = () => {
+                        if (request.result) {
+                            console.log(`📂 Cargado desde DB: ${key}`);
+                            resolve(request.result.clipData);
+                        } else {
+                            resolve(null);
+                        }
+                    };
+                    
+                    request.onerror = () => resolve(null);
+                } catch (error) {
+                    console.warn('⚠️ Error cargando desde DB:', error);
+                    resolve(null);
+                }
+            });
+        }
+        
+        // Serializar AnimationClip para IndexedDB
+        function serializeAnimationClip(clip) {
+            return {
+                name: clip.name,
+                duration: clip.duration,
+                tracks: clip.tracks.map(track => ({
+                    name: track.name,
+                    times: Array.from(track.times),
+                    values: Array.from(track.values),
+                    type: track.constructor.name
+                }))
+            };
+        }
+        
+        // Deserializar AnimationClip desde IndexedDB
+        function deserializeAnimationClip(data) {
+            const tracks = data.tracks.map(trackData => {
+                let TrackConstructor;
+                switch (trackData.type) {
+                    case 'VectorKeyframeTrack':
+                        TrackConstructor = THREE.VectorKeyframeTrack;
+                        break;
+                    case 'QuaternionKeyframeTrack':
+                        TrackConstructor = THREE.QuaternionKeyframeTrack;
+                        break;
+                    case 'NumberKeyframeTrack':
+                        TrackConstructor = THREE.NumberKeyframeTrack;
+                        break;
+                    default:
+                        TrackConstructor = THREE.KeyframeTrack;
+                }
+                return new TrackConstructor(
+                    trackData.name,
+                    new Float32Array(trackData.times),
+                    new Float32Array(trackData.values)
+                );
+            });
+            
+            return new THREE.AnimationClip(data.name, data.duration, tracks);
+        }
+        
+        // ================================================
+        // UTILIDADES
+        // ================================================
+        
+        // Actualizar indicador visual de estado
+        function updateStatus(mensaje, loading = false) {
+            // Función placeholder para evitar errores
+            // Puede implementarse con un elemento de status si se necesita UI
+            console.log(`📊 Estado: ${mensaje}`);
+        }
+        
         
         /**
          * Normaliza texto español: quita tildes pero MANTIENE ñ
@@ -408,10 +582,11 @@
                 .replace(/\x01/g, 'ñ')
                 .replace(/\x02/g, 'Ñ');
         }
-        const MAX_CACHE_SIZE = isMobile ? 15 : 50; // Menos caché en móvil
-        const PRELOAD_COUNT = isMobile ? 3 : 10; // Menos precarga en móvil
-        const LOAD_DELAY = isMobile ? 300 : 100; // Mayor delay entre cargas en móvil
-        const LOOKAHEAD = isMobile ? 2 : 3; // Cuantas animaciones precargar por adelantado
+        const MAX_CACHE_SIZE = isMobile ? 25 : 50; // Aumentado para móvil
+        const PRELOAD_COUNT = isMobile ? 5 : 10; // Aumentado para móvil
+        const LOAD_DELAY = isMobile ? 200 : 100; // Reducido para móvil
+        const LOOKAHEAD = isMobile ? 4 : 5; // Aumentado: precargar más por adelantado
+        const GLB_LOAD_TIMEOUT = isMobile ? 15000 : 20000; // Timeout para carga de GLB (15s móvil, 20s desktop)
         
         // Sistema de precarga anticipada
         let currentSequence = [];
@@ -425,14 +600,16 @@
         const PALABRAS_OMITIDAS = new Set([
             // Artículos definidos
             'el', 'la', 'los', 'las',
-            // Artículos indefinidos
-            'un', 'una', 'unos', 'unas',
+            // Artículos indefinidos (solo plural, 'un' se traduce como 1)
+            'una', 'unos', 'unas',
             // Preposiciones que no existen en LSV
-            'de', 'del', 'al',
+            'de', 'del', 'al', 'a', 'ante', 'bajo', 'con', 'contra', 'desde', 'durante', 'en', 'entre', 'hacia', 'hasta', 'para', 'por', 'segun', 'sin', 'sobre', 'tras',
             // Conectores que se omiten
-            'y', 'e', 'o', 'u',
+            'y', 'e', 'o', 'u', 'ni',
             // Pronombres que se omiten en ciertos contextos
             'se', 'me', 'te', 'le', 'les', 'nos',
+            // Demostrativos que se omiten
+            'esta', 'este', 'ese', 'esa', 'aquel', 'aquella', 'estos', 'estas', 'esos', 'esas', 'aquellos', 'aquellas',
             // Signos de interrogación (se procesarán aparte)
         ]);
         
@@ -722,7 +899,7 @@
                 return palabraLower; // Retornar el número como está, se procesará después
             }
             
-            // 1. Verificar si es una palabra que se omite en LSV
+            // 1. Verificar si es una palabra que se omite en LSV (artículos, preposiciones, etc.)
             if (PALABRAS_OMITIDAS.has(palabraLower)) {
                 return null; // null indica que se debe omitir
             }
@@ -804,7 +981,7 @@
         
         // Diccionario de mapeo
                                 const DICCIONARIO = {
-            // 📌 Generado automáticamente desde backend/scripts/data.json (357 palabras)
+            // 📌 Generado automáticamente desde backend/scripts/data.json (413 palabras totales, 33 en carpeta nuevo)
             '0': { categoria: 'numero', archivo: '0' },
             '1': { categoria: 'numero', archivo: '1' },
             '10': { categoria: 'numero', archivo: '10' },
@@ -1141,30 +1318,99 @@
             'yo': { categoria: 'pronombres', archivo: 'yo' },
             'z': { categoria: 'alfabeto', archivo: 'z' },
             'ñ': { categoria: 'alfabeto', archivo: 'ñ' },
-            'defensa': { categoria: 'general', archivo: 'defensa' },
-            'teg': { categoria: 'general', archivo: 'teg' },
+            'defensa': { categoria: 'frase', archivo: 'defensa' },
             'trabajo': { categoria: 'general', archivo: 'trabajo' },
             'especial': { categoria: 'general', archivo: 'especial' },
             'grado': { categoria: 'general', archivo: 'grado' },
-            'aporte': { categoria: 'general', archivo: 'aporte' },
-            'tecnologico': { categoria: 'general', archivo: 'tecnologico' },
-            'tecnologia': { categoria: 'general', archivo: 'tecnologia' },
-            'integracion': { categoria: 'general', archivo: 'integracion' },
-            'integrar': { categoria: 'verbos', archivo: 'integrar' },
-            'comunidad': { categoria: 'general', archivo: 'comunidad' },
-            'venezuela': { categoria: 'lugares', archivo: 'venezuela' },
+            'aporte': { categoria: 'frase', archivo: 'aportar' },
+            'tecnologico': { categoria: 'frase', archivo: 'computadora' },
+            'tecnologia': { categoria: 'frase', archivo: 'computadora' },
+            'integracion': { categoria: 'frase', archivo: 'integrar' },
+            'comunidad': { categoria: 'personas', archivo: 'personas' },
+            'un': { categoria: 'numero', archivo: '1' },
+            'integrar': { categoria: 'frase', archivo: 'integrar' },
+            'venezuela': { categoria: 'frase', archivo: 'venezuela' },
             'venezolano': { categoria: 'general', archivo: 'venezolano' },
-            'miembro': { categoria: 'general', archivo: 'miembro' },
-            'miembros': { categoria: 'general', archivo: 'miembro' },
-            'jurado': { categoria: 'general', archivo: 'jurado' },
-            'presentacion': { categoria: 'general', archivo: 'presentacion' },
-            'traduccion': { categoria: 'general', archivo: 'traduccion' },
+            'miembro': { categoria: 'frase', archivo: 'miembros' },
+            'miembros': { categoria: 'frase', archivo: 'miembros' },
+            'jurado': { categoria: 'profesion', archivo: 'abogado' },
+            'presentacion': { categoria: 'frase', archivo: 'nuevo' },
+            'traduccion': { categoria: 'frase', archivo: 'traduccion' },
             'traducir': { categoria: 'verbos', archivo: 'traducir' },
-            'lsv': { categoria: 'general', archivo: 'lsv' },
-            'universidad': { categoria: 'lugares', archivo: 'universidad' }
+            'universidad': { categoria: 'frase', archivo: 'universidad' },
+            // 📌 Nuevas palabras de carpeta frase (Duvall)
+            'entender': { categoria: 'frase', archivo: 'entender' },
+            'computadora': { categoria: 'frase', archivo: 'computadora' },
+            'dar': { categoria: 'frase', archivo: 'dar' },
+            'mejorar': { categoria: 'frase', archivo: 'mejorar' },
+            'poder': { categoria: 'frase', archivo: 'poder' },
+            'aprender': { categoria: 'frase', archivo: 'aprender' },
+            'aportar': { categoria: 'frase', archivo: 'aportar' },
+            'nuevo': { categoria: 'frase', archivo: 'nuevo' },
+            'nueva': { categoria: 'frase', archivo: 'nuevo' },
+            // 📌 Sinónimos y mapeos a glosa LSV
+            'ahora': { categoria: 'tiempo', archivo: 'hoy' },
+            'podemos': { categoria: 'frase', archivo: 'poder' },
+            'entendernos': { categoria: 'frase', archivo: 'aprender' },
+            'mejor': { categoria: 'frase', archivo: 'mejorar' },
+            'bienvenidos': { categoria: 'saludos', archivo: 'bienvenido' },
+            'sorda': { categoria: 'personas', archivo: 'sordo' },
+            'venezolana': { categoria: 'frase', archivo: 'venezuela' },
+            // 📌 Palabras de carpeta NUEVO (familia, verbos, operaciones)
+            'abuelo': { categoria: 'nuevo', archivo: 'abuelo' },
+            'antes': { categoria: 'nuevo', archivo: 'antes' },
+            'correr': { categoria: 'nuevo', archivo: 'correr' },
+            'cunado': { categoria: 'nuevo', archivo: 'cunado' },
+            'cuñado': { categoria: 'nuevo', archivo: 'cunado' },
+            'dividir': { categoria: 'nuevo', archivo: 'dividir' },
+            'entrar': { categoria: 'nuevo', archivo: 'entrar' },
+            'familia': { categoria: 'nuevo', archivo: 'familia' },
+            'fumar': { categoria: 'nuevo', archivo: 'fumar' },
+            'habia una vez': { categoria: 'nuevo', archivo: 'habia una vez' },
+            'había una vez': { categoria: 'nuevo', archivo: 'habia una vez' },
+            'hace rato': { categoria: 'nuevo', archivo: 'hace rato' },
+            'hermano': { categoria: 'nuevo', archivo: 'hermano' },
+            'hijo': { categoria: 'nuevo', archivo: 'hijo' },
+            'madre': { categoria: 'nuevo', archivo: 'madre' },
+            'mama': { categoria: 'nuevo', archivo: 'mama' },
+            'mamá': { categoria: 'nuevo', archivo: 'mama' },
+            'multiplicar': { categoria: 'nuevo', archivo: 'multiplicar' },
+            'nieto': { categoria: 'nuevo', archivo: 'nieto' },
+            'nombre': { categoria: 'nuevo', archivo: 'nombre' },
+            'padre': { categoria: 'nuevo', archivo: 'padre' },
+            'padrino': { categoria: 'nuevo', archivo: 'padrino' },
+            'madrina': { categoria: 'nuevo', archivo: 'madrina' },
+            'papa': { categoria: 'nuevo', archivo: 'papa' },
+            'papá': { categoria: 'nuevo', archivo: 'papa' },
+            'permitir': { categoria: 'nuevo', archivo: 'permitir' },
+            'primo': { categoria: 'nuevo', archivo: 'primo' },
+            'prohibir': { categoria: 'nuevo', archivo: 'prohibir' },
+            'respetar': { categoria: 'nuevo', archivo: 'respetar' },
+            'restar': { categoria: 'nuevo', archivo: 'restar' },
+            'sena': { categoria: 'nuevo', archivo: 'sena' },
+            'seña': { categoria: 'nuevo', archivo: 'sena' },
+            'señas': { categoria: 'nuevo', archivo: 'sena' },
+            'sobrino': { categoria: 'nuevo', archivo: 'sobrino' },
+            'stro': { categoria: 'nuevo', archivo: 'stro' },
+            'nuestro': { categoria: 'nuevo', archivo: 'stro' },
+            'suegro': { categoria: 'nuevo', archivo: 'suegro' },
+            'sumar': { categoria: 'nuevo', archivo: 'sumar' },
+            'tio': { categoria: 'nuevo', archivo: 'tio' },
+            'tío': { categoria: 'nuevo', archivo: 'tio' },
+            'viajar': { categoria: 'nuevo', archivo: 'viajar' }
         };
 
-        // 🗂️ MAPEO DE CATEGORÍAS: Diccionario → Carpetas Duvall
+        // � PALABRAS FUNCIONALES OMITIDAS (artículos, preposiciones, etc. que no se usan en LSV)
+        const PALABRAS_OMITIR_DUPLICADO = new Set([
+            'el', 'la', 'los', 'las', 'un', 'una', 'unos', 'unas',
+            'a', 'ante', 'bajo', 'con', 'contra', 'desde', 'durante', 'en', 'entre', 'hacia', 'hasta', 'para', 'por', 'segun', 'sin', 'sobre', 'tras',
+            'al', 'del',
+            'y', 'e', 'o', 'u', 'ni',
+            'esta', 'este', 'ese', 'esa', 'aquel', 'aquella',
+            'estos', 'estas', 'esos', 'esas', 'aquellos', 'aquellas'
+        ]);
+
+        // �🗂️ MAPEO DE CATEGORÍAS: Diccionario → Carpetas Duvall
         // Las categorías en el diccionario no siempre coinciden con los nombres de carpetas
         const MAPEO_CATEGORIAS = {
             // Categorías con una sola carpeta
@@ -1176,15 +1422,19 @@
             'personas': ['personas'],
             'pronombres': ['pronombres'],
             'ordinales': ['numeros ordinales'],
+            'profesion': ['profesion'],           // Categoría singular
             'profesiones': ['profesion'],
             'adverbios': ['adverbios lugares'],
             'lugares': ['adverbios lugares'],
             'viviendas': ['tipos de vivienda'],
             'estado_civil': ['estado civil'],
             'interrogantes': ['preguntas'],
+            'preguntas': ['preguntas'],
             'preposiciones': ['preposicion'],
             'dias_semana': ['dias_semana'],
             'transporte': ['medios transporte'],
+            'frase': ['frase'],                   // Palabras completas de carpeta frase
+            'nuevo': ['nuevo'],                   // Carpeta nuevo: familia, verbos, operaciones
             
             // Categorías con archivos en MÚLTIPLES carpetas
             'verbos': ['verbos', 'nuevo'],        // Mayoría en verbos, algunos en nuevo
@@ -1206,16 +1456,41 @@
 
         // Función helper para cargar GLB intentando múltiples carpetas
         async function cargarGLBDesdeCarpetas(loader, categoria, archivo, avatarActual) {
+            // LÓGICA UNIFICADA: Usar sistema de fallback inteligente
+            // Si Carla no tiene un archivo, Duvall SIEMPRE funciona como respaldo
+            
             const carpetas = obtenerCarpetas(categoria);
             let ultimoError = null;
             
-            // Intentar cargar de cada carpeta posible
-            for (const carpetaCategoria of carpetas) {
-                const rutaCompleta = `output/glb/${avatarActual}/${carpetaCategoria}/${avatarActual}_resultado_${archivo}.glb`;
+            console.log(`🔍 cargarGLBDesdeCarpetas: avatar="${avatarActual}", categoria="${categoria}", archivo="${archivo}"`);
+            logToExpo(`🔍 Buscando GLB`, { avatar: avatarActual, categoria, archivo, carpetas: carpetas.join(',') });
+            
+            // ⭐ FALLBACK INTELIGENTE PARA FRASE: SIEMPRE usar Duvall como respaldo (funciona perfectamente)
+            // Orden de búsqueda: [AvatarActual, Duvall, Luis]
+            // Duvall tiene la biblioteca más completa y confiable de animaciones
+            const avataresFrase = ['Carla', 'Duvall', 'Luis'];
+            let avatarsToTry = [avatarActual];
+            
+            if (categoria === 'frase') {
+                // Para TODAS las palabras de frase, hacer fallback a Duvall si avatar actual falla
+                avatarsToTry = [avatarActual, 'Duvall', 'Luis'];
+                console.log(`✨ Categoría FRASE: Fallback automático a Duvall → Luis`);
+                logToExpo(`✨ Fallback: ${avatarActual} → Duvall → Luis`);
+            }
+            
+            // Intentar cargar de cada avatar posible
+            for (const avatarPrueba of avatarsToTry) {
+                // Intentar cargar de cada carpeta posible
+                for (const carpetaCategoria of carpetas) {
+                    const timestamp = Date.now(); // Evitar cache del navegador
+                    const rutaCompleta = `output/glb/${avatarPrueba}/${carpetaCategoria}/${avatarPrueba}_resultado_${archivo}.glb?t=${timestamp}`;
+                    
+                    console.log(`🌐 Intentando cargar: ${rutaCompleta}`);
+                    logToExpo(`🌐 URL: ${rutaCompleta}`);
                 
                 try {
                     const gltf = await new Promise((resolve, reject) => {
-                        const timeoutId = setTimeout(() => reject(new Error('Timeout')), 5000);
+                        const timeoutId = setTimeout(() => reject(new Error('Timeout')), GLB_LOAD_TIMEOUT);
                         loader.load(
                             rutaCompleta,
                             (result) => { clearTimeout(timeoutId); resolve(result); },
@@ -1225,14 +1500,18 @@
                     });
                     
                     // Si llegamos aquí, la carga fue exitosa
-                    console.log(`✅ GLB cargado desde: ${carpetaCategoria}`);
+                    console.log(`✅ GLB cargado desde: ${carpetaCategoria} (avatar: ${avatarPrueba})`);
+                    logToExpo(`✅ Carga exitosa: ${carpetaCategoria}/${avatarPrueba}`);
                     return { gltf, rutaCompleta };
                     
                 } catch (error) {
+                    console.error(`❌ Fallo en ${avatarPrueba}/${carpetaCategoria}:`, error.message);
+                    logToExpo(`❌ Fallo: ${avatarPrueba}/${carpetaCategoria} - ${error.message}`);
                     ultimoError = error;
-                    // Continuar con la siguiente carpeta
+                    // Continuar con la siguiente carpeta/avatar
                 }
             }
+        }
             
             // Si llegamos aquí, ninguna carpeta funcionó
             throw ultimoError || new Error(`No se encontró GLB en ninguna carpeta: ${carpetas.join(', ')}`);
@@ -1247,31 +1526,72 @@
         };
 
         async function init() {
-            setupScene();
-            setupControls();
-            
-            // Crear instancia única de loader para reutilizar
-            loaderInstance = new GLTFLoader();
-            
             // Obtener parámetros desde URL
             const params = new URLSearchParams(window.location.search);
             const avatarParam = params.get('avatar') || 'Nancy';
             const textoParam = params.get('text') || '';
             
-            await cargarAvatar(avatarParam);
-            
-            // Precargar animaciones comunes en background
-            precargarAnimacionesComunes();
-            
-            // Si hay texto en URL, animarlo automáticamente
-            if (textoParam) {
-                document.getElementById('textInput').value = textoParam;
-                setTimeout(() => {
-                    traducirYAnimar(textoParam);
-                }, 500);
+            // ⚡⚡⚡ CARGA INSTANTÁNEA: Ocultar loading INMEDIATAMENTE
+            const loadingDiv = document.getElementById('loading');
+            if (loadingDiv) {
+                loadingDiv.classList.add('hidden');
             }
             
-            animate();
+            // ⚡⚡⚡ NOTIFICAR INSTANTÁNEAMENTE que está listo (0ms)
+            if (window.ReactNativeWebView) {
+                window.ReactNativeWebView.postMessage(JSON.stringify({
+                    type: 'pageReady',
+                    message: 'Traductor listo',
+                    avatar: avatarParam
+                }));
+                console.log('⚡ Notificado INMEDIATAMENTE - carga instantánea');
+            }
+            
+            // Todo lo demás se carga después en segundo plano
+            setTimeout(async () => {
+                setupScene();
+                setupControls();
+                
+                // Crear instancia única de loader
+                loaderInstance = new GLTFLoader();
+                
+                // Iniciar loop de animación
+                animate();
+                
+                // Inicializar IndexedDB en segundo plano
+                initIndexedDB().catch(err => console.warn('IndexedDB init error:', err));
+                
+                // Cargar avatar en segundo plano
+                cargarAvatar(avatarParam).then(() => {
+                    console.log('✅ Avatar cargado completamente');
+                    
+                    if (window.ReactNativeWebView) {
+                        window.ReactNativeWebView.postMessage(JSON.stringify({
+                            type: 'avatarReady',
+                            message: 'Avatar cargado',
+                            avatar: avatarParam
+                        }));
+                    }
+                }).catch(error => {
+                    console.error('❌ Error cargando avatar:', error);
+                });
+                
+                // OPTIMIZACIÓN MÓVIL: lazy loading
+                if (!isMobile) {
+                    precargarAnimacionesComunes();
+                } else {
+                    console.log('📱 Modo móvil: lazy loading activado');
+                    logToExpo('📱 Lazy loading activo');
+                }
+                
+                // Si hay texto en URL, animarlo
+                if (textoParam) {
+                    document.getElementById('textInput').value = textoParam;
+                    setTimeout(() => {
+                        traducirYAnimar(textoParam);
+                    }, 1500);
+                }
+            }, 10); // Micro delay de 10ms para permitir que la notificación llegue primero
         }
 
         function setupControls() {
@@ -1284,8 +1604,15 @@
             // Botón Animar
             animateBtn.addEventListener('click', () => {
                 const texto = textInput.value.trim();
+                console.log('🔘 Botón ANIMAR clickeado', { texto, isAnimating });
+                logToExpo('🔘 Botón ANIMAR presionado', { texto, isAnimating });
+                
                 if (texto && !isAnimating) {
+                    console.log('✅ Iniciando traducción y animación...');
                     traducirYAnimar(texto);
+                } else {
+                    console.log('⚠️ No se puede animar:', { razon: !texto ? 'Texto vacío' : 'Ya animando' });
+                    logToExpo('⚠️ Animación bloqueada', { razon: !texto ? 'Texto vacío' : 'Ya animando' });
                 }
             });
 
@@ -1293,8 +1620,15 @@
             textInput.addEventListener('keypress', (e) => {
                 if (e.key === 'Enter') {
                     const texto = textInput.value.trim();
+                    console.log('⌨️ Enter presionado', { texto, isAnimating });
+                    logToExpo('⌨️ Enter en input', { texto, isAnimating });
+                    
                     if (texto && !isAnimating) {
+                        console.log('✅ Iniciando traducción y animación...');
                         traducirYAnimar(texto);
+                    } else {
+                        console.log('⚠️ No se puede animar:', { razon: !texto ? 'Texto vacío' : 'Ya animando' });
+                        logToExpo('⚠️ Animación bloqueada', { razon: !texto ? 'Texto vacío' : 'Ya animando' });
                     }
                 }
             });
@@ -1310,13 +1644,13 @@
                     pauseBtn.classList.add('paused');
                     document.getElementById('pauseIcon').textContent = '▶️';
                     document.getElementById('pauseText').textContent = 'Reanudar';
-                    document.getElementById('status').textContent = '⏸️ Pausado';
+                    updateStatus('⏸️ Pausado', false);
                 } else {
                     currentAction.paused = false;
                     pauseBtn.classList.remove('paused');
                     document.getElementById('pauseIcon').textContent = '⏸️';
                     document.getElementById('pauseText').textContent = 'Pausar';
-                    document.getElementById('status').textContent = `▶️ ${ultimoTexto}`;
+                    updateStatus(`▶️ ${ultimoTexto}`, false);
                 }
             });
 
@@ -1404,16 +1738,32 @@
             );
             camera.position.set(INITIAL_CAMERA_POSITION.x, INITIAL_CAMERA_POSITION.y, INITIAL_CAMERA_POSITION.z);
             
+            // Renderer con CALIDAD MÁXIMA + RENDIMIENTO ÓPTIMO
+            const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+            
             renderer = new THREE.WebGLRenderer({ 
                 canvas: canvas,
-                antialias: true,
+                antialias: true, // ✨ SIEMPRE activado - bordes suaves y alta calidad
                 alpha: true
             });
             renderer.setSize(container.clientWidth, container.clientHeight);
-            renderer.setPixelRatio(window.devicePixelRatio);
+            
+            // ⚡ BALANCE PERFECTO: Limitar pixelRatio a 2.0 máximo
+            // Pantallas 1x: usa 1.0 | Pantallas 2x: usa 2.0 | Pantallas 3x/4x: usa 2.0
+            // Ahorra 50% rendimiento en pantallas ultra-densas SIN pérdida visual
+            const pixelRatio = Math.min(window.devicePixelRatio, 2.0);
+            renderer.setPixelRatio(pixelRatio);
+            
             renderer.outputColorSpace = THREE.SRGBColorSpace;
+            
+            // ✨ BRILLO Y CALIDAD: Tone mapping SIEMPRE activado
             renderer.toneMapping = THREE.ACESFilmicToneMapping;
             renderer.toneMappingExposure = 1.2;
+            
+            console.log('✅ Renderer: CALIDAD ALTA + RENDIMIENTO EXCELENTE');
+            console.log(`📱 Dispositivo: ${isMobile ? 'Móvil' : 'Escritorio'}`);
+            console.log(`🎨 PixelRatio: ${pixelRatio.toFixed(2)} (dispositivo: ${window.devicePixelRatio})`);
+            console.log(`✨ Antialias: ACTIVADO | Tone Mapping: ACTIVADO`);
             
             controls = new OrbitControls(camera, canvas);
             controls.target.set(INITIAL_CAMERA_TARGET.x, INITIAL_CAMERA_TARGET.y, INITIAL_CAMERA_TARGET.z);
@@ -1675,7 +2025,7 @@
             
             // Si no se pudo cargar desde ninguna ruta
             console.error(`❌ No se pudo cargar ${nombreAvatar} desde ninguna ubicación`);
-            document.getElementById('status').textContent = `❌ Error al cargar ${nombreAvatar}`;
+            updateStatus(`❌ Error: ${nombreAvatar}`, false);
             loadingDiv.classList.add('hidden');
             throw new Error(`No se pudo cargar ${nombreAvatar}`);
         }
@@ -1684,6 +2034,16 @@
         async function traducirConBackend(texto) {
             try {
                 console.log('🌐 Llamando a backend API...');
+                logToExpo('📞 Iniciando petición al backend', { texto, backend: BACKEND_URL });
+                
+                // Crear controlador de abort con timeout de 10 segundos (aumentado para mobile)
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => {
+                    console.log('⏱️ Timeout de backend alcanzado (10s)');
+                    logToExpo('⏱️ Timeout del backend después de 10s');
+                    controller.abort();
+                }, 10000);
+                
                 const response = await fetch(`${BACKEND_URL}/api/translate`, {
                     method: 'POST',
                     headers: {
@@ -1695,14 +2055,22 @@
                         deletrear_desconocidas: true,
                         corregir_ortografia: true,
                         velocidad_deletreo: 1.2
-                    })
+                    }),
+                    signal: controller.signal
                 });
+                
+                clearTimeout(timeoutId);
 
                 if (!response.ok) {
                     throw new Error(`Error HTTP: ${response.status}`);
                 }
 
                 const resultado = await response.json();
+                
+                logToExpo('✅ Backend respondió exitosamente', { 
+                    total: resultado.total_animaciones,
+                    glosa: resultado.glosa_lsv 
+                });
                 
                 // Mostrar correcciones si las hay
                 if (resultado.correcciones && resultado.correcciones.length > 0) {
@@ -1718,18 +2086,39 @@
                 return resultado;
                 
             } catch (error) {
-                console.error('❌ Error conectando con backend:', error);
+                if (error.name === 'AbortError') {
+                    console.error('⏱️ Timeout: El backend no respondió en 10 segundos');
+                    logToExpo('⏱️ Timeout: Backend no respondió', { timeout: '10s' });
+                } else {
+                    console.error('❌ Error conectando con backend:', error.message);
+                    logToExpo('❌ Error del backend', { error: error.message });
+                }
                 console.log('🔄 Usando modo local como fallback');
                 return null; // Indica que debe usar modo local
             }
         }
 
         async function traducirYAnimar(texto) {
-            if (isAnimating) return;
+            // ✅ NORMALIZAR TEXTO AL INICIO para que "día" → "dia", "José" → "jose", etc.
+            texto = normalizarTextoEspanol(texto);
+            
+            // ✅ LIMPIAR PUNTUACIÓN (¿?¡!,.;:-())
+            texto = texto.replace(/[¿?¡!,.:;()\-\"\']/g, ' ').replace(/\s+/g, ' ').trim();
+            
+            console.log('🎬 traducirYAnimar() llamada', { texto, isAnimating });
+            logToExpo('🎬 Función traducirYAnimar iniciada', { texto, isAnimating });
+            
+            if (isAnimating) {
+                console.log('⚠️ Ya hay una animación en curso, retornando');
+                logToExpo('⚠️ Animación bloqueada: ya hay una en curso');
+                return;
+            }
             
             isAnimating = true;
             ultimoTexto = texto;
             isPaused = false;
+            
+            console.log('✅ Estado actualizado', { isAnimating: true, texto });
             
             // Habilitar controles
             document.getElementById('pauseBtn').disabled = false;
@@ -1743,6 +2132,12 @@
                 const resultadoBackend = await traducirConBackend(texto);
                 
                 if (resultadoBackend && resultadoBackend.animaciones) {
+                    console.log('🎯 Backend respondió con animaciones');
+                    logToExpo('🎯 Usando animaciones del backend', { 
+                        cantidad: resultadoBackend.animaciones.length,
+                        nombres: resultadoBackend.animaciones.map(a => a.nombre).join(', ')
+                    });
+                    
                     // El backend YA devuelve las frases combinadas correctamente
                     // Los nombres YA vienen normalizados (sin tildes pero con ñ) - NO normalizar de nuevo
                     animacionesValidas = resultadoBackend.animaciones.map(anim => ({
@@ -1766,24 +2161,37 @@
                 }
                 // Si falló el backend, continuar con modo local
                 console.log('⚡ Procesando localmente...');
+                logToExpo('⚡ Backend falló, usando traductor local', { motivo: !resultadoBackend ? 'Sin respuesta' : 'Sin animaciones' });
             } else {
                 // Usar traductor LSV local (GitHub Pages)
                 console.log('📚 Usando traductor LSV local...');
+                logToExpo('📚 Iniciando traductor LSV local', { texto, lsvDisponible: typeof window.LSV_TRANSLATOR !== 'undefined' });
                 
                 if (typeof window.LSV_TRANSLATOR !== 'undefined') {
+                    console.log('✅ LSV_TRANSLATOR disponible, llamando translate()...');
+                    logToExpo('✅ LSV_TRANSLATOR detectado');
+                    
                     const resultado = window.LSV_TRANSLATOR.translate(texto, {
                         deletrearDesconocidas: true,
                         velocidadDeletreo: 1.2
                     });
                     
+                    console.log('🔍 Resultado de translate:', resultado);
+                    logToExpo('🔍 Resultado LSV', { 
+                        animaciones: resultado.animaciones.length,
+                        deletreadas: resultado.palabrasDeletreadas.length
+                    });
+                    
                     if (resultado.palabrasDeletreadas.length > 0) {
                         console.log(`✏️ Palabras deletreadas: ${resultado.palabrasDeletreadas.join(', ')}`);
+                        logToExpo(`✏️ Palabras deletreadas: ${resultado.palabrasDeletreadas.join(', ')}`);
                     }
                     
                     animacionesValidas = resultado.animaciones.map(anim => ({
-                        texto: anim.nombre,
-                        // Usar nombre directamente (traductor LSV ya normaliza correctamente)
-                        palabra: anim.nombre.toLowerCase()
+                        texto: anim.archivo,  // Usar archivo (el mapeado: poder, aprender, etc.)
+                        palabra: anim.archivo.toLowerCase(),
+                        categoria: anim.categoria,  // ✅ AGREGAR categoria
+                        archivo: anim.archivo       // ✅ AGREGAR archivo
                     }));
                     
                     console.log(`🎯 LSV: ${resultado.totalAnimaciones} animaciones generadas`);
@@ -1795,10 +2203,13 @@
                     }
                 } else {
                     console.error('❌ Traductor LSV no disponible');
+                    logToExpo('❌ LSV_TRANSLATOR no está definido - usando fallback');
                 }
             }
             
             // Modo local antiguo (fallback si LSV falló)
+            console.log('🔄 Cayó en modo fallback - procesamiento palabra por palabra');
+            logToExpo('🔄 Modo fallback activado', { razon: typeof window.LSV_TRANSLATOR === 'undefined' ? 'LSV no disponible' : 'Sin animaciones de LSV' });
             const palabras = texto.toLowerCase().trim().split(/\s+/);
             
             let i = 0;
@@ -1928,15 +2339,20 @@
             currentSequence = animacionesValidas;
             currentIndex = 0;
             
-            // Precargar las primeras animaciones
+            // Precargar las primeras animaciones de forma agresiva
+            console.log(`🚀 Iniciando precarga agresiva de primeras ${LOOKAHEAD} animaciones...`);
             precargarSiguientes(0);
+            
+            // Dar un momento para que la precarga avance (especialmente importante en móvil)
+            await new Promise(resolve => setTimeout(resolve, isMobile ? 800 : 400));
+            console.log(`✅ Precarga inicial completada, iniciando reproducción...`);
             
             // Reproducir secuencia sin delays
             for (let idx = 0; idx < animacionesValidas.length; idx++) {
                 const animacion = animacionesValidas[idx];
                 currentIndex = idx;
                 
-                // Precargar siguientes mientras reproduce actual
+                // Precargar siguientes mientras reproduce actual (más adelante)
                 if (idx + 1 < animacionesValidas.length) {
                     precargarSiguientes(idx + 1);
                 }
@@ -1949,7 +2365,7 @@
                 );
             }
             
-            document.getElementById('status').textContent = '✅ Secuencia completada';
+            updateStatus('✅ Completado', false);
             isAnimating = false;
             document.getElementById('animateBtn').disabled = false;
             
@@ -1960,9 +2376,11 @@
             document.getElementById('pauseText').textContent = 'Pausar';
         }
 
-        // Función para precargar las siguientes N animaciones
+        // Función para precargar las siguientes N animaciones (MEJORADA)
         function precargarSiguientes(startIdx) {
             const endIdx = Math.min(startIdx + LOOKAHEAD, currentSequence.length);
+            
+            console.log(`🔄 Precargando desde índice ${startIdx} hasta ${endIdx - 1} (LOOKAHEAD: ${LOOKAHEAD})`);
             
             for (let i = startIdx; i < endIdx; i++) {
                 const animacion = currentSequence[i];
@@ -1970,72 +2388,111 @@
                 // Normalizar palabra para búsqueda (mantiene ñ)
                 const palabraNormalizada = normalizarTextoEspanol(palabra.toLowerCase().trim());
                 
-                // Si ya está en caché, continuar
+                // Si ya está en caché RAM, continuar
                 if (animationCache.has(palabraNormalizada)) {
+                    console.log(`⚡ Ya en caché: ${palabraNormalizada}`);
                     continue;
                 }
                 
+                // Prioridad: precargar inmediatamente las próximas 2 animaciones
+                const esPrioridad = (i - startIdx) < 2;
+                
                 // Precargar en background sin bloquear
-                // Pasar categoria y archivo si están disponibles
                 precargarAnimacionSilenciosa(
                     palabraNormalizada, 
                     animacion.categoria, 
-                    animacion.archivo
-                );
+                    animacion.archivo,
+                    esPrioridad
+                ).catch(err => {
+                    console.warn(`⚠️ Fallo precarga ${palabraNormalizada}:`, err.message);
+                });
             }
         }
         
-        // Precarga silenciosa sin bloquear la ejecución
-        async function precargarAnimacionSilenciosa(palabraNormalizada, categoriaBackend = null, archivoBackend = null) {
+        // Precarga silenciosa sin bloquear la ejecución - MEJORADA
+        async function precargarAnimacionSilenciosa(palabraNormalizada, categoriaBackend = null, archivoBackend = null, esPrioridad = false) {
+            // 1. Verificar RAM
             if (animationCache.has(palabraNormalizada)) {
                 return;
             }
             
-            // Determinar categoria y archivo
+            if (esPrioridad) {
+                console.log(`🎯 PRIORIDAD: Precargando ${palabraNormalizada}`);
+            }
+            
+            // 2. Verificar IndexedDB (si ya está ahí, moverla a RAM)
+            const dbKey = `${avatarActual}-${palabraNormalizada}`;
+            const clipDataFromDB = await loadAnimationFromDB(dbKey);
+            
+            if (clipDataFromDB) {
+                const clip = deserializeAnimationClip(clipDataFromDB);
+                if (animationCache.size >= MAX_CACHE_SIZE) {
+                    const firstKey = animationCache.keys().next().value;
+                    animationCache.delete(firstKey);
+                }
+                animationCache.set(palabraNormalizada, clip);
+                console.log(`📦 Precargada desde DB: ${palabraNormalizada}`);
+                return;
+            }
+            
+            // 3. Descargar desde red (solo si no está en DB)
             let categoria, archivo;
             if (categoriaBackend && archivoBackend) {
-                // Usar datos del backend
                 categoria = categoriaBackend;
                 archivo = archivoBackend;
             } else if (DICCIONARIO[palabraNormalizada]) {
-                // Buscar en diccionario local
                 categoria = DICCIONARIO[palabraNormalizada].categoria;
                 archivo = DICCIONARIO[palabraNormalizada].archivo;
             } else {
-                // No hay datos disponibles
                 return;
             }
             
             try {
                 const loader = loaderInstance || new GLTFLoader();
-                
-                // Intentar cargar desde múltiples carpetas posibles
                 const { gltf } = await cargarGLBDesdeCarpetas(loader, categoria, archivo, avatarActual);
                 
                 if (gltf.animations && gltf.animations.length > 0) {
                     const clip = gltf.animations[0];
                     procesarTracksAnimacion(clip);
                     
+                    // Guardar en RAM
                     if (animationCache.size >= MAX_CACHE_SIZE) {
                         const firstKey = animationCache.keys().next().value;
                         animationCache.delete(firstKey);
                     }
-                    
                     animationCache.set(palabraNormalizada, clip);
-                    console.log(`📦 Precargada anticipadamente: ${palabraNormalizada}`);
                     
-                    // Liberar recursos
+                    // Guardar en IndexedDB (no esperar, background)
+                    const serializedClip = serializeAnimationClip(clip);
+                    saveAnimationToDB(dbKey, serializedClip, avatarActual).catch(() => {});
+                    
+                    console.log(`📦 Precargada: ${palabraNormalizada}`);
+                    
+                    // Liberar recursos AGRESIVO
                     if (gltf.scene) {
                         gltf.scene.traverse((child) => {
-                            if (child.geometry) child.geometry.dispose();
+                            if (child.geometry) {
+                                child.geometry.dispose();
+                                child.geometry = null;
+                            }
                             if (child.material) {
                                 if (Array.isArray(child.material)) {
-                                    child.material.forEach(m => m.dispose());
+                                    child.material.forEach(m => {
+                                        m.dispose();
+                                        for (const key in m) {
+                                            if (m[key]?.dispose) m[key].dispose();
+                                        }
+                                    });
                                 } else {
                                     child.material.dispose();
+                                    for (const key in child.material) {
+                                        if (child.material[key]?.dispose) child.material[key].dispose();
+                                    }
                                 }
+                                child.material = null;
                             }
                         });
+                        gltf.scene = null;
                     }
                 }
             } catch (error) {
@@ -2046,6 +2503,9 @@
         async function cargarYReproducirAnimacion(palabra, categoriaBackend = null, archivoBackend = null) {
             // Normalizar tildes antes de buscar en diccionario (mantiene ñ)
             const palabraNormalizada = normalizarTextoEspanol(palabra.toLowerCase().trim());
+            
+            console.log(`🎯 cargarYReproducirAnimacion INICIO - palabra="${palabra}", normalizada="${palabraNormalizada}", avatarActual="${avatarActual}"`);
+            logToExpo(`🎯 Procesando`, { palabra, normalizada: palabraNormalizada, avatar: avatarActual });
             
             // Si no viene del backend, buscar en diccionario local
             let categoria, archivo;
@@ -2058,70 +2518,111 @@
                 // Buscar en diccionario local
                 categoria = DICCIONARIO[palabraNormalizada].categoria;
                 archivo = DICCIONARIO[palabraNormalizada].archivo;
+                console.log(`📖 Encontrado en diccionario: "${palabraNormalizada}" → categoria="${categoria}", archivo="${archivo}"`);
+                logToExpo(`📖 Diccionario OK`, { palabra: palabraNormalizada, categoria, archivo });
             } else {
                 // No hay datos disponibles
-                console.warn(`⚠️ No se encontró: ${palabra}`);
+                console.warn(`⚠️ No se encontró: ${palabra} (normalizada: ${palabraNormalizada})`);
+                logToExpo(`⚠️ NO ENCONTRADO: ${palabraNormalizada}`);
                 return;
             }
             
-            //cambio
-            //document.getElementById('status').textContent = `▶️ ${palabra}`;
-            
+            // ⭐ SISTEMA DE CACHÉ EFICIENTE
+            // Paso 1: Buscar en caché RAM (instantáneo)
             if (animationCache.has(palabraNormalizada)) {
-                console.log(`⚡ Instantánea desde caché: ${palabra}`);
+                console.log(`⚡ RAM caché: ${palabra}`);
                 const clip = animationCache.get(palabraNormalizada);
                 await reproducirAnimacion(clip, palabra);
                 return;
             }
             
-            console.log(`⏳ Cargando: ${palabra}`);
+            // Paso 2: Buscar en IndexedDB (rápido)
+            const dbKey = `${avatarActual}-${palabraNormalizada}`;
+            const clipDataFromDB = await loadAnimationFromDB(dbKey);
+            
+            if (clipDataFromDB) {
+                console.log(`💾 IndexedDB: ${palabra}`);
+                const clip = deserializeAnimationClip(clipDataFromDB);
+                
+                // Guardar en RAM para acceso más rápido
+                if (animationCache.size >= MAX_CACHE_SIZE) {
+                    const firstKey = animationCache.keys().next().value;
+                    animationCache.delete(firstKey);
+                }
+                animationCache.set(palabraNormalizada, clip);
+                
+                await reproducirAnimacion(clip, palabra);
+                return;
+            }
+            
+            // Paso 3: Descargar desde red (lento)
+            console.log(`⏳ Descargando: ${palabra}`);
+            logToExpo(`📥 Descargando: ${palabra}`);
+            updateStatus(`📥 ${palabra}...`, true);
             
             // Reutilizar loader global
             const loader = loaderInstance || new GLTFLoader();
             
             return new Promise(async (resolve, reject) => {
-                const timeout = isMobile ? 8000 : 15000; // Timeout más corto en móvil
+                const timeout = isMobile ? 18000 : 25000; // Timeout muy generoso para primera carga
                 const timeoutId = setTimeout(() => {
-                    console.error(`⏱️ Timeout cargando: ${palabra}`);
+                    console.error(`⏱️ Timeout: ${palabra}`);
+                    logToExpo(`⏱️ Timeout descargando: ${palabra}`);
                     resolve(); // Continuar con siguiente palabra
                 }, timeout);
                 
                 try {
-                    // Intentar cargar desde múltiples carpetas posibles
                     const { gltf, rutaCompleta } = await cargarGLBDesdeCarpetas(loader, categoria, archivo, avatarActual);
-                    console.log(`🔄 Cargada desde: ${rutaCompleta}`);
-                    
                     clearTimeout(timeoutId);
+                    
                     if (gltf.animations && gltf.animations.length > 0) {
                         const clip = gltf.animations[0];
-                        
-                        // Optimización: Procesar tracks una sola vez
                         procesarTracksAnimacion(clip);
                         
-                        // Gestión de caché con límite
+                        // Guardar en RAM
                         if (animationCache.size >= MAX_CACHE_SIZE) {
-                            // Eliminar la animación más antigua
                             const firstKey = animationCache.keys().next().value;
                             animationCache.delete(firstKey);
-                            console.log(`🗑️ Caché lleno, eliminada: ${firstKey}`);
                         }
-                        
                         animationCache.set(palabraNormalizada, clip);
-                        console.log(`✅ Cargada: ${palabra} (${clip.duration.toFixed(2)}s) - Caché: ${animationCache.size}/${MAX_CACHE_SIZE}`);
+                        
+                        // Guardar en IndexedDB para próxima vez (asíncrono, no bloquea)
+                        const serializedClip = serializeAnimationClip(clip);
+                        saveAnimationToDB(dbKey, serializedClip, avatarActual).catch(err => {
+                            console.warn('⚠️ No se pudo guardar en IndexedDB:', err);
+                        });
+                        
+                        console.log(`✅ ${palabra} (${clip.duration.toFixed(2)}s) RAM:${animationCache.size}/${MAX_CACHE_SIZE}`);
+                        logToExpo(`✅ Animación lista: ${palabra}`);
+                        
                         await reproducirAnimacion(clip, palabra);
                         
-                        // Liberar memoria de geometrías del GLB
+                        // Liberar memoria de geometrías del GLB (AGRESIVO)
                         if (gltf.scene) {
                             gltf.scene.traverse((child) => {
-                                if (child.geometry) child.geometry.dispose();
+                                if (child.geometry) {
+                                    child.geometry.dispose();
+                                    child.geometry = null;
+                                }
                                 if (child.material) {
                                     if (Array.isArray(child.material)) {
-                                        child.material.forEach(m => m.dispose());
+                                        child.material.forEach(m => {
+                                            m.dispose();
+                                            for (const key in m) {
+                                                if (m[key]?.dispose) m[key].dispose();
+                                            }
+                                        });
                                     } else {
                                         child.material.dispose();
+                                        for (const key in child.material) {
+                                            if (child.material[key]?.dispose) child.material[key].dispose();
+                                        }
                                     }
+                                    child.material = null;
                                 }
                             });
+                            // Limpiar referencia
+                            gltf.scene = null;
                         }
                         
                         resolve();
@@ -2131,7 +2632,8 @@
                     }
                 } catch (error) {
                     clearTimeout(timeoutId);
-                    console.error(`❌ Error cargando: ${palabra}`, error);
+                    console.error(`❌ Error: ${palabra}`, error);
+                    logToExpo(`❌ Error cargando: ${palabra}`);
                     resolve(); // Continuar incluso si falla
                 }
             });
@@ -2160,76 +2662,112 @@
         }
         async function reproducirAnimacion(clip, palabra) {
             return new Promise((resolve) => {
-                // Detener animación actual SIN transición para fluidez
-                if (currentAction) {
-                    currentAction.stop();
-                }
-                
-                // Reproducir nueva animación inmediatamente
-                const action = mixer.clipAction(clip);
-                action.reset();
-                action.setLoop(THREE.LoopOnce);
-                action.clampWhenFinished = true;
-                action.play();
-                
-                currentAction = action;
-                
-                const onFinished = (e) => {
-                    if (e.action === action) {
-                        console.log(`✅ Completada: ${palabra}`);
-                        mixer.removeEventListener('finished', onFinished);
-                        resolve();
+                // Pequeña pausa para estabilizar (especialmente importante en primera reproducción)
+                setTimeout(() => {
+                    // Detener animación actual SIN transición para fluidez
+                    if (currentAction) {
+                        currentAction.stop();
                     }
-                };
-                mixer.addEventListener('finished', onFinished);
+                    
+                    // Reproducir nueva animación inmediatamente
+                    const action = mixer.clipAction(clip);
+                    action.reset();
+                    action.setLoop(THREE.LoopOnce);
+                    action.clampWhenFinished = true;
+                    action.play();
+                    
+                    currentAction = action;
+                    
+                    const onFinished = (e) => {
+                        if (e.action === action) {
+                            console.log(`✅ Completada: ${palabra}`);
+                            mixer.removeEventListener('finished', onFinished);
+                            // Pequeña pausa entre animaciones para suavidad
+                            setTimeout(resolve, isMobile ? 50 : 30);
+                        }
+                    };
+                    mixer.addEventListener('finished', onFinished);
+                }, isMobile ? 100 : 50); // Pausa antes de reproducir
             });
         }
         
         // Nueva función: Precargar animaciones más comunes en background
         async function precargarAnimacionesComunes() {
-            // En móvil, precargar menos animaciones
+            // En móvil, precargar menos animaciones (o ninguna si lazy loading está activo)
             const animacionesComunes = isMobile 
-                ? ['hola', 'gracias', 'si'] // Solo 3 en móvil
+                ? [] // Móvil: lazy loading puro, sin precarga
                 : ['hola', 'buenos dias', 'gracias', 'por favor', 'adios', 'si', 'no', 'bien', 'mal', 'mucho gusto'];
+            
+            if (animacionesComunes.length === 0) {
+                console.log('📱 Precarga desactivada (lazy loading)');
+                return;
+            }
             
             console.log('🔄 Iniciando precarga de animaciones comunes...');
             
             for (const palabra of animacionesComunes) {
                 if (animationCache.has(palabra)) continue;
                 
-                // Normalizar tildes antes de buscar en diccionario (mantiene ñ)
                 const palabraNormalizada = normalizarTextoEspanol(palabra.toLowerCase().trim());
                 if (!DICCIONARIO[palabraNormalizada]) continue;
                 
+                // Verificar primero en IndexedDB
+                const dbKey = `${avatarActual}-${palabraNormalizada}`;
+                const clipDataFromDB = await loadAnimationFromDB(dbKey);
+                
+                if (clipDataFromDB) {
+                    const clip = deserializeAnimationClip(clipDataFromDB);
+                    animationCache.set(palabraNormalizada, clip);
+                    console.log(`✅ Precargada desde DB: ${palabra}`);
+                    continue;
+                }
+                
+                // Si no está en DB, descargar
                 try {
                     const loader = loaderInstance || new GLTFLoader();
                     const { categoria, archivo } = DICCIONARIO[palabraNormalizada];
-                    
-                    // Intentar cargar desde múltiples carpetas posibles
                     const { gltf } = await cargarGLBDesdeCarpetas(loader, categoria, archivo, avatarActual);
                     
                     if (gltf.animations && gltf.animations.length > 0) {
                         const clip = gltf.animations[0];
                         procesarTracksAnimacion(clip);
                         animationCache.set(palabraNormalizada, clip);
+                        
+                        // Guardar en IndexedDB
+                        const serializedClip = serializeAnimationClip(clip);
+                        saveAnimationToDB(dbKey, serializedClip, avatarActual).catch(() => {});
+                        
                         console.log(`✅ Precargada: ${palabra}`);
                         
-                        // Liberar recursos del GLB
+                        // Liberar recursos AGRESIVO
                         if (gltf.scene) {
                             gltf.scene.traverse((child) => {
-                                if (child.geometry) child.geometry.dispose();
+                                if (child.geometry) {
+                                    child.geometry.dispose();
+                                    child.geometry = null;
+                                }
                                 if (child.material) {
                                     if (Array.isArray(child.material)) {
-                                        child.material.forEach(m => m.dispose());
+                                        child.material.forEach(m => {
+                                            m.dispose();
+                                            for (const key in m) {
+                                                if (m[key]?.dispose) m[key].dispose();
+                                            }
+                                        });
                                     } else {
                                         child.material.dispose();
+                                        for (const key in child.material) {
+                                            if (child.material[key]?.dispose) child.material[key].dispose();
+                                        }
                                     }
+                                    child.material = null;
                                 }
                             });
+                            gltf.scene = null;
                         }
                     }
                     
-                    // Pausa adaptativa según dispositivo
+                    // Pausa adaptativa
                     await new Promise(r => setTimeout(r, LOAD_DELAY));
                     
                 } catch (error) {
