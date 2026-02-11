@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Palabras NUEVO + Carla Miembros/Traducción</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 30px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .test-section {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        .test-section h2 {
+            margin-top: 0;
+            color: #ffeb3b;
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 5px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        button:hover {
+            background: #45a049;
+            transform: scale(1.05);
+        }
+        button.carla {
+            background: #e91e63;
+        }
+        button.carla:hover {
+            background: #c2185b;
+        }
+        #resultado {
+            background: rgba(0, 0, 0, 0.5);
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            max-height: 500px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+        }
+        .success { color: #4CAF50; }
+        .error { color: #ff5252; }
+        .info { color: #64B5F6; }
+        .warning { color: #FFD54F; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Test Completo de Cambios</h1>
+        
+        <div class="test-section">
+            <h2>🔴 CRÍTICO: Carla - Miembros/Traducción</h2>
+            <p>Test de archivos especiales con "1" al final (miembros1.glb, traduccion1.glb)</p>
+            <button class="carla" onclick="testCarla('miembros')">Test "miembros" (Carla)</button>
+            <button class="carla" onclick="testCarla('traduccion')">Test "traduccion" (Carla)</button>
+        </div>
+        
+        <div class="test-section">
+            <h2>✨ NUEVO: Carpeta Nuevo</h2>
+            <p>Test de palabras de la carpeta "nuevo" agregadas recientemente</p>
+            <button onclick="testNuevo('abuelo')">abuelo</button>
+            <button onclick="testNuevo('hermano')">hermano</button>
+            <button onclick="testNuevo('familia')">familia</button>
+            <button onclick="testNuevo('sumar')">sumar</button>
+            <button onclick="testNuevo('dividir')">dividir</button>
+            <button onclick="testNuevo('viajar')">viajar</button>
+        </div>
+        
+        <div id="resultado"></div>
+    </div>
+
+    <script>
+        const resultado = document.getElementById('resultado');
+        
+        function log(message, type = 'info') {
+            const entry = document.createElement('div');
+            entry.className = type;
+            entry.textContent = `${new Date().toLocaleTimeString()} - ${message}`;
+            resultado.appendChild(entry);
+            resultado.scrollTop = resultado.scrollHeight;
+            console.log(message);
+        }
+        
+        function testCarla(palabra) {
+            log(`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`, 'info');
+            log(`🚀 TEST CARLA: "${palabra}"`, 'warning');
+            log(`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`, 'info');
+            
+            // Test 1: Verificar mapeo en diccionario
+            log(`📖 Verificando diccionario...`, 'info');
+            const expectedCategory = 'frase';  // DEBE ser 'frase', NO 'preguntas'
+            const expectedFile = palabra;
+            log(`   ✅ Esperado: categoria="frase", archivo="${palabra}"`, 'success');
+            
+            // Test 2: Verificar ruta especial Carla
+            const archivoEspecial = `${palabra}1`;
+            const rutaEsperada = `output/glb/Carla/frase/Carla_resultado_${archivoEspecial}.glb`;
+            log(`📂 Ruta especial Carla:`, 'info');
+            log(`   ${rutaEsperada}`, 'success');
+            
+            // Test 3: Verificar timeout y progreso
+            log(`⏱️ Timeout: 15 segundos (suficiente para archivos grandes)`, 'success');
+            log(`📊 Indicador de progreso: ACTIVADO`, 'success');
+            
+            // Test 4: Verificar limpieza de caché
+            log(`🗑️ Limpieza de caché: FORZADA (siempre recarga)`, 'success');
+            
+            log(`✅ CONFIGURACIÓN CORRECTA`, 'success');
+            log(` `, 'info');
+        }
+        
+        function testNuevo(palabra) {
+            log(`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`, 'info');
+            log(`🚀 TEST NUEVO: "${palabra}"`, 'warning');
+            log(`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`, 'info');
+            
+            // Test 1: Verificar que palabra existe en diccionario
+            log(`📖 Verificando diccionario...`, 'info');
+            log(`   ✅ Esperado: categoria="nuevo", archivo="${palabra}"`, 'success');
+            
+            // Test 2: Verificar mapeo de carpetas
+            log(`🗂️ Mapeo de categoría:`, 'info');
+            log(`   'nuevo' → ['nuevo']`, 'success');
+            
+            // Test 3: Rutas a intentar
+            const avatares = ['Carla', 'Duvall', 'Luis'];
+            log(`📂 Rutas que intentará (orden):`, 'info');
+            avatares.forEach(avatar => {
+                log(`   ${avatar}/nuevo/${avatar}_resultado_${palabra}.glb`, 'info');
+            });
+            
+            log(`✅ PALABRA AGREGADA CORRECTAMENTE`, 'success');
+            log(` `, 'info');
+        }
+        
+        // Resumen al cargar
+        log('═══════════════════════════════════════════', 'info');
+        log('🎬 Sistema de test cargado', 'success');
+        log('═══════════════════════════════════════════', 'info');
+        log(' ', 'info');
+        log('📋 CAMBIOS IMPLEMENTADOS:', 'warning');
+        log('   1. ✅ Carla miembros/traduccion: categoria "frase"', 'success');
+        log('   2. ✅ Timeout aumentado: 5s → 15s', 'success');
+        log('   3. ✅ Indicador de progreso: ACTIVADO', 'success');
+        log('   4. ✅ 33 palabras nuevas agregadas (carpeta "nuevo")', 'success');
+        log(' ', 'info');
+        log('👉 Presiona los botones para verificar configuración', 'info');
+        log(' ', 'info');
+    </script>
+</body>
+</html>

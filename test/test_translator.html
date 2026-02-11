@@ -1,0 +1,18 @@
+﻿<!DOCTYPE html>
+<html>
+<head><meta charset='UTF-8'></head>
+<body>
+<script src='http://localhost:8000/lsv-translator.js?v=2.1.0'></script>
+<script>
+setTimeout(() => {
+  if (typeof window.LSV_TRANSLATOR !== 'undefined') {
+    console.log(' LSV_TRANSLATOR cargado');
+    const resultado = window.LSV_TRANSLATOR.translate('¿como estás?', {deletrearDesconocidas: true});
+    console.log('Resultado:', JSON.stringify(resultado, null, 2));
+  } else {
+    console.log(' LSV_TRANSLATOR NO disponible');
+  }
+}, 500);
+</script>
+</body>
+</html>

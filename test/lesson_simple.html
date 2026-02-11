@@ -27,13 +27,13 @@
         #viewer-container {
             flex: 1;
             position: relative;
-            background: rgb(0, 0, 0);
-            opacity: 0;
+            background: rgb(26, 26, 46);
+            /* 🔧 REMOVIDO: opacity: 0 para que siempre sea visible */
             transition: opacity 0.3s ease-in;
         }
         
         #viewer-container.ready {
-            opacity: 1;
+            /* 🔧 Ya no cambia opacity porque siempre es 1 */
         }
 
         #canvas-3d {
@@ -49,12 +49,14 @@
             background: rgba(0, 0, 0, 0.9);
             padding: 15px 30px;
             border-radius: 25px;
-            font-size: 16px;
-            font-weight: 600;
-            color: white;
+            font-size: 18px;
+            font-weight: bold;
             z-index: 50;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+            color: #4fc3f7;
+            /* 🔧 Asegurar que sea visible */
+            pointer-events: none;
         }
+            
 
         #loading {
             position: fixed;
@@ -91,7 +93,7 @@
 
         .loading-text {
             font-size: 20px;
-            color: #ffffff;
+            color: #fffbfb;
             font-weight: 600;
         }
         
@@ -235,8 +237,6 @@
         const PRELOAD_COUNT = isMobile ? 5 : 10; // Menos precarga en móvil
         const LOAD_DELAY = isMobile ? 300 : 100; // Mayor delay entre cargas en móvil
         
-        console.log(`📱 Dispositivo: ${isMobile ? 'Móvil' : 'PC'} | Caché: ${MAX_CACHE_SIZE} | Precarga: ${PRELOAD_COUNT}`);
-        
         // Posición inicial de la cámara (para reset)
         const INITIAL_CAMERA_POSITION = { x: 0, y: 1.6, z: 3 };
         const INITIAL_CAMERA_TARGET = { x: 0, y: 1.2, z: 0 };
@@ -269,7 +269,6 @@
             
             // Cargar animación si autoplay está habilitado (sin mostrar loading)
             if (autoplay && avatarModel) {
-                console.log('🎯 INIT: Llamando cargarSiguienteAnimacionSilenciosa con:', letraParam);
                 await cargarSiguienteAnimacionSilenciosa(letraParam);
             }
             
@@ -356,8 +355,6 @@
                     // Reactivar OrbitControls después del reset
                     controls.enabled = true;
                     controls.update();
-                    
-                    console.log('🎯 Cámara reseteada a posición inicial');
                 }
             }
             
@@ -385,7 +382,7 @@
                 alpha: true
             });
             renderer.setSize(container.clientWidth, container.clientHeight);
-            renderer.setPixelRatio(window.devicePixelRatio);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
             renderer.outputColorSpace = THREE.SRGBColorSpace;
             renderer.toneMapping = THREE.ACESFilmicToneMapping;
             renderer.toneMappingExposure = 1.2;
@@ -412,25 +409,10 @@
             
             clock = new THREE.Clock();
             
-            // LOGGING INICIAL - Posición al iniciar
-            console.log('🟢 CÁMARA INICIAL:', {
-                position: { x: camera.position.x, y: camera.position.y, z: camera.position.z },
-                target: { x: controls.target.x, y: controls.target.y, z: controls.target.z },
-                zoom: camera.zoom,
-                fov: camera.fov
-            });
-            
             // Mejorado: Detectar teclado virtual y CONGELAR controles completamente
             window.addEventListener('resize', () => {
                 const currentHeight = window.innerHeight;
                 const heightDifference = initialViewportHeight - currentHeight;
-                
-                console.log('📏 RESIZE DETECTADO:', {
-                    initialHeight: initialViewportHeight,
-                    currentHeight: currentHeight,
-                    difference: heightDifference,
-                    isKeyboardOpen: isKeyboardOpen
-                });
                 
                 // Detectar si el teclado virtual se abrió (altura reducida significativamente)
                 if (heightDifference > 150 && !isKeyboardOpen) {
@@ -446,27 +428,12 @@
                             fov: camera.fov
                         };
                         
-                        console.log('🔴 TECLADO ABIERTO - Estado guardado:', {
-                            position: { x: savedCameraState.position.x, y: savedCameraState.position.y, z: savedCameraState.position.z },
-                            target: { x: savedCameraState.target.x, y: savedCameraState.target.y, z: savedCameraState.target.z },
-                            zoom: savedCameraState.zoom,
-                            fov: savedCameraState.fov
-                        });
-                        
                         // CONGELAR OrbitControls completamente
                         controls.enabled = false;
-                        console.log('⛔ OrbitControls DESHABILITADO');
                     }
                 } else if (heightDifference < 100 && isKeyboardOpen) {
                     // Teclado cerrado
                     isKeyboardOpen = false;
-                    
-                    console.log('🟢 TECLADO CERRADO - Antes de restaurar:', {
-                        currentPosition: { x: camera.position.x, y: camera.position.y, z: camera.position.z },
-                        currentTarget: { x: controls.target.x, y: controls.target.y, z: controls.target.z },
-                        currentZoom: camera.zoom,
-                        currentFov: camera.fov
-                    });
                     
                     // Restaurar posición exacta de la cámara después de un breve delay
                     setTimeout(() => {
@@ -489,14 +456,6 @@
                             // Reactivar OrbitControls
                             controls.enabled = true;
                             controls.update();
-                            
-                            console.log('✅ Cámara RESTAURADA:', {
-                                restoredPosition: { x: camera.position.x, y: camera.position.y, z: camera.position.z },
-                                restoredTarget: { x: controls.target.x, y: controls.target.y, z: controls.target.z },
-                                restoredZoom: camera.zoom,
-                                restoredFov: camera.fov
-                            });
-                            console.log('✅ OrbitControls REACTIVADO');
                         }
                     }, 100);
                 }
@@ -507,7 +466,6 @@
                     if (Math.abs(camera.aspect - newAspect) > 0.01) {
                         camera.aspect = newAspect;
                         camera.updateProjectionMatrix();
-                        console.log('🔄 Aspect ratio actualizado:', newAspect);
                     }
                     renderer.setSize(container.clientWidth, container.clientHeight);
                 }
@@ -516,32 +474,23 @@
             // Actualizar altura inicial cuando la página carga completamente
             window.addEventListener('load', () => {
                 initialViewportHeight = window.innerHeight;
-                console.log('🟢 Altura inicial establecida:', initialViewportHeight);
             });
         }
 
         async function cargarAvatar(nombreAvatar) {
-            // Reutilizar loader si existe, sino crear uno nuevo
-            const loader = loaderInstance || new GLTFLoader();
-            if (!loaderInstance) loaderInstance = loader;
-            
             const loadingText = document.getElementById('loading-text');
             const loadingDiv = document.getElementById('loading');
             
             loadingDiv.classList.remove('hidden');
             loadingText.textContent = `Cargando ${nombreAvatar}...`;
             
-            const genero = (nombreAvatar === 'nancy' || nombreAvatar === 'nina' || nombreAvatar === 'carla') ? 'Mujer' : 'Hombre';
-            const nombreCapitalizado = nombreAvatar.charAt(0).toUpperCase() + nombreAvatar.slice(1);
+            // Reutilizar loader si existe, sino crear uno nuevo
+            const loader = loaderInstance || new GLTFLoader();
+            if (!loaderInstance) loaderInstance = loader;
+            
+            // Usar rutas desde output/glb - mismo formato que animation_mobile.html
             const rutasIntento = [
-                `../output/glb/${nombreCapitalizado}/${nombreCapitalizado}.glb`,
-                `../output/glb/${nombreAvatar}/${nombreAvatar}.glb`,
-                `../output/glb/${genero}/${nombreCapitalizado}.glb`,
-                `../output/glb/${genero}/${nombreAvatar}.glb`,
-                `output/glb/${nombreCapitalizado}/${nombreCapitalizado}.glb`,
-                `output/glb/${nombreAvatar}/${nombreAvatar}.glb`,
-                `output/glb/${genero}/${nombreCapitalizado}.glb`,
-                `output/glb/${genero}/${nombreAvatar}.glb`
+                `output/glb/${nombreAvatar}/${nombreAvatar}.glb`
             ];
             
             for (const ruta of rutasIntento) {
@@ -603,14 +552,15 @@
                     
                     mixer = new THREE.AnimationMixer(avatarModel);
                     
-                    // NO ocultar loading aquí, se oculta en init() cuando TODO esté listo
-                    document.getElementById('status').textContent = `✅ ${nombreAvatar} listo`;
+                    // Limpiar caché de animaciones al cambiar avatar
+                    animationCache.clear();
                     
-                    console.log(`✅ Avatar ${nombreAvatar} cargado`);
+                    // NO ocultar loading aquí, se oculta en init() cuando TODO esté listo
+                    document.getElementById('status').textContent = `Cargando animación...`;
                     return;
                     
                 } catch (error) {
-                    console.log(`⚠️ No se pudo cargar desde: ${ruta}`);
+                    // Continue trying other paths
                 }
             }
             
@@ -620,7 +570,6 @@
         async function cargarYReproducirAnimacion(letra) {
             // Verificar que el avatar y mixer estén listos
             if (!avatarModel || !mixer) {
-                console.error('❌ Avatar o mixer no disponibles');
                 document.getElementById('status').textContent = '❌ Error: Avatar no cargado';
                 return;
             }
@@ -628,7 +577,6 @@
             // Guardar para repetir
             lastAnimationLetra = letra;
             
-            console.log(`🔍 Cargando animación para letra: "${letra}"`);
             document.getElementById('status').textContent = `🎬 Mostrando: ${letra.toUpperCase()}`;
             
             const loader = loaderInstance || new GLTFLoader();
@@ -637,17 +585,12 @@
             const cacheKey = `${categoria}_${archivo}`;
             const nombreCapitalizado = avatarName.charAt(0).toUpperCase() + avatarName.slice(1);
             
-            console.log(`📋 Búsqueda: avatar="${avatarName}", capitalizado="${nombreCapitalizado}", categoria="${categoria}", archivo="${archivo}"`);
-            
             // OPTIMIZACIÓN: Verificar caché primero
             if (animationCache.has(cacheKey)) {
-                console.log(`⚡ Instantánea desde caché: ${letra}`);
                 const clip = animationCache.get(cacheKey);
                 reproducirClip(clip, letra);
                 return;
             }
-            
-            console.log(`⏳ Cargando: ${letra}`);
             
             const rutasIntento = [
                 `../output/glb/${nombreCapitalizado}/${categoria}/${nombreCapitalizado}_resultado_${archivo}.glb`,
@@ -660,21 +603,14 @@
                 `output/glb/${nombreCapitalizado}/${categoria}/${categoria}_${avatarName}_resultado_${archivo}.glb`,
             ];
             
-            console.log(`🔍 Intentando ${rutasIntento.length} rutas para letra "${archivo}"...`);
-            
             for (const ruta of rutasIntento) {
                 try {
-                    console.log(`⏳ Intentando: ${ruta}`);
                     const gltf = await new Promise((resolve, reject) => {
                         loader.load(ruta, resolve, undefined, reject);
                     });
                     
-                    console.log(`✅ Animación cargada: ${ruta}`);
-                    
                     if (gltf.animations && gltf.animations.length > 0) {
                         const clip = gltf.animations[0];
-                        
-                        console.log(`✅ Clip encontrado: ${clip.name}, duración: ${clip.duration}s`);
                         
                         // Corregir nombres de tracks si hay mapping
                         if (avatarModel.userData.nodeNameMap) {
@@ -692,12 +628,10 @@
                         if (animationCache.size >= MAX_CACHE_SIZE) {
                             const firstKey = animationCache.keys().next().value;
                             animationCache.delete(firstKey);
-                            console.log(`🗑️ Caché lleno, eliminada: ${firstKey}`);
                         }
                         
                         // OPTIMIZACIÓN: Guardar solo el clip de animación en caché
                         animationCache.set(cacheKey, clip);
-                        console.log(`✅ En caché: ${letra} - Caché: ${animationCache.size}/${MAX_CACHE_SIZE}`);
                         
                         // Liberar memoria de geometrías del GLB
                         if (gltf.scene) {
@@ -716,35 +650,27 @@
                         // Aplicar animación al avatar existente (NO reemplazar modelo)
                         reproducirClip(clip, letra);
                     } else {
-                        console.warn(`⚠️ No hay animación en el archivo`);
                         document.getElementById('status').textContent = `⚠️ Sin animación: ${letra}`;
                     }
                     
                     return;
                 } catch (error) {
-                    console.log(`❌ Error cargando ${ruta}: ${error.message}`);
+                    // Continue trying other paths
                 }
             }
             
-            console.error(`❌ No se encontró animación "${letra}" en ninguna ruta`);
             document.getElementById('status').textContent = `❌ No se encontró animación: ${letra}`;
         }
         
         function reproducirClip(clip, letra) {
-            console.log(`🎭 REPRODUCIR CLIP INICIO: letra="${letra}"`);
-            
             if (!mixer || !avatarModel) {
-                console.error('❌ Mixer o avatar no disponibles');
                 return;
             }
-            
-            console.log(`🎭 REPRODUCIR: Deteniendo acción previa (si existe)...`);
             if (currentAction) {
                 currentAction.stop();
                 currentAction = null;
             }
             
-            console.log(`🎭 REPRODUCIR: Creando nueva acción...`);
             const action = mixer.clipAction(clip);
             action.reset();
             action.setLoop(THREE.LoopRepeat);
@@ -754,7 +680,6 @@
             currentAction = action;
             isPaused = false;
             
-            console.log(`🎭 REPRODUCIR: Habilitando botón de pausa...`);
             // Habilitar botón de pausa
             document.getElementById('pauseBtn').disabled = false;
             
@@ -764,10 +689,7 @@
             document.getElementById('pauseIcon').textContent = '⏸️';
             document.getElementById('pauseText').textContent = 'Pausar';
             
-            console.log(`🎭 REPRODUCIR: Actualizando status...`);
             document.getElementById('status').textContent = `▶️ ${letra.toUpperCase()}`;
-            
-            console.log(`✅ REPRODUCIR COMPLETO: ${letra.toUpperCase()}`);
         }
 
         // Función para pausar animación actual (sin recargar avatar)
@@ -775,7 +697,6 @@
             if (mixer && currentAction) {
                 mixer.timeScale = 0;
                 isPaused = true;
-                console.log('⏸️ Animación pausada');
             }
         }
 
@@ -784,14 +705,12 @@
             if (mixer && currentAction) {
                 mixer.timeScale = 1;
                 isPaused = false;
-                console.log('▶️ Animación reanudada');
             }
         }
 
         // Función para cargar siguiente animación SIN mostrar loading (transición suave)
         async function cargarSiguienteAnimacionSilenciosa(letra) {
             const letraNormalizada = letra.toLowerCase().trim();
-            console.log(`🔄 SILENCIOSA INICIO: letra="${letraNormalizada}"`);
             
             const loader = loaderInstance || new GLTFLoader();
             const categoria = params.get('categoria') || params.get('category') || 'alfabeto';
@@ -799,36 +718,24 @@
             const cacheKey = `${categoria}_${archivo}`;
             const nombreCapitalizado = avatarName.charAt(0).toUpperCase() + avatarName.slice(1);
             
-            console.log(`🔍 SILENCIOSA: Buscando en caché - cacheKey="${cacheKey}", existe=${animationCache.has(cacheKey)}`);
-            
             // Verificar caché primero
             if (animationCache.has(cacheKey)) {
-                console.log(`⚡ SILENCIOSA: Encontrado en caché: ${letraNormalizada}`);
                 const clip = animationCache.get(cacheKey);
                 reproducirClip(clip, letraNormalizada);
-                console.log(`✅ SILENCIOSA: Clip reproducido desde caché`);
                 return;
             }
-            
-            // Cargar sin mostrar loading
-            console.log(`⏬ SILENCIOSA: No está en caché, cargando desde servidor...`);
             const rutasIntento = [
                 `../output/glb/${nombreCapitalizado}/${categoria}/${nombreCapitalizado}_resultado_${archivo}.glb`,
                 `../output/glb/${nombreCapitalizado}/${categoria}/${avatarName}_resultado_${archivo}.glb`,
             ];
             
-            console.log(`🔍 SILENCIOSA: Intentando ${rutasIntento.length} rutas`);
-            
             for (const ruta of rutasIntento) {
                 try {
-                    console.log(`⏳ SILENCIOSA: Intentando cargar: ${ruta}`);
                     const gltf = await new Promise((resolve, reject) => {
                         loader.load(ruta, resolve, undefined, reject);
                     });
-                    console.log(`✅ SILENCIOSA: Archivo cargado exitosamente desde: ${ruta}`);
                     
                     if (gltf.animations && gltf.animations.length > 0) {
-                        console.log(`🎬 SILENCIOSA: Clip encontrado, procesando...`);
                         const clip = gltf.animations[0];
                         
                         // Corregir nombres de tracks si hay mapping
@@ -849,21 +756,15 @@
                             animationCache.delete(firstKey);
                         }
                         animationCache.set(cacheKey, clip);
-                        console.log(`💾 SILENCIOSA: Guardado en caché: ${cacheKey}`);
                         
                         // Reproducir inmediatamente
-                        console.log(`▶️ SILENCIOSA: Reproduciendo clip...`);
                         reproducirClip(clip, letraNormalizada);
-                        console.log(`✅ SILENCIOSA COMPLETO: Todo exitoso`);
                         return;
                     }
                 } catch (error) {
-                    console.log(`❌ SILENCIOSA: Error en ruta ${ruta}: ${error.message}`);
                     // Continuar con siguiente ruta
                 }
             }
-            
-            console.error(`❌ SILENCIOSA FALLÓ: No se encontró animación "${letraNormalizada}" en ninguna ruta`);
         }
 
         function animate() {
@@ -887,8 +788,6 @@
                 : ['a', 'e', 'i', 'o', 'u', 'h', 'l', 's', 'n', 'r'];
             const categoria = params.get('categoria') || params.get('category') || 'alfabeto';
             const nombreCapitalizado = avatarName.charAt(0).toUpperCase() + avatarName.slice(1);
-            
-            console.log('🔄 Iniciando precarga de letras comunes...');
             
             for (const letra of letrasComunes) {
                 const cacheKey = `${categoria}_${letra}`;
@@ -936,7 +835,6 @@
                                 }
                                 
                                 animationCache.set(cacheKey, clip);
-                                console.log(`✅ Precargada: ${letra}`);
                                 
                                 // Liberar recursos del GLB
                                 if (gltf.scene) {
@@ -963,11 +861,9 @@
                     await new Promise(r => setTimeout(r, LOAD_DELAY));
                     
                 } catch (error) {
-                    console.log(`⚠️ No se pudo precargar: ${letra}`);
+                    // Continue trying other letters
                 }
             }
-            
-            console.log(`✅ Precarga completada: ${animationCache.size} letras en caché`);
         }
 
         // Detectar eventos de focus/blur que también indican teclado virtual
@@ -977,7 +873,6 @@
                     position: camera.position.clone(),
                     target: controls.target.clone()
                 };
-                console.log('🔍 Input enfocado - estado guardado');
             }
         });
         
@@ -989,7 +884,6 @@
                         controls.target.copy(savedCameraState.target);
                         controls.update();
                         savedCameraState = null;
-                        console.log('🎯 Cámara restaurada después de perder foco');
                     }
                 }, 300);
             }
@@ -1000,12 +894,6 @@
         window.cargarYReproducirAnimacion = cargarYReproducirAnimacion;
         window.pausarAnimacion = pausarAnimacion;
         window.reanudarAnimacion = reanudarAnimacion;
-        console.log('✅ Funciones expuestas globalmente:', {
-            cargarSiguienteAnimacionSilenciosa: typeof window.cargarSiguienteAnimacionSilenciosa,
-            cargarYReproducirAnimacion: typeof window.cargarYReproducirAnimacion,
-            pausarAnimacion: typeof window.pausarAnimacion,
-            reanudarAnimacion: typeof window.reanudarAnimacion
-        });
         
         window.addEventListener('DOMContentLoaded', init);
     </script>

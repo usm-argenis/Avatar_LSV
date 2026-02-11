@@ -77,11 +77,33 @@ export default function FallingSignsGame({ route, navigation }) {
   const [gameOver, setGameOver] = useState(false);
   const [completedWords, setCompletedWords] = useState(0);
   const [totalStarsEarned, setTotalStarsEarned] = useState(0);
+  const [gameCompleted, setGameCompleted] = useState(false);
 
   const lettersRef = useRef([]);
   const intervalRef = useRef(null);
   const hintIntervalRef = useRef(null);
   const idRef = useRef(0);
+
+  /* -------------------- HANDLE GAME COMPLETION -------------------- */
+
+  // useEffect para manejar la completación del juego sin causar setState durante render
+  useEffect(() => {
+    if (gameCompleted && completedWords >= WORDS_REQUIRED) {
+      // Guardar estrellas al backend
+      saveStarsProgressToBackend(totalStarsEarned, completedWords);
+      
+      // Llamar a onComplete con el total de estrellas ganadas
+      if (onComplete) {
+        onComplete(totalStarsEarned);
+      }
+
+      Alert.alert(
+        '🎉 ¡Experiencia completada!',
+        `Has completado ${completedWords} palabras\n⭐ +${totalStarsEarned} estrellas ganadas en total`,
+        [{ text: 'Continuar', onPress: () => navigation.goBack() }]
+      );
+    }
+  }, [gameCompleted, completedWords, totalStarsEarned]);
 
   /* -------------------- BACKEND FUNCTIONS -------------------- */
 
@@ -244,46 +266,29 @@ export default function FallingSignsGame({ route, navigation }) {
         // Palabra completada - otorgar 50 estrellas
         const starsForWord = 50;
         
-        setCompletedWords(w => {
-          const total = w + 1;
-          
-          // Acumular estrellas ganadas
-          setTotalStarsEarned(prev => {
-            const newTotal = prev + starsForWord;
-            
-            // Guardar palabra completada en historial
-            saveWordProgressToBackend(targetWord, true, 0);
-            
-            if (total >= WORDS_REQUIRED) {
-              stopInterval();
-              stopHintInterval();
-              
-              // Guardar estrellas al backend
-              saveStarsProgressToBackend(newTotal, total);
-              
-              // Llamar a onComplete con el total de estrellas ganadas
-              if (onComplete) {
-                onComplete(newTotal);
-              }
-
-              Alert.alert(
-                '🎉 ¡Experiencia completada!',
-                `Has completado ${total} palabras\n⭐ +${newTotal} estrellas ganadas en total`,
-                [{ text: 'Continuar', onPress: () => navigation.goBack() }]
-              );
-            } else {
-              Alert.alert(
-                '✅ Palabra completada',
-                `"${targetWord.toUpperCase()}" (${total}/${WORDS_REQUIRED})\n⭐ +${starsForWord} estrellas`,
-                [{ text: 'Continuar', onPress: pickNewWord }]
-              );
-            }
-            
-            return newTotal;
-          });
-
-          return total;
-        });
+        // Guardar palabra completada en historial (no bloqueante)
+        saveWordProgressToBackend(targetWord, true, 0);
+        
+        // Actualizar estados
+        const newCompletedWords = completedWords + 1;
+        const newTotalStars = totalStarsEarned + starsForWord;
+        
+        setCompletedWords(newCompletedWords);
+        setTotalStarsEarned(newTotalStars);
+        
+        if (newCompletedWords >= WORDS_REQUIRED) {
+          // Juego completado - detener intervalos y marcar como completado
+          stopInterval();
+          stopHintInterval();
+          setGameCompleted(true);
+        } else {
+          // Mostrar alerta de progreso
+          Alert.alert(
+            '✅ Palabra completada',
+            `"${targetWord.toUpperCase()}" (${newCompletedWords}/${WORDS_REQUIRED})\n⭐ +${starsForWord} estrellas`,
+            [{ text: 'Continuar', onPress: pickNewWord }]
+          );
+        }
 
         setLevel(p => p + 1);
         if ((level + 1) % 3 === 0) {

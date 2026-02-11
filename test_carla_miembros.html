@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Carla - Miembros</title>
+</head>
+<body>
+    <h1>Test de Carga: Carla - Miembros</h1>
+    <div id="status">Cargando...</div>
+    <div id="results"></div>
+    
+    <script>
+        const DICCIONARIO = {
+            'miembro': { categoria: 'frase', archivo: 'miembros' },
+            'miembros': { categoria: 'frase', archivo: 'miembros' },
+            'traduccion': { categoria: 'frase', archivo: 'traduccion' }
+        };
+        
+        const MAPEO_CATEGORIAS = {
+            'frase': ['frase'],
+            'general': ['horario', 'nuevo']
+        };
+        
+        function obtenerCarpetas(categoria) {
+            const carpetas = MAPEO_CATEGORIAS[categoria];
+            if (carpetas) {
+                return Array.isArray(carpetas) ?carpetas : [carpetas];
+            }
+            return [categoria];
+        }
+        
+        async function testLoadGLB() {
+            const statusDiv = document.getElementById('status');
+            const resultsDiv = document.getElementById('results');
+            
+            const testCases = [
+                { palabra: 'miembros', avatar: 'Carla' },
+                { palabra: 'traduccion', avatar: 'Carla' },
+                { palabra: 'miembro', avatar: 'Carla' }
+            ];
+            
+            for (const test of testCases) {
+                const { palabra, avatar } = test;
+                const info = DICCIONARIO[palabra];
+                
+                if (!info) {
+                    resultsDiv.innerHTML += `<p>❌ ${palabra}: No está en diccionario</p>`;
+                    continue;
+                }
+                
+                const { categoria, archivo } = info;
+                const carpetas = obtenerCarpetas(categoria);
+                
+                resultsDiv.innerHTML += `<p>🔍 Probando: ${palabra} (${avatar})</p>`;
+                resultsDiv.innerHTML += `<p style="margin-left:20px">├─ Categoría: ${categoria}</p>`;
+                resultsDiv.innerHTML += `<p style="margin-left:20px">├─ Archivo: ${archivo}</p>`;
+                resultsDiv.innerHTML += `<p style="margin-left:20px">├─ Carpetas posibles: ${carpetas.join(', ')}</p>`;
+                
+                let loaded = false;
+                
+                for (const carpeta of carpetas) {
+                    const url = `http://10.171.95.217:8000/output/glb/${avatar}/${carpeta}/${avatar}_resultado_${archivo}.glb`;
+                    
+                    resultsDiv.innerHTML += `<p style="margin-left:20px">├─ Intentando: ${url}</p>`;
+                    
+                    try {
+                        const response = await fetch(url, { method: 'HEAD' });
+                        
+                        if (response.ok) {
+                            resultsDiv.innerHTML += `<p style="margin-left:20px;color:green">└─ ✅ HTTP ${response.status} - ENCONTRADO</p>`;
+                            loaded = true;
+                            break;
+                        } else {
+                            resultsDiv.innerHTML += `<p style="margin-left:20px;color:orange">├─ ⚠️ HTTP ${response.status}</p>`;
+                        }
+                    } catch (error) {
+                        resultsDiv.innerHTML += `<p style="margin-left:20px;color:red">├─ ❌ Error: ${error.message}</p>`;
+                    }
+                }
+                
+                if (!loaded) {
+                    resultsDiv.innerHTML += `<p style="margin-left:20px;color:red">└─ ❌ NO SE ENCONTRÓ en ninguna carpeta</p>`;
+                }
+                
+                resultsDiv.innerHTML += `<hr>`;
+            }
+            
+            statusDiv.textContent = '✅ Pruebas completadas';
+        }
+        
+        testLoadGLB();
+    </script>
+</body>
+</html>
