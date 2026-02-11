@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Avatar Estático LSV</title>
+    <title>Avatar Estático LSV - Visor 3D</title>
     <style>
         * {
             margin: 0;
@@ -30,11 +30,45 @@
             height: 100%;
             border: none;
         }
+
+        #loading-indicator {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            color: #2196F3;
+            font-family: Arial, sans-serif;
+            z-index: 10;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #2196F3;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .hidden {
+            display: none;
+        }
     </style>
 </head>
 <body>
     <div id="app">
         <canvas id="canvas-3d"></canvas>
+        <div id="loading-indicator">
+            <div class="spinner"></div>
+            <div id="loading-text">Cargando modelo 3D...</div>
+        </div>
     </div>
 
     <script type="importmap">
@@ -50,11 +84,16 @@
         import * as THREE from 'three';
         import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
+        console.log('🎬 Avatar Static HTML - Visor de Modelos 3D GLB');
+        console.log('📦 THREE.js version:', THREE.REVISION);
+
         // Obtener parámetros de URL
         const params = new URLSearchParams(window.location.search);
         const avatarName = params.get('avatar') || 'Luis';
+        
+        console.log('🎭 Avatar solicitado:', avatarName);
 
-        // Configuración
+        // Configuración de rutas de modelos 3D GLB
         const AVATAR_PATHS = {
             'Luis': 'output/glb/Luis/Luis.glb',
             'Duvall': 'output/glb/Duvall/Duvall.glb',
@@ -62,17 +101,147 @@
             'Carla': 'output/glb/Carla/Carla.glb',
             'Argenis': 'output/glb/Argenis/Argenis.glb'
         };
+        
+        console.log('📂 Rutas de modelos 3D GLB configuradas:', AVATAR_PATHS);
+        console.log(`🎯 Ruta del modelo a cargar: ${AVATAR_PATHS[avatarName] || 'NO ENCONTRADA'}`);
 
         // Variables globales
         let scene, camera, renderer, avatar;
         const avatarCache = {}; // Cache para avatares ya cargados
         let isLoading = false;
+        const loader = new GLTFLoader(); // Reutilizar loader
+        
+        // Configurar loader para mejor rendimiento
+        loader.setRequestHeader({ 'Cache-Control': 'max-age=31536000' });
 
-        // Inicializar escena
+        // Función de carga de modelo 3D GLB
+        function loadAvatar(name) {
+            // Prevenir cargas múltiples simultáneas
+            if (isLoading) {
+                console.warn('⏳ Ya hay una carga en progreso');
+                return;
+            }
+
+            // ⚡ Si el avatar ya está en caché, usar inmediatamente (INSTANTÁNEO)
+            if (avatarCache[name]) {
+                console.log(`⚡ Modelo 3D ${name} desde caché - INSTANTÁNEO`);
+                
+                if (avatar && avatar !== avatarCache[name]) {
+                    scene.remove(avatar);
+                }
+                
+                avatar = avatarCache[name];
+                avatar.visible = true;
+                scene.add(avatar);
+                hideLoading();
+                return;
+            }
+
+            // Primera carga desde red
+            const avatarPath = AVATAR_PATHS[name] || AVATAR_PATHS['Luis'];
+            console.log(`🚀 Cargando modelo 3D desde: ${avatarPath}`);
+            showLoading(`Cargando modelo 3D ${name}...`);
+            isLoading = true;
+            
+            loader.load(
+                avatarPath,
+                (gltf) => {
+                    console.log(`✅ Modelo 3D ${name}.glb cargado exitosamente`);
+                    const model = gltf.scene;
+                    
+                    // Configurar escala
+                    const scale = (name === 'Nancy' || name === 'Carla') ? 1.0 : 1.0;
+                    model.scale.set(scale, scale, scale);
+                    model.position.set(0, 0, 0);
+                    model.rotation.y = 0;
+                    
+                    // Optimizar materiales para alta calidad visual
+                    model.traverse((node) => {
+                        if (node.isMesh) {
+                            node.frustumCulled = true;
+                            node.castShadow = false;
+                            node.receiveShadow = false;
+                            
+                            if (node.material) {
+                                node.material.metalness = 0.1;
+                                node.material.roughness = 0.8;
+                                node.material.needsUpdate = true;
+                                
+                                // Mejorar calidad de texturas
+                                if (node.material.map) {
+                                    node.material.map.anisotropy = renderer.capabilities.getMaxAnisotropy();
+                                    node.material.map.needsUpdate = true;
+                                }
+                            }
+                        }
+                    });
+
+                    // Guardar en caché
+                    avatarCache[name] = model;
+
+                    // Remover avatar anterior
+                    if (avatar) {
+                        scene.remove(avatar);
+                    }
+
+                    avatar = model;
+                    scene.add(avatar);
+                    isLoading = false;
+                    hideLoading();
+
+                    console.log(`✅ Modelo 3D ${name} renderizado en escena`);
+                    console.log(`📊 Mallas en el modelo: ${countMeshes(model)}`);
+                },
+                (progress) => {
+                    if (progress.lengthComputable) {
+                        const percent = (progress.loaded / progress.total) * 100;
+                        showLoading(`Cargando modelo 3D ${name}... ${Math.round(percent)}%`);
+                        console.log(`📥 Progreso de carga: ${Math.round(percent)}%`);
+                    }
+                },
+                (error) => {
+                    console.error(`❌ ERROR cargando modelo 3D ${name}:`, error);
+                    console.error(`❌ Ruta intentada: ${avatarPath}`);
+                    showLoading(`❌ Error: No se pudo cargar el modelo 3D ${name}`);
+                    isLoading = false;
+                    
+                    setTimeout(() => {
+                        hideLoading();
+                    }, 3000);
+                }
+            );
+        }
+
+        // Función auxiliar para contar mallas en el modelo 3D
+        function countMeshes(object) {
+            let count = 0;
+            object.traverse((node) => {
+                if (node.isMesh) count++;
+            });
+            return count;
+        }
+
+        // Funciones de UI para indicador de carga
+        function showLoading(text) {
+            const indicator = document.getElementById('loading-indicator');
+            const loadingText = document.getElementById('loading-text');
+            if (indicator) indicator.classList.remove('hidden');
+            if (loadingText) loadingText.textContent = text || 'Cargando modelo 3D...';
+        }
+
+        function hideLoading() {
+            const indicator = document.getElementById('loading-indicator');
+            if (indicator) indicator.classList.add('hidden');
+        }
+
+        // Inicializar escena 3D
         function init() {
+            console.log('🚀 Inicializando escena 3D con alta calidad visual...');
+            
             // Escena
             scene = new THREE.Scene();
             scene.background = new THREE.Color(0xffffff);
+            console.log('✅ Escena 3D creada');
 
             // Cámara
             camera = new THREE.PerspectiveCamera(
@@ -83,21 +252,35 @@
             );
             camera.position.set(0, 1.5, 2.1);
             camera.lookAt(0, 1.3, 1.32);
+            console.log('✅ Cámara configurada');
 
-            // Renderer
+            // Renderer optimizado para WebView móvil con alta calidad
             const canvas = document.getElementById('canvas-3d');
+            const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+            
             renderer = new THREE.WebGLRenderer({ 
                 canvas, 
                 antialias: true,
-                alpha: true
+                alpha: true,
+                powerPreference: 'high-performance',
+                stencil: false,
+                depth: true,
+                premultipliedAlpha: true
             });
             renderer.setSize(window.innerWidth, window.innerHeight);
             renderer.setPixelRatio(window.devicePixelRatio);
             renderer.outputColorSpace = THREE.SRGBColorSpace;
             renderer.toneMapping = THREE.ACESFilmicToneMapping;
             renderer.toneMappingExposure = 1.2;
+            renderer.shadowMap.enabled = false;
+            
+            console.log('✅ Renderer WebGL configurado (alta calidad)');
+            console.log(`📱 Dispositivo móvil: ${isMobile ? 'Sí' : 'No'}`);
+            console.log(`📐 Resolución: ${window.innerWidth}x${window.innerHeight}`);
+            console.log(`🎨 PixelRatio: ${window.devicePixelRatio}`);
+            console.log(`✨ Antialias: activado`);
 
-            // Luces
+            // Iluminación
             const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
             scene.add(ambientLight);
 
@@ -112,8 +295,11 @@
             const fillLight = new THREE.DirectionalLight(0xffffff, 0.4);
             fillLight.position.set(0, -2, 5);
             scene.add(fillLight);
+            
+            console.log('✅ Iluminación configurada (3 luces direccionales + ambiente)');
 
-            // Cargar avatar
+            // ⚡ Carga INMEDIATA del modelo 3D GLB
+            console.log(`🎭 Iniciando carga de modelo 3D: ${avatarName}.glb`);
             loadAvatar(avatarName);
 
             // Resize
@@ -123,126 +309,63 @@
             animate();
         }
 
-        function loadAvatar(name) {
-            // Prevenir cargas múltiples simultáneas
-            if (isLoading) {
-                console.log('⏳ Carga en progreso, ignorando...');
-                return;
-            }
-
-            // Si el avatar ya está cargado y en caché, solo intercambiarlo
-            if (avatarCache[name]) {
-                console.log(`⚡ Usando ${name} desde caché`);
-                
-                if (avatar) {
-                    scene.remove(avatar);
-                    avatar.visible = false;
-                }
-                
-                avatar = avatarCache[name];
-                avatar.visible = true;
-                scene.add(avatar);
-                return;
-            }
-
-            isLoading = true;
-            const loader = new GLTFLoader();
-            const avatarPath = AVATAR_PATHS[name] || AVATAR_PATHS['Luis'];
-
-            loader.load(
-                avatarPath,
-                (gltf) => {
-                    const newAvatar = gltf.scene;
-                    
-                    // Configurar avatar
-                    newAvatar.position.set(0, 0, 0);
-                    newAvatar.rotation.y = 0;
-                    
-                    const scale = name === 'Nancy' || name === 'Carla' ? 1.0 : 1.0;
-                    newAvatar.scale.set(scale, scale, scale);
-
-                    // Optimizar materiales
-                    newAvatar.traverse((child) => {
-                        if (child.isMesh) {
-                            child.frustumCulled = true;
-                            if (child.material) {
-                                child.material.needsUpdate = false;
-                            }
-                        }
-                    });
-
-                    // Guardar en caché
-                    avatarCache[name] = newAvatar;
-
-                    // Remover avatar anterior
-                    if (avatar) {
-                        scene.remove(avatar);
-                        avatar.visible = false;
-                    }
-
-                    avatar = newAvatar;
-                    scene.add(avatar);
-                    isLoading = false;
-
-                    console.log(`✅ Avatar ${name} cargado y cacheado`);
-                },
-                (progress) => {
-                    if (progress.total > 0) {
-                        const percent = (progress.loaded / progress.total) * 100;
-                        console.log(`Cargando ${name}: ${percent.toFixed(0)}%`);
-                    }
-                },
-                (error) => {
-                    console.error('❌ Error cargando avatar:', error);
-                    isLoading = false;
-                }
-            );
-        }
-
         function onResize() {
             camera.aspect = window.innerWidth / window.innerHeight;
             camera.updateProjectionMatrix();
             renderer.setSize(window.innerWidth, window.innerHeight);
         }
 
+        // Render loop continuo optimizado para WebView móvil
         function animate() {
             requestAnimationFrame(animate);
             renderer.render(scene, camera);
         }
 
-        // Iniciar
+        // Iniciar aplicación
         init();
 
         // Exponer función para cambiar avatar desde fuera
         window.changeAvatar = function(name) {
-            loadAvatar(name);
+            if (name && AVATAR_PATHS[name]) {
+                console.log(`🔄 Cambio de modelo 3D solicitado: ${name}`);
+                loadAvatar(name);
+            } else {
+                console.error(`❌ Avatar ${name} no existe en AVATAR_PATHS`);
+            }
         };
 
-        // Listener para mensajes de React Native WebView
-        window.addEventListener('message', function(event) {
+        // Función unificada para manejar mensajes de React Native
+        function handleAvatarMessage(data) {
             try {
-                const data = JSON.parse(event.data);
-                if (data.type === 'changeAvatar' && data.avatar) {
-                    console.log('📱 Mensaje recibido: cambiar a avatar', data.avatar);
-                    loadAvatar(data.avatar);
+                const message = typeof data === 'string' ? JSON.parse(data) : data;
+                
+                if (message.type === 'changeAvatar' && message.avatar) {
+                    console.log('📱 Cambio de avatar solicitado desde app móvil:', message.avatar);
+                    loadAvatar(message.avatar);
                 }
             } catch (e) {
-                // Ignorar mensajes mal formados
+                console.warn('⚠️ Mensaje no procesable:', e);
             }
+        }
+
+        // Listener para iOS React Native WebView
+        window.addEventListener('message', function(event) {
+            handleAvatarMessage(event.data);
         });
 
-        // Listener adicional para Android
+        // Listener para Android React Native WebView
         document.addEventListener('message', function(event) {
-            try {
-                const data = JSON.parse(event.data);
-                if (data.type === 'changeAvatar' && data.avatar) {
-                    console.log('📱 Mensaje recibido (Android): cambiar a avatar', data.avatar);
-                    loadAvatar(data.avatar);
-                }
-            } catch (e) {
-                // Ignorar mensajes mal formados
-            }
+            handleAvatarMessage(event.data);
         });
+
+        // Notificar a React Native que la página está lista
+        if (window.ReactNativeWebView) {
+            window.ReactNativeWebView.postMessage(JSON.stringify({
+                type: 'ready',
+                avatar: avatarName
+            }));
+            console.log('📲 Notificación de "ready" enviada a React Native');
+        }
     </script>
 </body>
 </html>

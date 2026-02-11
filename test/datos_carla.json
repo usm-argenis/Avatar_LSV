@@ -1,83 +1,69 @@
 {
-  "C:/Users/andre/OneDrive/Documentos/tesis/test/output/glb/Carla/nuevo/Carla_resultado_fumar.glb": {
+  "C:/Users/andre/OneDrive/Documentos/tesis/test/output/glb/Carla/frase/Carla_resultado_traduccion1s.glb": {
     "alcance": {
-    "min": 0,
-    "max": "fin",
-    "retencion": "fin"
-  },
-  
-  "Spine": {
-    "w": 1.000,
-    "x": 0.000644,
-    "y": -0.013,
-    "z": 0.001
-  },"Hips": {
-      "w": 0.998,
-      "x": 0.024,
-      "y": 0.062,
-      "z": 0.006
-    }   ,
-
-  "LeftUpLeg": {
-      "w": 0.997,
-      "x": 0.072,
-      "y": -0.002,
-      "z": -0.031
-    }   ,
-    "RightUpLeg": {
+      "min": 21,
+      "max": 73,
+      "retencion": 50
+    },
+    "RightHandIndex1": {
+      "w": 0.982,
+      "x": -0.159,
+      "y": -0.067,
+      "z": 0.077
+    },
+    "RightHandIndex2": {
+      "w": 0.987,
+      "x": -0.162,
+      "y": -0.000512,
+      "z": -0.019
+    },
+    "RightHandMiddle1": {
       "w": 0.996,
-      "x": 0.082,
-      "y": 0.002,
-      "z": 0.032
-    }   ,"RightLeg": {
-      "w": 0.986,
-      "x": -0.168,
-      "y": 0.000056,
-      "z": -0.000737
-    }   ,"LeftLeg": {
-      "w": 0.989,
-      "x": -0.148,
-      "y": -0.002,
-      "z": 0.000932
-    }   ,
-
-
-    "RightFoot": {
-      "w": 1.000,
-      "x": 0.004,
-      "y": -0.005,
-      "z": -0.023
+      "x": -0.006,
+      "y": -0.084,
+      "z": 0.029
     },
-    "LeftFoot": {
-      "w": 1.000,
-      "x": -0.007,
-      "y": -0.010,
-      "z": 0.008
-    },"LeftToe_End": {
-      "w": 1.000,
-      "x": -0.000000,
-      "y": 0.000,
-      "z": -0.000000
+    "RightHandMiddle2": {
+      "w": 0.961,
+      "x": -0.269,
+      "y": -0.018,
+      "z": 0.055
     },
-    
-    "LeftToeBase": {
-      "w": 0.954,
-      "x": 0.297,
-      "y": -0.013,
-      "z": -0.034
+    "RightHandPinky1": {
+      "w": 0.862,
+      "x": 0.367,
+      "y": -0.252,
+      "z": -0.243
     },
-    "RightToe_End": {
-      "w": 1.000,
-      "x": 0.000000,
-      "y": -0.000002,
-      "z": 0.000000
+    "RightHandPinky2": {
+      "w": 0.906,
+      "x": 0.376,
+      "y": 0.054,
+      "z": -0.188
     },
-    
-    "RightToeBase": {
-      "w": 0.954,
-      "x": 0.297,
-      "y": 0.013,
-      "z": 0.034
+    "RightHandPinky3": {
+      "w": 0.988,
+      "x": 0.150,
+      "y": 0.003,
+      "z": 0.026
+    },
+    "RightHandRing1": {
+      "w": 0.850,
+      "x": 0.448,
+      "y": 0.275,
+      "z": 0.053
+    },
+    "RightHandRing2": {
+      "w": 0.790,
+      "x": 0.524,
+      "y": -0.092,
+      "z": 0.305
+    },
+    "RightHandRing3": {
+      "w": 0.985,
+      "x": 0.171,
+      "y": -0.003,
+      "z": 0.003
     }
   }
 }
